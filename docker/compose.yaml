@@ -1,0 +1,26 @@
+services:
+    mqtt:
+        image: eclipse-mosquitto
+        restart: always
+        volumes:
+            - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+            - ./mqtt/password.conf:/mosquitto/config/password.conf
+            - ./ca.crt:/mosquitto/config/tls-ca.pem
+            - ./server.crt:/mosquitto/config/tls-cert.pem
+            - ./server.key:/mosquitto/config/tls-key.pem
+        ports:
+            - '8883:8883'
+    vsftpd:
+        build:
+            context: vsftpd
+            #target: builder
+        restart: always
+        volumes:
+            - ./vsftpd/vsftpd.conf:/etc/vsftpd/vsftpd.conf
+            - ./vsftpd/users.txt:/etc/vsftpd/virtual_users.txt
+            - ./server.crt:/etc/vsftpd/vsftpd.crt
+            - ./server.key:/etc/vsftpd/vsftpd.key
+            - ./vsftpd/home:/home/vsftpd
+        ports:
+            - '990:990'
+            - '21100-21110:21100-21110'

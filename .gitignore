@@ -4,14 +4,15 @@ pom.xml.releaseBackup
 pom.xml.versionsBackup
 pom.xml.next
 release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
-# https://github.com/takari/maven-wrapper#usage-without-binary-jar
-.mvn/wrapper/maven-wrapper.jar
+nbactions.xml
+nb-configuration.xml
+.DS_Store
 
-# Eclipse m2e generated files
-# Eclipse Core
-.project
-# JDT-specific (Eclipse Java Development Tools)
-.classpath
+# The following files are generated/updated by vaadin-maven-plugin
+bambu/node_modules/
+bambu/frontend/generated/
+.env
+
+/docker/ca.*
+/docker/server.*
+/docker/vsftpd/home/

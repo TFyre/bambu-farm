@@ -1,0 +1,239 @@
+// https://json-to-proto.github.io/
+// https://formatter.org/protobuf-formatter
+
+syntax = "proto3";
+option java_multiple_files = true;
+option java_package = "com.tfyre.bambu.model";
+
+message Empty {}
+
+message Pushing {
+  optional string command = 1;
+  optional int32 push_target = 2;
+  optional int32 version = 3;
+  optional string sequence_id = 4;
+}
+
+message Upload {
+  optional string status = 1;
+  optional int32 progress = 2;
+  optional string message = 3;
+}
+
+message Online {
+  optional bool ahb = 1;
+  optional bool rfid = 2;
+  optional int32 version = 3;
+}
+
+message Tray {
+  optional string id = 1;
+  optional int32 remain = 2;
+  optional double k = 3;
+  optional double n = 4;
+  optional string tag_uid = 5;
+  optional string tray_id_name = 6;
+  optional string tray_info_idx = 7;
+  optional string tray_type = 8;
+  optional string tray_sub_brands = 9;
+  optional string tray_color = 10;
+  optional string tray_weight = 11;
+  optional string tray_diameter = 12;
+  optional string tray_temp = 13;
+  optional string tray_time = 14;
+  optional string bed_temp_type = 15;
+  optional string bed_temp = 16;
+  optional string nozzle_temp_max = 17;
+  optional string nozzle_temp_min = 18;
+  optional string xcam_info = 19;
+  optional string tray_uuid = 20;
+}
+
+message AmsSingle {
+  optional string id = 1;
+  optional string humidity = 2;
+  optional string temp = 3;
+  repeated Tray tray = 4;
+}
+
+message Ams {
+  repeated AmsSingle ams = 1;
+  optional string ams_exist_bits = 2;
+  optional string tray_exist_bits = 3;
+  optional string tray_is_bbl_bits = 4;
+  optional string tray_tar = 5;
+  optional string tray_now = 6;
+  optional string tray_pre = 7;
+  optional string tray_read_done_bits = 8;
+  optional string tray_reading_bits = 9;
+  optional int32 version = 10;
+  optional bool insert_flag = 11;
+  optional bool power_on_flag = 12;
+}
+
+message VtTray {
+  optional string id = 1;
+  optional string tag_uid = 2;
+  optional string tray_id_name = 3;
+  optional string tray_info_idx = 4;
+  optional string tray_type = 5;
+  optional string tray_sub_brands = 6;
+  optional string tray_color = 7;
+  optional string tray_weight = 8;
+  optional string tray_diameter = 9;
+  optional string tray_temp = 10;
+  optional string tray_time = 11;
+  optional string bed_temp_type = 12;
+  optional string bed_temp = 13;
+  optional string nozzle_temp_max = 14;
+  optional string nozzle_temp_min = 15;
+  optional string xcam_info = 16;
+  optional string tray_uuid = 17;
+  optional int32 remain = 18;
+  optional double k = 19;
+  optional double n = 20;
+}
+
+message LightsReport {
+  optional string node = 1;
+  optional string mode = 2;
+}
+
+message Ipcam {
+  optional string ipcam_dev = 1;
+  optional string ipcam_record = 2;
+  optional string timelapse = 3;
+  optional string resolution = 4;
+  optional int32 mode_bits = 5;
+}
+
+message UpgradeState {
+  optional int32 sequence_id = 1;
+  optional string progress = 2;
+  optional string status = 3;
+  optional bool consistency_request = 4;
+  optional int32 dis_state = 5;
+  optional int32 err_code = 6;
+  optional bool force_upgrade = 7;
+  optional string message = 8;
+  optional string module = 9;
+  optional int32 new_version_state = 10;
+  optional int32 cur_state_code = 11;
+  repeated Empty new_ver_list = 12;
+}
+
+message Hms {
+  
+}
+
+message Print {
+  optional UpgradeState upgrade_state = 1;
+  optional Upload upload = 2;
+  optional double nozzle_temper = 3;
+  optional double nozzle_target_temper = 4;
+  optional double bed_temper = 5;
+  optional double bed_target_temper = 6;
+  optional double chamber_temper = 7;
+  optional string mc_print_stage = 8;
+  optional string heatbreak_fan_speed = 9;
+  optional string cooling_fan_speed = 10;
+  optional string big_fan1_speed = 11;
+  optional string big_fan2_speed = 12;
+  optional int32 mc_percent = 13;
+  optional int32 mc_remaining_time = 14;
+  optional int32 ams_status = 15;
+  optional int32 ams_rfid_status = 16;
+  optional int32 hw_switch_state = 17;
+  optional int32 spd_mag = 18;
+  optional int32 spd_lvl = 19;
+  optional int32 print_error = 20;
+  optional string lifecycle = 21;
+  optional string wifi_signal = 22;
+  optional string gcode_state = 23;
+  optional string gcode_file_prepare_percent = 24;
+  optional int32 queue_number = 25;
+  optional int32 queue_total = 26;
+  optional int32 queue_est = 27;
+  optional int32 queue_sts = 28;
+  optional string project_id = 29;
+  optional string profile_id = 30;
+  optional string task_id = 31;
+  optional string subtask_id = 32;
+  optional string subtask_name = 33;
+  optional string gcode_file = 34;
+  repeated int32 stg = 35;
+  optional int32 stg_cur = 36;
+  optional string print_type = 37;
+  optional int32 home_flag = 38;
+  optional string mc_print_line_number = 39;
+  optional int32 mc_print_sub_stage = 40;
+  optional bool sdcard = 41;
+  optional bool force_upgrade = 42;
+  optional string mess_production_state = 43;
+  optional int32 layer_num = 44;
+  optional int32 total_layer_num = 45;
+  repeated Empty s_obj = 46;
+  repeated int32 filam_bak = 47;
+  optional int32 fan_gear = 48;
+  optional string nozzle_diameter = 49;
+  optional string nozzle_type = 50;
+  repeated Hms hms = 51;
+  optional Online online = 52;
+  optional Ams ams = 53;
+  optional Ipcam ipcam = 54;
+  optional VtTray vt_tray = 55;
+  repeated LightsReport lights_report = 56;
+  optional string command = 57;
+  optional int32 msg = 58;
+  optional string sequence_id = 59;
+  optional string param = 60;
+  optional string file = 61;
+  optional string url = 62;
+  optional string md5 = 63;
+  optional bool timelapse = 64;
+  optional string bed_type = 65;
+  optional bool bed_levelling = 66;
+  optional bool flow_cali = 67;
+  optional bool vibration_cali = 68;
+  optional bool layer_inspect = 69;
+  optional string ams_mapping = 70;
+  optional bool use_ams = 71;
+  optional string reason = 72;
+  optional string result = 73;
+}
+
+message System {
+  optional string sequence_id = 1;
+  optional string command = 2;
+  optional string led_node = 3;
+  optional string led_mode = 4;
+  optional int32 led_on_time = 5;
+  optional int32 led_off_time = 6;
+  optional int32 loop_times = 7;
+  optional int32 interval_time = 8;
+}
+
+
+message Module {
+  optional string name = 1;
+  optional string project_name = 2;
+  optional string sw_ver = 3;
+  optional string hw_ver = 4;
+  optional string sn = 5;
+  optional int32 flag = 6;
+}
+
+message Info {
+  optional string command = 1;
+  optional string sequence_id = 2;
+  repeated Module module = 3;
+  optional string result = 4;
+  optional string reason = 5;
+}
+
+message BambuMessage {
+  optional Print print = 1;
+  optional Pushing pushing = 2;
+  optional System system = 3;
+  optional Info info = 4;
+}

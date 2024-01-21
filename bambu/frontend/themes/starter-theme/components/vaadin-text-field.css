@@ -1,0 +1,11 @@
+/*
+   CSS styling examples for the Vaadin app.
+   Visit https://vaadin.com/docs/flow/theme/theming-overview.html and
+   https://vaadin.com/themes/lumo for more information.
+*/
+
+/* Example: the style is applied only to the textfields which has the `bordered` theme attribute. */
+:host([theme~="bordered"]) [part="input-field"] {
+    box-shadow: inset 0 0 0 1px var(--lumo-contrast-30pct);
+    background-color: var(--lumo-base-color);
+}

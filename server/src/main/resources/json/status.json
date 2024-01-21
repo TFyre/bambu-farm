@@ -1,0 +1,12 @@
+{
+    "print": {
+        "nozzle_temper": 229.9375,
+        "bed_temper": 64.96875,
+        "mc_remaining_time": 100,
+        "mc_print_line_number": "280515",
+        "command": "push_status",
+        "msg": 1,
+        "sequence_id": "FIXME"
+    }
+}
+
