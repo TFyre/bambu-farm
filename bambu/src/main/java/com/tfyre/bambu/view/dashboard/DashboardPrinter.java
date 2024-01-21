@@ -58,9 +58,6 @@ public class DashboardPrinter implements ShowInterface {
             .appendLiteral(':')
             .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
             .toFormatter();
-    //JPG Size from Stream: 1280x720
-    private static final int THUMBNAIL_WIDTH = 600;
-    private static final int THUMBNAIL_HEIGHT = (int) (600.0 / 1280 * 720);
 
     private final BambuPrinter printer;
     private final ProgressBar progressBar;
@@ -92,9 +89,13 @@ public class DashboardPrinter implements ShowInterface {
     private final Map<String, AmsHeader> amsHeaders = new HashMap<>();
     private final Map<String, AmsFilament> amsFilaments = new HashMap<>();
     private String printType = BambuConst.PRINT_TYPE_IDLE;
+    private final int thumbnailMaxHeight;
+    private final int thumbnailMaxWidth;
 
-    public DashboardPrinter(final BambuPrinter printer) {
+    public DashboardPrinter(final BambuPrinter printer, final int thumbnailMaxHeight, final int thumbnailMaxWidth) {
         this.printer = printer;
+        this.thumbnailMaxHeight = thumbnailMaxHeight;
+        this.thumbnailMaxWidth = thumbnailMaxWidth;
         progressBar = newProgressBar();
         statusBox = newStatusBox();
         isAdmin = SecurityUtils.userHasAccess(SystemRoles.ROLE_ADMIN);
@@ -124,10 +125,13 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private double parseDouble(final String value) {
+        if (value == null) {
+            return 0;
+        }
         try {
             return Double.parseDouble(value);
         } catch (NumberFormatException ex) {
-            log.errorf("%s: Cannot parseDouble %s", printer.getName(), value);
+            log.errorf("%s: Cannot parseDouble [%s]", printer.getName(), value);
             return 0;
         }
     }
@@ -364,14 +368,14 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private Component buildImage() {
-        thumbnail.setMaxWidth(THUMBNAIL_WIDTH, Unit.PIXELS);
-        thumbnail.setMaxHeight(THUMBNAIL_HEIGHT, Unit.PIXELS);
+        thumbnail.setMaxWidth(thumbnailMaxWidth, Unit.PIXELS);
+        thumbnail.setMaxHeight(thumbnailMaxHeight, Unit.PIXELS);
         thumbnail.getStyle().set("object-fit", "contain");
         thumbnailUpdated.getStyle().setColor("#fff");
 
         final Div result = new Div();
         result.setWidthFull();
-        result.setMinHeight(THUMBNAIL_HEIGHT + 25, Unit.PIXELS);
+        result.setMinHeight(thumbnailMaxHeight + 25, Unit.PIXELS);
         result.getStyle()
                 .setDisplay(Style.Display.FLEX)
                 .setFlexDirection(Style.FlexDirection.COLUMN)
@@ -621,7 +625,7 @@ public class DashboardPrinter implements ShowInterface {
         content.setPadding(false);
         content.setSpacing(false);
         content.add(components);
-        content.setMinWidth(THUMBNAIL_WIDTH, Unit.PIXELS);
+        content.setMinWidth(thumbnailMaxWidth, Unit.PIXELS);
         content.addClassName(LumoUtility.Flex.GROW);
         content.setSizeUndefined();
         return content;

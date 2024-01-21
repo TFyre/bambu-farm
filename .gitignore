@@ -13,6 +13,9 @@ bambu/node_modules/
 bambu/frontend/generated/
 .env
 
-/docker/ca.*
-/docker/server.*
 /docker/vsftpd/home/
+/docker/*.crt
+/docker/*.key
+/docker/*.srl
+/docker/*.csr
+/bambu/.flow-node-tasks.lock

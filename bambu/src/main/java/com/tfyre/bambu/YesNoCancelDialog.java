@@ -1,11 +1,14 @@
 package com.tfyre.bambu;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -26,7 +29,7 @@ public class YesNoCancelDialog {
     private final Consumer<YesNoCancelDialog> consumer;
     private final Dialog dialog = new Dialog();
 
-    private YesNoCancelDialog(final String message, final Consumer<YesNoCancelDialog> consumer) {
+    private YesNoCancelDialog(final List<Component> extra, final String message, final Consumer<YesNoCancelDialog> consumer) {
         this.consumer = consumer;
         dialog.setHeaderTitle(HEADER);
         dialog.add(new VerticalLayout(
@@ -34,12 +37,17 @@ public class YesNoCancelDialog {
                         .stream()
                         .map(Span::new)
                         .toArray(Span[]::new)));
+        extra.forEach(dialog::add);
 
         dialog.getFooter().add(getCancel(), getNo(), getYes());
     }
 
     public static void show(final String message, final Consumer<YesNoCancelDialog> consumer) {
-        new YesNoCancelDialog(message, consumer).open();
+        new YesNoCancelDialog(List.of(), message, consumer).open();
+    }
+
+    public static void show(final List<Component> extra, final String message, final Consumer<YesNoCancelDialog> consumer) {
+        new YesNoCancelDialog(extra, message, consumer).open();
     }
 
     private Button getCancel() {

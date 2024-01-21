@@ -2,6 +2,7 @@ package com.tfyre.bambu.view;
 
 import com.tfyre.bambu.MainLayout;
 import com.tfyre.bambu.SystemRoles;
+import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.printer.BambuPrinterConsumer;
 import com.tfyre.bambu.printer.BambuPrinterException;
 import com.tfyre.bambu.printer.BambuPrinters;
@@ -19,10 +20,13 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.Function;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
@@ -100,13 +104,27 @@ public class MaintenanceView extends VerticalLayout implements ShowInterface, Gr
         grid.setItems(printers.getPrintersDetail());
     }
 
+    private <T> Comparator<BambuPrinters.PrinterDetail> getODTComparator(
+            final Function<BambuPrinter, Optional<T>> function1,
+            final Function<T, OffsetDateTime> function2) {
+        return Comparator.comparing(pd ->
+                function1.apply(pd.printer())
+                        .map(function2)
+                        .map(odt -> odt.toEpochSecond())
+                        .orElse(0l)
+        );
+    }
+
     private void configureGrid() {
         final Grid.Column<BambuPrinters.PrinterDetail> colName
                 = setupColumn("Name", pd -> pd.printer().getName());
         setupColumnCheckBox("Running", pd -> pd.isRunning());
-        setupColumn("Last Status", pd -> pd.printer().getStatus().map(m -> DTF.format(m.lastUpdated())).orElse("--"));
-        setupColumn("Last Full Status", pd -> pd.printer().getFullStatus().map(m -> DTF.format(m.lastUpdated())).orElse("--"));
-        setupColumn("Last Thumbnail", pd -> pd.printer().getThumbnail().map(m -> DTF.format(m.lastUpdated())).orElse("--"));
+        setupColumn("Last Status", pd -> pd.printer().getStatus().map(m -> DTF.format(m.lastUpdated())).orElse("--"))
+                .setSortable(true).setComparator(getODTComparator(BambuPrinter::getStatus, BambuPrinter.Message::lastUpdated));
+        setupColumn("Last Full Status", pd -> pd.printer().getFullStatus().map(m -> DTF.format(m.lastUpdated())).orElse("--"))
+                .setSortable(true).setComparator(getODTComparator(BambuPrinter::getFullStatus, BambuPrinter.Message::lastUpdated));
+        setupColumn("Last Thumbnail", pd -> pd.printer().getThumbnail().map(m -> DTF.format(m.lastUpdated())).orElse("--"))
+                .setSortable(true).setComparator(getODTComparator(BambuPrinter::getThumbnail, BambuPrinter.Thumbnail::lastUpdated));
 
         grid.addComponentColumn(v -> {
             final HorizontalLayout result = new HorizontalLayout();

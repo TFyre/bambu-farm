@@ -338,9 +338,9 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     }
 
     @Override
-    public void commandPrintProject(final String fileName) {
+    public void commandPrintProject(final String fileName, final boolean useAms) {
         final String _fileName = stripSlash(fileName);
-        logUser("%s: commandPrintProject: %s".formatted(name, _fileName));
+        logUser("%s: commandPrintProject: %s / %s".formatted(name, _fileName, useAms));
         final int pos = _fileName.lastIndexOf(".");
         final String taskName = pos == -1 ? _fileName : _fileName.substring(0, pos);
         final BambuMessage message = BambuMessage.newBuilder()
@@ -364,7 +364,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
                                 .setVibrationCali(true)
                                 .setLayerInspect(true)
                                 .setAmsMapping("")
-                                .setUseAms(false)
+                                .setUseAms(useAms)
                 )
                 .build();
         toJson(message).ifPresent(this::sendData);

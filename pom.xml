@@ -21,7 +21,8 @@
         <vaadin.version>24.3.3</vaadin.version>
         <quarkus.version>3.6.6</quarkus.version>
         <compiler-plugin.version>3.12.1</compiler-plugin.version>
-        <jna.version>5.13.0</jna.version>
+        <jna.version>5.14.0</jna.version>
+        <commons-net.version>3.10.0</commons-net.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -72,6 +73,13 @@
                 <artifactId>jna-platform</artifactId>
                 <version>${jna.version}</version>
             </dependency>
+
+
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>${commons-net.version}</version>
+            </dependency>            
         </dependencies>
     </dependencyManagement>
     <build>

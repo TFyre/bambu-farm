@@ -1,5 +1,6 @@
 package com.tfyre.bambu.view.dashboard;
 
+import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.MainLayout;
 import com.tfyre.bambu.SystemRoles;
@@ -42,12 +43,19 @@ public class Dashboard extends FlexLayout {
     BambuPrinters printers;
 
     @Inject
+    BambuConfig config;
+
+    @Inject
     ScheduledExecutorService ses;
 
     private ScheduledFuture<?> future;
+    private int thumbnailMaxHeight;
+    private int thumbnailMaxWidth;
 
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
+        thumbnailMaxHeight = config.dashboard().thumbnailMaxHeight();
+        thumbnailMaxWidth = config.dashboard().thumbnailMaxWidth();
         final List<Runnable> runnables = new ArrayList<>();
         final UI ui = attachEvent.getUI();
         setFlexWrap(FlexLayout.FlexWrap.WRAP);
@@ -65,7 +73,7 @@ public class Dashboard extends FlexLayout {
     }
 
     private Component handlePrinter(final BambuPrinter printer, final Consumer<Runnable> consumer) {
-        final DashboardPrinter card = new DashboardPrinter(printer);
+        final DashboardPrinter card = new DashboardPrinter(printer, thumbnailMaxHeight, thumbnailMaxWidth);
         consumer.accept(card::update);
         return card.build();
     }

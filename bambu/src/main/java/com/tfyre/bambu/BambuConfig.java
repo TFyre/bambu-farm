@@ -13,6 +13,8 @@ import java.util.Optional;
 @ConfigMapping(prefix = "bambu")
 public interface BambuConfig {
 
+    Dashboard dashboard();
+
     Map<String, Printer> printers();
 
     Map<String, User> users();
@@ -32,6 +34,9 @@ public interface BambuConfig {
         String accessCode();
 
         String ip();
+
+        @WithDefault("true")
+        boolean useAms();
 
         Mqtt mqtt();
 
@@ -62,9 +67,6 @@ public interface BambuConfig {
 
             Optional<String> url();
 
-            @WithDefault("/timelapse/thumbnail/")
-            String thumbnail();
-
             @WithDefault("false")
             boolean logCommands();
 
@@ -80,6 +82,16 @@ public interface BambuConfig {
             @WithDefault("5m")
             Duration watchDog();
         }
+    }
+
+    public interface Dashboard {
+
+        @WithDefault("346")
+        int thumbnailMaxHeight();
+
+        @WithDefault("615")
+        int thumbnailMaxWidth();
+
     }
 
     public interface User {

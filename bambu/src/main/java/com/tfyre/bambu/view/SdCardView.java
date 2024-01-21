@@ -12,7 +12,9 @@ import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.html.Anchor;
@@ -338,8 +340,10 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         final Grid.Column<FTPFile> colName
                 = setupColumn("Name", f -> f.getName());
 
-        setupColumn("Size", f -> f.getSize());
-        setupColumn("Date", f -> DTF.format(f.getTimestampInstant().atOffset(ZoneOffset.UTC)));
+        setupColumn("Size", f -> f.getSize())
+                .setSortable(true).setComparator(FTPFile::getSize);
+        setupColumn("Date", f -> DTF.format(f.getTimestampInstant().atOffset(ZoneOffset.UTC)))
+                .setSortable(true).setComparator(FTPFile::getTimestampInstant);
 
         grid.addComponentColumn(this::getComponentColumn);
         grid.addItemDoubleClickListener(l -> doDoubleClick(l.getItem()));
@@ -405,7 +409,8 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     }
 
     private void doPrintFile(final FTPFile file) {
-        YesNoCancelDialog.show("Confirm to print: %s".formatted(file.getName()), ync -> {
+        final Checkbox useAMS = new Checkbox("Use AMS", comboBox.getValue().config().useAms());
+        YesNoCancelDialog.show(List.of(useAMS), "Confirm to print: %s".formatted(file.getName()), ync -> {
             if (!ync.isConfirmed()) {
                 return;
             }
@@ -413,7 +418,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
             if (fileName.endsWith(BambuConst.FILE_GCODE)) {
                 comboBox.getValue().printer().commandPrintGCode(fileName);
             } else if (fileName.endsWith(BambuConst.FILE_3MF)) {
-                comboBox.getValue().printer().commandPrintProject(fileName);
+                comboBox.getValue().printer().commandPrintProject(fileName, useAMS.getValue());
             } else {
                 showError("Unknown File: %s".formatted(fileName));
             }

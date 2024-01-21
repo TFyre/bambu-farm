@@ -40,7 +40,7 @@ public interface BambuPrinter {
 
     void commandPrintGCode(final String filename);
 
-    void commandPrintProject(final String filename);
+    void commandPrintProject(final String filename, final boolean useAms);
 
     record Message(OffsetDateTime lastUpdated, BambuMessage message, String raw) {
 
