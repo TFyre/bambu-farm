@@ -410,15 +410,17 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
 
     private void doPrintFile(final FTPFile file) {
         final Checkbox useAMS = new Checkbox("Use AMS", comboBox.getValue().config().useAms());
-        YesNoCancelDialog.show(List.of(useAMS), "Confirm to print: %s".formatted(file.getName()), ync -> {
+        final Checkbox timelapse = new Checkbox("Timelapse", comboBox.getValue().config().timelapse());
+        final Checkbox bedLevelling = new Checkbox("Bed Levelling", comboBox.getValue().config().bedLevelling());
+        YesNoCancelDialog.show(List.of(useAMS, timelapse, bedLevelling), "Confirm to print: %s".formatted(file.getName()), ync -> {
             if (!ync.isConfirmed()) {
                 return;
             }
             final String fileName = buildFileName(file.getName());
             if (fileName.endsWith(BambuConst.FILE_GCODE)) {
-                comboBox.getValue().printer().commandPrintGCode(fileName);
+                comboBox.getValue().printer().commandPrintGCodeFile(fileName);
             } else if (fileName.endsWith(BambuConst.FILE_3MF)) {
-                comboBox.getValue().printer().commandPrintProject(fileName, useAMS.getValue());
+                comboBox.getValue().printer().commandPrintProjectFile(fileName, useAMS.getValue(), timelapse.getValue(), bedLevelling.getValue());
             } else {
                 showError("Unknown File: %s".formatted(fileName));
             }

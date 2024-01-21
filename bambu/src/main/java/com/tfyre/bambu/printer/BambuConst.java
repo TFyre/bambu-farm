@@ -81,8 +81,9 @@ public class BambuConst {
 
     public enum LightMode {
         ON("on"),
-        OFF("off"),
-        FLASHING("flashing");
+        OFF("off");
+        //FIXME what does this do?
+        //FLASHING("flashing");
 
         private final String value;
 

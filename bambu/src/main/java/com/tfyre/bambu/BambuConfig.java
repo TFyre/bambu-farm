@@ -38,6 +38,12 @@ public interface BambuConfig {
         @WithDefault("true")
         boolean useAms();
 
+        @WithDefault("true")
+        boolean timelapse();
+
+        @WithDefault("true")
+        boolean bedLevelling();
+
         Mqtt mqtt();
 
         Ftp ftp();

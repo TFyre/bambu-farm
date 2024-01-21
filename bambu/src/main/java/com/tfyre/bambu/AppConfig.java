@@ -17,6 +17,7 @@ public class AppConfig implements AppShellConfigurator {
     public void configurePage(AppShellSettings settings) {
         settings.setPageTitle("Bambu Web Interface");
         //FIXME: secure /q/metrics
+        //FIXME: add custom CSS
     }
 
 }

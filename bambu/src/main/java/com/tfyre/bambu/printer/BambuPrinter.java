@@ -38,9 +38,11 @@ public interface BambuPrinter {
 
     void commandSpeed(BambuConst.Speed speed);
 
-    void commandPrintGCode(final String filename);
+    void commandPrintGCodeLine(final String data);
 
-    void commandPrintProject(final String filename, final boolean useAms);
+    void commandPrintGCodeFile(final String filename);
+
+    void commandPrintProjectFile(final String filename, final boolean useAms, final boolean timelapse, final boolean bedLevelling);
 
     record Message(OffsetDateTime lastUpdated, BambuMessage message, String raw) {
 

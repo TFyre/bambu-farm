@@ -323,26 +323,41 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     }
 
     @Override
-    public void commandPrintGCode(final String fileName) {
-        final String _fileName = stripSlash(fileName);
-        logUser("%s: commandPrintGCode: %s".formatted(name, _fileName));
+    public void commandPrintGCodeLine(final String data) {
+        logUser("%s: commandPrintGCodeLine: %s".formatted(name, data));
+        final BambuMessage message = BambuMessage.newBuilder()
+                .setPrint(
+                        Print.newBuilder()
+                                .setSequenceId("%d".formatted(counter.incrementAndGet()))
+                                .setCommand("gcode_line")
+                                .setParam(data)
+                )
+                .build();
+        toJson(message).ifPresent(log::info);
+        toJson(message).ifPresent(this::sendData);
+    }
+
+    @Override
+    public void commandPrintGCodeFile(final String filename) {
+        final String _filename = stripSlash(filename);
+        logUser("%s: commandPrintGCode: %s".formatted(name, _filename));
         final BambuMessage message = BambuMessage.newBuilder()
                 .setPrint(
                         Print.newBuilder()
                                 .setSequenceId("%d".formatted(counter.incrementAndGet()))
                                 .setCommand("gcode_file")
-                                .setParam("/sdcard/%s".formatted(_fileName))
+                                .setParam("/sdcard/%s".formatted(_filename))
                 )
                 .build();
         toJson(message).ifPresent(this::sendData);
     }
 
     @Override
-    public void commandPrintProject(final String fileName, final boolean useAms) {
-        final String _fileName = stripSlash(fileName);
-        logUser("%s: commandPrintProject: %s / %s".formatted(name, _fileName, useAms));
-        final int pos = _fileName.lastIndexOf(".");
-        final String taskName = pos == -1 ? _fileName : _fileName.substring(0, pos);
+    public void commandPrintProjectFile(final String filename, final boolean useAms, final boolean timelapse, final boolean bedLevelling) {
+        final String _filename = stripSlash(filename);
+        logUser("%s: commandPrintProject: %s ams[%s] timelapse[%s] bedlevelling[%s]".formatted(name, _filename, useAms, timelapse, bedLevelling));
+        final int pos = _filename.lastIndexOf(".");
+        final String taskName = pos == -1 ? _filename : _filename.substring(0, pos);
         final BambuMessage message = BambuMessage.newBuilder()
                 .setPrint(
                         Print.newBuilder()
@@ -355,11 +370,11 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
                                 .setSubtaskId("0")
                                 .setSubtaskName(taskName)
                                 .setFile("")
-                                .setUrl("file:///sdcard/%s".formatted(_fileName))
+                                .setUrl("file:///sdcard/%s".formatted(_filename))
                                 .setMd5("")
-                                .setTimelapse(true)
+                                .setTimelapse(timelapse)
                                 .setBedType("auto")
-                                .setBedLevelling(true)
+                                .setBedLevelling(bedLevelling)
                                 .setFlowCali(true)
                                 .setVibrationCali(true)
                                 .setLayerInspect(true)

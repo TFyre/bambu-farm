@@ -9,13 +9,17 @@ import com.tfyre.bambu.printer.BambuPrinters;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
@@ -83,7 +87,7 @@ public class MaintenanceView extends VerticalLayout implements ShowInterface, Gr
     }
 
     private Button newButton(final BambuPrinters.PrinterDetail pd, final String action, final VaadinIcon icon, final BambuPrinterConsumer<String> consumer) {
-        return new Button(action, new Icon(icon), l -> {
+        final Button result = new Button("", new Icon(icon), l -> {
             final Optional<UI> ui = getUI();
             executor.submit(() -> {
                 try {
@@ -96,8 +100,9 @@ public class MaintenanceView extends VerticalLayout implements ShowInterface, Gr
                     });
                 }
             });
-
         });
+        result.setTooltipText(action);
+        return result;
     }
 
     private void refreshItems() {
@@ -115,6 +120,29 @@ public class MaintenanceView extends VerticalLayout implements ShowInterface, Gr
         );
     }
 
+    private void doDialog(final BambuPrinters.PrinterDetail pd) {
+        final Dialog d = new Dialog();
+        d.setHeaderTitle("Send GCode (No Validation!!)");
+        final TextArea text = new TextArea();
+        text.setWidthFull();
+        text.setHeight(95, Unit.PERCENTAGE);
+        d.add(text);
+        final Button cancel = new Button("Cancel", e -> d.close());
+        cancel.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        final Button ok = new Button("OK", e -> {
+            d.close();
+            final StringBuilder sb = new StringBuilder();
+            sb.append(text.getValue().trim().replaceAll("\n", "\\\n"));
+            sb.append("\n");
+            pd.printer().commandPrintGCodeLine(sb.toString());
+        });
+        ok.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        d.getFooter().add(cancel, ok);
+        d.setWidth(80, Unit.PERCENTAGE);
+        d.setHeight(80, Unit.PERCENTAGE);
+        d.open();
+    }
+
     private void configureGrid() {
         final Grid.Column<BambuPrinters.PrinterDetail> colName
                 = setupColumn("Name", pd -> pd.printer().getName());
@@ -127,10 +155,13 @@ public class MaintenanceView extends VerticalLayout implements ShowInterface, Gr
                 .setSortable(true).setComparator(getODTComparator(BambuPrinter::getThumbnail, BambuPrinter.Thumbnail::lastUpdated));
 
         grid.addComponentColumn(v -> {
-            final HorizontalLayout result = new HorizontalLayout();
-            result.add(newButton(v, "Enable", VaadinIcon.PLAY, printers::startPrinter));
-            result.add(newButton(v, "Disable", VaadinIcon.STOP, printers::stopPrinter));
-            return result;
+            final Button gcode = new Button("", new Icon(VaadinIcon.COG), l -> doDialog(v));
+            gcode.setTooltipText("Send GCode");
+            return new HorizontalLayout(
+                    newButton(v, "Enable", VaadinIcon.PLAY, printers::startPrinter),
+                    newButton(v, "Disable", VaadinIcon.STOP, printers::stopPrinter),
+                    gcode
+            );
         });
 
         grid.sort(GridSortOrder.asc(colName).build());
