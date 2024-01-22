@@ -17,7 +17,7 @@ Technologies used:
 |**Print .3mf from SD card**|?|?|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|?
 |**Print .gcode from SD card**|?|?|?|?|?
 |**AMS**|?|?|?|<ul><li>[x] </li></ul>|?
-|**Send Custom GCode**|?|?|?|?|?
+|**Send Custom GCode**|?|?|?|<ul><li>[x] </li></ul>|?
 
 **Currently only .3mf sliced projects are supported.**
 
