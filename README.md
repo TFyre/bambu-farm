@@ -1,4 +1,4 @@
-# Bambu Web
+# Bambu Farm
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/tfyre)
 
 Web based application to monitor multiple bambu printers using mqtt / ftp / rtsp (**no custom firmware required**)
