@@ -42,7 +42,7 @@ public interface BambuPrinter {
 
     void commandPrintGCodeFile(final String filename);
 
-    void commandPrintProjectFile(final String filename, final boolean useAms, final boolean timelapse, final boolean bedLevelling);
+    void commandPrintProjectFile(final String filename, final int plateId, final boolean useAms, final boolean timelapse, final boolean bedLevelling);
 
     record Message(OffsetDateTime lastUpdated, BambuMessage message, String raw) {
 

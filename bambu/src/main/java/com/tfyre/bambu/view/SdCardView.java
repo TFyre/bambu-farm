@@ -14,7 +14,6 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.html.Anchor;
@@ -23,6 +22,7 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.SucceededEvent;
 import com.vaadin.flow.component.upload.Upload;
@@ -338,17 +338,17 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
 
     private void configureGrid() {
         setupColumn("Type", getTypeRender());
-        final Grid.Column<FTPFile> colName
-                = setupColumn("Name", f -> f.getName());
+        setupColumn("Name", f -> f.getName());
 
         setupColumn("Size", f -> f.getSize())
                 .setSortable(true).setComparator(FTPFile::getSize);
-        setupColumn("Date", f -> DTF.format(f.getTimestampInstant().atOffset(ZoneOffset.UTC)))
+        final Grid.Column<FTPFile> coldDate
+                = setupColumn("Date", f -> DTF.format(f.getTimestampInstant().atOffset(ZoneOffset.UTC)))
                 .setSortable(true).setComparator(FTPFile::getTimestampInstant);
 
         grid.addComponentColumn(this::getComponentColumn);
         grid.addItemDoubleClickListener(l -> doDoubleClick(l.getItem()));
-        grid.sort(GridSortOrder.asc(colName).build());
+        grid.sort(GridSortOrder.desc(coldDate).build());
     }
 
     private String buildFileName(final String fileName) {
@@ -410,10 +410,15 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     }
 
     private void doPrintFile(final FTPFile file) {
+        final IntegerField plateId = new IntegerField("Plate Id");
+        plateId.setMin(1);
+        plateId.setMax(20);
+        plateId.setStepButtonsVisible(true);
+        plateId.setValue(1);
         final Checkbox useAMS = new Checkbox("Use AMS", comboBox.getValue().config().useAms());
         final Checkbox timelapse = new Checkbox("Timelapse", comboBox.getValue().config().timelapse());
         final Checkbox bedLevelling = new Checkbox("Bed Levelling", comboBox.getValue().config().bedLevelling());
-        YesNoCancelDialog.show(List.of(useAMS, timelapse, bedLevelling), "Confirm to print: %s".formatted(file.getName()), ync -> {
+        YesNoCancelDialog.show(List.of(plateId, useAMS, timelapse, bedLevelling), "Confirm to print: %s".formatted(file.getName()), ync -> {
             if (!ync.isConfirmed()) {
                 return;
             }
@@ -421,7 +426,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
             if (fileName.endsWith(BambuConst.FILE_GCODE)) {
                 comboBox.getValue().printer().commandPrintGCodeFile(fileName);
             } else if (fileName.endsWith(BambuConst.FILE_3MF)) {
-                comboBox.getValue().printer().commandPrintProjectFile(fileName, useAMS.getValue(), timelapse.getValue(), bedLevelling.getValue());
+                comboBox.getValue().printer().commandPrintProjectFile(fileName, plateId.getValue(), useAMS.getValue(), timelapse.getValue(), bedLevelling.getValue());
             } else {
                 showError("Unknown File: %s".formatted(fileName));
             }

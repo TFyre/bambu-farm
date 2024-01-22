@@ -353,7 +353,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     }
 
     @Override
-    public void commandPrintProjectFile(final String filename, final boolean useAms, final boolean timelapse, final boolean bedLevelling) {
+    public void commandPrintProjectFile(final String filename, final int plateId, final boolean useAms, final boolean timelapse, final boolean bedLevelling) {
         final String _filename = stripSlash(filename);
         logUser("%s: commandPrintProject: %s ams[%s] timelapse[%s] bedlevelling[%s]".formatted(name, _filename, useAms, timelapse, bedLevelling));
         final int pos = _filename.lastIndexOf(".");
@@ -363,7 +363,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
                         Print.newBuilder()
                                 .setSequenceId("%d".formatted(counter.incrementAndGet()))
                                 .setCommand("project_file")
-                                .setParam("Metadata/plate_1.gcode")
+                                .setParam("Metadata/plate_%d.gcode".formatted(plateId))
                                 .setProjectId("0")
                                 .setProfileId("0")
                                 .setTaskId("0")
