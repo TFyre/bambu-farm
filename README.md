@@ -6,7 +6,7 @@ Technologies used:
 * Quarkus https://quarkus.io/
 * Vaadin https://vaadin.com/
 
-# Supported Devices
+# Features / Supported Devices
 
 | Feature | A1 | A1 Mini | P1P | P1S | X1C|
 |--|:--:|:--:|:--:|:--:|:--:|
@@ -16,6 +16,11 @@ Technologies used:
 |**Print .gcode from SD card**|?|?|?|?|?
 |**AMS**|?|?|?|<ul><li>[x] </li></ul>|?
 |**Send Custom GCode**|?|?|?|?|?
+
+**Currently only .3mf sliced projects are supported.**
+
+> In Bambu Studio/Orca slicer, make sure to slice the place and then use the "File -> Export -> Export plate sliced file". This creates a `.3mf` project with embedded `.gcode` plate.
+
 
 # Building & Running
 
@@ -152,12 +157,6 @@ quarkus.log.file.path=application.log
 #quarkus.log.category."com.tfyre".min-level=TRACE
 #quarkus.log.category."com.tfyre".level=TRACE
 ```
-
-# Printing from the SD Card
-
-**Currently only .3mf sliced projects are supported.**
-
-> In Bambu Studio/Orca slicer, make sure to slice the place and then use the "File -> Export -> Export plate sliced file". This creates a `.3mf` project with embedded `.gcode` plate.
 
 # TODO
 
