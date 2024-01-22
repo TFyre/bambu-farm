@@ -103,6 +103,8 @@ bambu.printers.myprinter1.stream.watch-dog=5m
 
 ### User Section
 
+**Remember to encrypt your passwords with bcrypt (eg https://bcrypt-generator.com/)**
+
 Current roles supported:
 
 * `admin` - full access
@@ -161,9 +163,7 @@ quarkus.log.file.path=application.log
 # TODO
 
 * Move Axis
-* Custom GCode commands
 * Colour Mapping when printing from frontend
-* Custom CSS
 
 # Links
 
