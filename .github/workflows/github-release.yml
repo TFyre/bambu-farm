@@ -1,7 +1,7 @@
 # This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
 # For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
 
-name: Maven Package
+name: Github Release
 
 on:
   release:
@@ -22,13 +22,14 @@ jobs:
       with:
         java-version: '21'
         distribution: 'zulu'
-        server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
+        server-id: github
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
     - name: Build with Maven
       run: ./mvnw -B package -Pproduction --file pom.xml
 
-    - name: Publish to GitHub Packages Apache Maven
-      run: ./mvnw deploy -s $GITHUB_WORKSPACE/settings.xml
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: bambu/target/bambu-web-*-runner.jar
