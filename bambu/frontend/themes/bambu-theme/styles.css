@@ -4,6 +4,8 @@
    https://vaadin.com/themes/lumo for more information.
 */
 
+@import 'bambu.css';
+
 /* Example: CSS class name to center align the content . */
 .centered-content {
     margin: 0 auto;

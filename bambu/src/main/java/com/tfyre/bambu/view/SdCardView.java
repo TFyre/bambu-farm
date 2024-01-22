@@ -273,6 +273,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
 
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
+        addClassName("sdcard-view");
         setSizeFull();
         configureGrid();
         add(buildToolbar(), grid);

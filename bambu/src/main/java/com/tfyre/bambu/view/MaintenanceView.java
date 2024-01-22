@@ -73,6 +73,7 @@ public class MaintenanceView extends VerticalLayout implements ShowInterface, Gr
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
         super.onAttach(attachEvent);
+        addClassName("maintenance-view");
         setSizeFull();
         configureGrid();
         add(buildToolbar(), grid);

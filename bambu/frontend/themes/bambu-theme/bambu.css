@@ -1,0 +1,146 @@
+.dashboard-view {
+    flex-wrap: wrap;
+    
+    /*LumoUtility.Gap.MEDIUM*/
+    gap: var(--lumo-space-m);
+
+    /*LumoUtility.Padding.SMALL*/
+    padding: var(--lumo-space-s);
+}
+
+.dashboard-printer {
+    min-width: 615px;
+    flex-grow: 1;
+}
+
+.dashboard-printer .name {
+    font-weight: bold;
+    width: 100%;
+    font-size: 2em;
+    text-align: center;
+}
+
+.dashboard-printer .image {
+    background-color: grey;
+    flex-direction: column;
+    display: flex;
+    width: 100%;
+    min-height: 371px;
+    justify-content: center;
+    align-items: center;
+}
+
+.dashboard-printer .image img {
+    max-height: 346px;
+    max-width: 615px;
+    object-fit: contain;
+}
+
+.dashboard-printer .status {
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.dashboard-printer .badge {
+    font-weight: bolder;
+    align-items: center;
+    min-width: 50px;
+    
+    /*LumoUtility.Padding.SMALL*/
+    padding: var(--lumo-space-s);
+    
+    /*LumoUtility.Margin.SMALL*/
+    margin: var(--lumo-space-s);
+    
+    /*LumoUtility.Flex.GROW*/
+    flex-grow: 1;
+
+    /*LumoUtility.Background.BASE*/
+    background-color: var(--lumo-base-color);
+
+    /*LumoUtility.BoxShadow.SMALL*/
+    box-shadow: var(--lumo-box-shadow-s);
+
+    /*LumoUtility.BorderRadius.LARGE*/
+    border-radius: var(--lumo-border-radius-l);
+}
+
+.dashboard-printer .filaments {
+    width: 100%;
+}
+
+.dashboard-printer .ams {
+    width: 100%;
+}
+
+.dashboard-printer .amsheader {
+    width: 100%;
+    height: 30px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.dashboard-printer .amsheader > span {
+    flex-grow: 1;
+}
+
+.dashboard-printer .amsheader > span.filler {
+    flex-grow: 10;
+}
+
+.dashboard-printer .amsheader > img {
+    flex-grow: 1;
+    max-height: 30px;
+}
+
+.dashboard-printer .amstray {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.dashboard-printer .amstray .filament {
+    display: flex;
+    flex-direction: column;
+    font-weight: bolder;
+    align-items: center;
+    
+    /*LumoUtility.Padding.SMALL*/
+    padding: var(--lumo-space-s);
+    
+    /*LumoUtility.Margin.SMALL*/
+    margin: var(--lumo-space-s);
+
+    /*LumoUtility.Flex.GROW*/
+    flex-grow: 1;
+    
+    /*LumoUtility.Background.BASE*/
+    background-color: var(--lumo-base-color);
+
+    /*LumoUtility.BoxShadow.SMALL*/
+    box-shadow: var(--lumo-box-shadow-s);
+
+    /*LumoUtility.BorderRadius.LARGE*/
+    border-radius: var(--lumo-border-radius-l);
+}
+
+.dashboard-printer .amstray .filament .color {
+    width: 50px;
+    height: 50px;
+    border: 1px solid;
+
+    /*LumoUtility.BoxShadow.SMALL*/
+    box-shadow: var(--lumo-box-shadow-s);
+
+    /*LumoUtility.BorderRadius.LARGE*/
+    border-radius: var(--lumo-border-radius-l);
+}
+
+.dashboard-printer .progress {
+    width: 100%;
+    justify-content: space-between;
+}
+
+.dashboard-printer vaadin-progress-bar {
+    height: 5px;
+}

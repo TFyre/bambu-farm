@@ -19,3 +19,4 @@ bambu/frontend/generated/
 /docker/*.srl
 /docker/*.csr
 /bambu/.flow-node-tasks.lock
+/bambu/styles.css

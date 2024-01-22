@@ -1,5 +1,7 @@
 package com.tfyre.bambu.view;
 
+import com.tfyre.bambu.BambuConfig;
+import com.tfyre.bambu.MainLayout;
 import com.tfyre.bambu.security.SecurityUtils;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.UI;
@@ -14,6 +16,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
 import static com.vaadin.flow.server.auth.NavigationAccessControl.SESSION_STORED_REDIRECT;
+import jakarta.inject.Inject;
 import java.util.Optional;
 
 /**
@@ -30,6 +33,9 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver, Sh
 
     private final LoginForm login = new LoginForm();
 
+    @Inject
+    BambuConfig config;
+
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
         super.onAttach(attachEvent);
@@ -43,6 +49,9 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver, Sh
         login.addForgotPasswordListener(this::onForgotPassword);
 
         add(new H1("Bambu Web Farm"), login);
+        if (config.darkMode()) {
+            MainLayout.setTheme(getElement(), true);
+        }
     }
 
     @Override

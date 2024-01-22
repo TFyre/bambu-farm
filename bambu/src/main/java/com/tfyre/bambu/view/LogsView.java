@@ -159,6 +159,7 @@ public class LogsView extends VerticalLayout implements HasUrlParameter<String>,
 
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
+        addClassName("logs-view");
         setSizeFull();
         add(buildToolbar(), buildListBox());
         _printer.ifPresent(this::buildList);

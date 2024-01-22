@@ -13,7 +13,8 @@ import java.util.Optional;
 @ConfigMapping(prefix = "bambu")
 public interface BambuConfig {
 
-    Dashboard dashboard();
+    @WithDefault("false")
+    boolean darkMode();
 
     Map<String, Printer> printers();
 
@@ -90,21 +91,13 @@ public interface BambuConfig {
         }
     }
 
-    public interface Dashboard {
-
-        @WithDefault("346")
-        int thumbnailMaxHeight();
-
-        @WithDefault("615")
-        int thumbnailMaxWidth();
-
-    }
-
     public interface User {
 
         String password();
 
         String role();
+
+        Optional<Boolean> darkMode();
 
     }
 }

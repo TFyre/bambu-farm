@@ -6,15 +6,26 @@ Technologies used:
 * Quarkus https://quarkus.io/
 * Vaadin https://vaadin.com/
 
+# Supported Devices
+
+| Feature | A1 | A1 Mini | P1P | P1S | X1C|
+|--|:--:|:--:|:--:|:--:|:--:|
+|**Remote View**|<ul><li>[x] </li></ul>|?|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|?
+|**Upload to SD card**|?|?|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|?
+|**Print .3mf from SD card**|?|?|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|?
+|**Print .gcode from SD card**|?|?|?|?|?
+|**AMS**|?|?|?|<ul><li>[x] </li></ul>|?
+|**Send Custom GCode**|?|?|?|?|?
+
 # Building & Running
 
 Building:
-```
+```bash
 mvn clean install -Pproduction
 ```
 
 Create a new directory and copy `bambu/target/bambu-web-1.0.0-runner.jar` into it, example:
-```
+```bash
 tfyre@fsteyn-pc:/mnt/c/bambu-farm$ ls -al
 total 64264
 drwxrwxrwx 1 tfyre tfyre     4096 Jan 17 16:47 .
@@ -24,7 +35,7 @@ drwxrwxrwx 1 tfyre tfyre     4096 Jan 18 20:42 ..
 ```
 
 Running
-```
+```bash
 java -jar bambu-web-1.0.0-runner.jar
 ```
 
@@ -35,7 +46,7 @@ You can now access it via http://127.0.0.1:8080 (username: admin / password: adm
 ## Minimal config
 
 Create an `.env` file with  the following config:
-```
+```properties
 quarkus.http.host=0.0.0.0
 quarkus.http.port=8080
 
@@ -49,8 +60,18 @@ bambu.users.admin.role=admin
 
 ## Full Config Options
 
-### Printer section (with defaults)
+**All default options are displayed**
+
+### Dark Mode
+```properties
+# Gobal
+bambu.dark-mode=false
+# Per user (will default to global if omitted)
+bambu.users.myUserName.dark-mode=false
 ```
+
+### Printer section
+```properties
 bambu.printers.myprinter1.enabled=true
 bambu.printers.myprinter1.name=Name With Spaces
 bambu.printers.myprinter1.device-id=REPLACE_WITH_DEVICE_SERIAL
@@ -82,7 +103,7 @@ Current roles supported:
 * `admin` - full access
 * `normal` - only dashboard with readonly access
 
-```
+```properties
 #https://bcrypt-generator.com/
 #bambu.users.REPLACE_WITH_USERNAME.password=REPLACE_WITH_PASSWORD
 
@@ -91,18 +112,40 @@ Current roles supported:
 #Secure version:
 bambu.users.myUserName.password=$2a$12$GtP15HEGIhqNdeKh2tFguOAg92B3cPdCh91rj7hklM7aSOuTMh1DC 
 bambu.users.myUserName.role=admin
+bambu.users.myUserName.dark-mode=false
 
+#Guest account with readonly role
 bambu.users.guest.password=guest
 bambu.users.guest.role=normal
+```
+
+### Custom CSS
+
+If you want to modify the CSS, create a file next to the `.jar` file called `styles.css`
+
+```css
+/* Add your custom CSS here */
+
+/*Setting 2 display columns on ~1920x1080 display*/
+.dashboard-printer .image img {
+    max-height: 507px !important;
+    max-width: 900px !important;
+}
 ```
 
 # Debug
 
 For debugging the application, add the following to .env and uncomment DEBUG or TRACE logging sections
 
-```
+```properties
+### Log To File
+quarkus.log.file.enable=true
+quarkus.log.file.path=application.log
+
+
 ### DEBUG logging
 #quarkus.log.category."com.tfyre".level=DEBUG
+
 
 ### TRACE logging
 #quarkus.log.min-level=TRACE
@@ -114,7 +157,7 @@ For debugging the application, add the following to .env and uncomment DEBUG or 
 
 **Currently only .3mf sliced projects are supported.**
 
-In Bambu Studio/Orca slicer, make sure to slice the place and then use the "File -> Export -> Export plate sliced file". This creates a `.3mf` project with embedded `.gcode` plate.
+> In Bambu Studio/Orca slicer, make sure to slice the place and then use the "File -> Export -> Export plate sliced file". This creates a `.3mf` project with embedded `.gcode` plate.
 
 # TODO
 

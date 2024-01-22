@@ -14,13 +14,11 @@ import com.tfyre.bambu.view.LogsView;
 import com.tfyre.bambu.view.ShowInterface;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -34,6 +32,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -89,13 +88,9 @@ public class DashboardPrinter implements ShowInterface {
     private final Map<String, AmsHeader> amsHeaders = new HashMap<>();
     private final Map<String, AmsFilament> amsFilaments = new HashMap<>();
     private String printType = BambuConst.PRINT_TYPE_IDLE;
-    private final int thumbnailMaxHeight;
-    private final int thumbnailMaxWidth;
 
-    public DashboardPrinter(final BambuPrinter printer, final int thumbnailMaxHeight, final int thumbnailMaxWidth) {
+    public DashboardPrinter(final BambuPrinter printer) {
         this.printer = printer;
-        this.thumbnailMaxHeight = thumbnailMaxHeight;
-        this.thumbnailMaxWidth = thumbnailMaxWidth;
         progressBar = newProgressBar();
         statusBox = newStatusBox();
         isAdmin = SecurityUtils.userHasAccess(SystemRoles.ROLE_ADMIN);
@@ -107,9 +102,8 @@ public class DashboardPrinter implements ShowInterface {
 
     private ProgressBar newProgressBar() {
         final ProgressBar result = new ProgressBar(0.0, 100.0);
-        result.setWidthFull();
+        result.addClassName("progress");
         result.setIndeterminate(true);
-        result.setHeight(5, Unit.PIXELS);
         return result;
     }
 
@@ -324,6 +318,7 @@ public class DashboardPrinter implements ShowInterface {
         }
         printType = _printType;
         if (BambuConst.PRINT_TYPE_IDLE.equals(printType)) {
+            //FIXME: show green notice + print complete
             showNotification("%s: Printer Idle".formatted(printer.getName()));
         }
     }
@@ -357,58 +352,35 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private Div buildName() {
+        printerName.addClassName("name");
         printerName.setTitle("--");
         printerName.setText(printer.getName());
-        printerName.setWidthFull();
-        printerName.getStyle()
-                .setFontWeight(Style.FontWeight.BOLD)
-                .setTextAlign(Style.TextAlign.CENTER)
-                .setFontSize("2em");
         return printerName;
     }
 
     private Component buildImage() {
-        thumbnail.setMaxWidth(thumbnailMaxWidth, Unit.PIXELS);
-        thumbnail.setMaxHeight(thumbnailMaxHeight, Unit.PIXELS);
-        thumbnail.getStyle().set("object-fit", "contain");
         thumbnailUpdated.getStyle().setColor("#fff");
 
         final Div result = new Div();
-        result.setWidthFull();
-        result.setMinHeight(thumbnailMaxHeight + 25, Unit.PIXELS);
-        result.getStyle()
-                .setDisplay(Style.Display.FLEX)
-                .setFlexDirection(Style.FlexDirection.COLUMN)
-                .setJustifyContent(Style.JustifyContent.CENTER)
-                .setAlignItems(Style.AlignItems.CENTER)
-                .setBackgroundColor("grey");
+        result.addClassName("image");
         result.add(thumbnail, thumbnailUpdated);
         return result;
     }
 
     private VerticalLayout getBadge() {
         final VerticalLayout result = new VerticalLayout();
-        //result.setPadding(true);
         result.setMargin(true);
         result.setSpacing(false);
         result.setSizeUndefined();
-        result.setMinWidth(50, Unit.PIXELS);
-        result.getStyle()
-                .setFontWeight(Style.FontWeight.BOLDER)
-                .setAlignItems(Style.AlignItems.CENTER);
-        result.addClassNames(
-                LumoUtility.Padding.SMALL,
-                LumoUtility.Margin.SMALL,
-                LumoUtility.Flex.GROW,
-                LumoUtility.Background.BASE,
-                LumoUtility.BoxShadow.SMALL,
-                LumoUtility.BorderRadius.LARGE
-        );
         return result;
     }
 
     private VerticalLayout getBadge(final String toolTip, final Component... components) {
         final VerticalLayout result = getBadge();
+        result.addClassNames(
+                "badge",
+                toolTip.toLowerCase()
+        );
         result.getElement().setProperty("title", toolTip);
         result.add(components);
         return result;
@@ -473,6 +445,7 @@ public class DashboardPrinter implements ShowInterface {
 
     private FlexLayout buildStatus() {
         final FlexLayout result = new FlexLayout();
+        result.addClassName("status");
         result.add(
                 getBadge("Bed", bedImage, bed, bedTarget),
                 getBadge("Nozzle", nozzleImage, nozzle, nozzleTarget),
@@ -481,61 +454,40 @@ public class DashboardPrinter implements ShowInterface {
                 wrapSpeedMenu(getBadge("Speed", speedImage, speed)),
                 wrapMonitorMenu(getBadge("Lamp", monitorLamp, monitorLampText))
         );
-        result.setWidthFull();
-        result.setFlexWrap(FlexLayout.FlexWrap.WRAP);
         return result;
     }
 
     private HorizontalLayout buildProgressBar() {
         final HorizontalLayout result = new HorizontalLayout(progressFile, progressTime, progressLayer);
-        result.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        result.setWidthFull();
+        result.addClassName("progress");
         return result;
     }
 
-    private FlexLayout buildAmsHeader(final AmsHeader header) {
+    private Div buildAmsHeader(final AmsHeader header) {
         amsHeaders.put(header.id(), header);
-        final FlexLayout result = new FlexLayout();
-        result.setWidthFull();
-        result.setFlexWrap(FlexLayout.FlexWrap.WRAP);
+        final Div result = new Div();
+        result.addClassName("amsheader");
         final Span name = new Span(header.id());
         final Span filler = new Span();
-        header.humidity().setMaxHeight(30, Unit.PIXELS);
-        result.setHeight(30, Unit.PIXELS);
+        filler.addClassName("filler");
         result.add(name, filler, header.temperature(), header.humidity());
-        result.setFlexGrow(1.0, name, header.temperature(), header.humidity());
-        result.setFlexGrow(10.0, filler);
         return result;
     }
 
-    private FlexLayout buildAmsTray() {
-        final FlexLayout result = new FlexLayout();
-        result.setWidthFull();
-        result.setFlexWrap(FlexLayout.FlexWrap.WRAP);
+    private Div buildAmsTray() {
+        final Div result = new Div();
+        result.addClassName("amstray");
         return result;
     }
 
-    private FlexLayout buildAmsFilament(final String amsTrayId) {
+    private Div buildAmsFilament(final String amsTrayId) {
         final Span color = new Span();
-        color.setWidth(50, Unit.PIXELS);
-        color.setHeight(50, Unit.PIXELS);
+        color.addClassName("color");
         final AmsFilament filament = new AmsFilament(amsTrayId, new Span(), color);
         amsFilaments.put(amsTrayId, filament);
 
-        final FlexLayout result = new FlexLayout();
-        result.setFlexDirection(FlexLayout.FlexDirection.COLUMN);
-        result.getStyle()
-                .setFontWeight(Style.FontWeight.BOLDER)
-                .setAlignItems(Style.AlignItems.CENTER);
-        result.addClassNames(
-                LumoUtility.Padding.SMALL,
-                LumoUtility.Margin.SMALL,
-                LumoUtility.Flex.GROW,
-                LumoUtility.Background.BASE,
-                LumoUtility.BoxShadow.SMALL,
-                LumoUtility.BorderRadius.LARGE
-        );
-
+        final Div result = new Div();
+        result.addClassName("filament");
         result.add(filament.type(), filament.color());
         return result;
     }
@@ -552,43 +504,47 @@ public class DashboardPrinter implements ShowInterface {
         return "Tray#%s".formatted(id);
     }
 
+    private Div buildTray(final String amsHeaderId, final boolean hasHumidity, final List<Div> filaments) {
+        final Image image = new Image(Images.AMS_HUMIDITY_0.getImage(), "Humidity");
+        image.setTitle("Humidity");
+        final AmsHeader amsHeader = new AmsHeader(amsHeaderId,
+                new Span("--"),
+                image
+        );
+        if (!hasHumidity) {
+            amsHeader.humidity().getStyle().setDisplay(Style.Display.NONE);
+        }
+        final Div trayL = buildAmsTray();
+        filaments.forEach(trayL::add);
+        final Div layout = new Div();
+        layout.addClassName("ams");
+        layout.add(buildAmsHeader(amsHeader), trayL);
+        return layout;
+    }
+
     private void buildAms(final Div parent, final com.tfyre.bambu.model.Ams ams) {
         ams.getAmsList().forEach(single -> {
-            final Image image = new Image(Images.AMS_HUMIDITY_0.getImage(), "Humidity");
-            image.setTitle("Humidity");
-            final AmsHeader amsHeader = new AmsHeader(getAmsHeaderId(single.getId()),
-                    new Span("--"),
-                    image
-            );
-            final FlexLayout trayL = buildAmsTray();
-            single.getTrayList().stream()
-                    .map(tray -> buildAmsFilament(getFilamentTrayId(single, tray)))
-                    .forEach(trayL::add);
-
-            final Div layout = new Div();
-            layout.setWidthFull();
-            layout.add(buildAmsHeader(amsHeader), trayL);
-            parent.add(layout);
+            parent.add(buildTray(
+                    getAmsHeaderId(single.getId()),
+                    true,
+                    single.getTrayList().stream()
+                            .map(tray -> buildAmsFilament(getFilamentTrayId(single, tray)))
+                            .toList()
+            ));
         });
     }
 
     private void buildVtTray(final Div parent, final com.tfyre.bambu.model.VtTray tray) {
-        final AmsHeader amsHeader = new AmsHeader(getTrayId(tray.getId()),
-                new Span("--"),
-                new Image(Images.AMS_HUMIDITY_0.getImage(), "Humidity")
-        );
-        amsHeader.humidity().getStyle().setDisplay(Style.Display.NONE);
-        final FlexLayout trayL = buildAmsTray();
-        trayL.add(buildAmsFilament(getTrayId(tray.getId())));
-        final Div layout = new Div();
-        layout.setWidthFull();
-        layout.add(buildAmsHeader(amsHeader), trayL);
-        parent.add(layout);
+        parent.add(buildTray(
+                getTrayId(tray.getId()),
+                false,
+                List.of(buildAmsFilament(getTrayId(tray.getId())))
+        ));
     }
 
     private Div buildAms() {
         final Div result = new Div();
-        result.setWidthFull();
+        result.addClassName("filaments");
         printer.getFullStatus().ifPresent(m -> {
             if (!m.message().hasPrint() || !m.message().getPrint().hasAms()) {
                 return;
@@ -622,11 +578,10 @@ public class DashboardPrinter implements ShowInterface {
 
     private Component createContent(final Component... components) {
         final VerticalLayout content = new VerticalLayout();
+        content.addClassName("dashboard-printer");
         content.setPadding(false);
         content.setSpacing(false);
         content.add(components);
-        content.setMinWidth(thumbnailMaxWidth, Unit.PIXELS);
-        content.addClassName(LumoUtility.Flex.GROW);
         content.setSizeUndefined();
         return content;
     }

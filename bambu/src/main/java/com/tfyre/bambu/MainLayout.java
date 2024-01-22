@@ -10,14 +10,17 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.router.HighlightConditions;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinRequest;
+import com.vaadin.flow.theme.lumo.Lumo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +32,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.inject.Inject;
 
 /**
  * The main view contains a button and a click listener.
@@ -45,17 +49,40 @@ public class MainLayout extends AppLayout {
 
     private final HorizontalLayout header = new HorizontalLayout();
     private final List<VerticalLayout> drawerItems = new ArrayList<>();
+    private final Checkbox darkMode = new Checkbox("Dark Theme");
+
+    @Inject
+    BambuConfig config;
 
     public MainLayout() {
+    }
+
+    public static void setTheme(final Element element, final boolean darkMode) {
+        final String js = "document.documentElement.setAttribute('theme', $0)";
+        element.executeJs(js, darkMode ? Lumo.DARK : Lumo.LIGHT);
+    }
+
+    private void setTheme() {
+        //FIXME: use security context
+        SecurityUtils.getPrincipal()
+                .flatMap(p -> Optional.ofNullable(config.users().get(p.getName().toLowerCase())))
+                .ifPresent(u -> {
+                    if (u.darkMode().orElseGet(config::darkMode)) {
+                        darkMode.setValue(true);
+                    }
+                });
     }
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
+        darkMode.addValueChangeListener(l -> setTheme(getElement(), l.getValue()));
         setDrawerOpened(false);
         createHeader();
         createDrawer();
         addToNavbar(header);
+        setTheme();
+
     }
 
     private String getUsername() {
@@ -72,7 +99,7 @@ public class MainLayout extends AppLayout {
                 .set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");
 
-        header.add(new DrawerToggle(), logo);
+        header.add(new DrawerToggle(), logo, darkMode);
 
         if (SecurityUtils.isLoggedIn()) {
             header.add(new Button("Logout", e -> SecurityUtils.logout()));
