@@ -23,6 +23,11 @@ Technologies used:
 
 > In Bambu Studio/Orca slicer, make sure to slice the place and then use the "File -> Export -> Export plate sliced file". This creates a `.3mf` project with embedded `.gcode` plate.
 
+# Screenshots
+
+![Desktop browser](/docs/bambufarm1.jpg)
+
+*More screenshots in [docs](/docs)*
 
 # Building & Running
 
