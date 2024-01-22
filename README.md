@@ -168,19 +168,20 @@ quarkus.log.file.path=application.log
 
 # Links
 
-## Printer Interface
+## Inspirational Web interface
+
+* https://github.com/davglass/bambu-farm/tree/main
+
+## Printer MQTT Interface
 
 * https://github.com/Doridian/OpenBambuAPI/blob/main/mqtt.md
 * https://github.com/xperiments-in/xtouch/blob/main/src/xtouch/device.h
 * https://github.com/SoftFever/OrcaSlicer/blob/main/src/slic3r/GUI/DeviceManager.hpp
 
-Stream
-* https://github.com/hisptoot/BambuP1PSource2Raw
-* https://github.com/bambulab/BambuStudio/issues/1536#issuecomment-1812001751
+## Remoteview
 
-## Inspirational Web interface
+* https://github.com/bambulab/BambuStudio/issues/1536#issuecomment-1811916472
 
-* https://github.com/davglass/bambu-farm/tree/main
 
 ## Images from
 

@@ -16,6 +16,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.parameters>true</maven.compiler.parameters>
+        <maven.deploy.skip>true</maven.deploy.skip>
 
         <failOnMissingWebXml>false</failOnMissingWebXml>
         <vaadin.version>24.3.3</vaadin.version>
