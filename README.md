@@ -29,6 +29,47 @@ Technologies used:
 
 *More screenshots in [docs](/docs)*
 
+# I just want to run it
+
+* Make sure you have Java 21 installed, verify with `java -version`
+```bash
+[user@build:~]# java -version
+openjdk version "21.0.1" 2023-10-17 LTS
+OpenJDK Runtime Environment Zulu21.30+15-CA (build 21.0.1+12-LTS)
+OpenJDK 64-Bit Server VM Zulu21.30+15-CA (build 21.0.1+12-LTS, mixed mode, sharing)
+```
+* Download the latest `bambu-web-*-runner.jar` from [releases](https://github.com/TFyre/bambu-farm/releases/latest) into a new folder
+* Create a `.env` config file from [Minimal Config](#minimal-config)
+  * *Check out the [Full Config Options](#full-config-options) section if you want to tweak some settings*
+* Run with `java -jar bambu-web-x.x.x-runner.jar`
+```bash
+[user@build:~]# java -jar bambu-web-1.0.1-runner.jar
+__  ____  __  _____   ___  __ ____  ______
+ --/ __ \/ / / / _ | / _ \/ //_/ / / / __/
+ -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\ \
+--\___\_\____/_/ |_/_/|_/_/|_|\____/___/
+2024-01-23 08:49:05,586 INFO  [io.und.servlet] (main) Initializing AtmosphereFramework
+...
+...
+2024-01-23 08:49:05,666 INFO  [com.vaa.flo.ser.DefaultDeploymentConfiguration] (main) Vaadin is running in production mode.
+2024-01-23 08:49:05,912 INFO  [org.apa.cam.qua.cor.CamelBootstrapRecorder] (main) Bootstrap runtime: org.apache.camel.quarkus.main.CamelMainRuntime
+2024-01-23 08:49:05,913 INFO  [org.apa.cam.mai.MainSupport] (main) Apache Camel (Main) 4.2.0 is starting
+...
+...
+2024-01-23 08:49:06,029 INFO  [com.tfy.bam.cam.CamelController] (main) configured
+2024-01-23 08:49:06,074 INFO  [org.apa.cam.imp.eng.AbstractCamelContext] (main) Apache Camel 4.2.0 (camel-1) is starting
+2024-01-23 08:49:06,081 INFO  [org.apa.cam.imp.eng.AbstractCamelContext] (main) Routes startup (total:10 started:0 disabled:10)
+...
+...
+2024-01-23 08:49:06,085 INFO  [org.apa.cam.imp.eng.AbstractCamelContext] (main) Apache Camel 4.2.0 (camel-1) started in 10ms (build:0ms init:0ms start:10ms)
+2024-01-23 08:49:06,193 INFO  [io.quarkus] (main) bambu-web 1.0.1 on JVM (powered by Quarkus 3.6.6) started in 1.421s. Listening on: http://0.0.0.0:8084
+2024-01-23 08:49:06,194 INFO  [io.quarkus] (main) Profile prod activated.
+2024-01-23 08:49:06,194 INFO  [io.quarkus] (main) Installed features: [camel-core, camel-direct, camel-paho, cdi, resteasy-reactive, resteasy-reactive-jackson, 
+scheduler, security, servlet, smallrye-context-propagation, vaadin-quarkus, vertx, websockets, websockets-client]
+```
+* If starting correctly, it will show `Routes startup (total:10 started:0 disabled:10)` with a number that is 2x your printer count
+* Head over to http://127.0.0.1:8080 and log in with `admin` / `admin`
+
 # Building & Running
 
 Building:
