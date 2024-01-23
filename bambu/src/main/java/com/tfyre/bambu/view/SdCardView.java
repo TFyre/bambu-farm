@@ -35,6 +35,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -84,6 +85,8 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     BambuPrinters printers;
     @Inject
     ManagedExecutor executor;
+    @Inject
+    Instance<FTPSClient> ftpsClientInstance;
 
     private Optional<BambuPrinters.PrinterDetail> _printer = Optional.empty();
 
@@ -159,7 +162,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     }
 
     private FTPSClient getFtpsClient(final BambuPrinters.PrinterDetail printer) {
-        final FTPSClient result = new FTPSClient(true);
+        final FTPSClient result = ftpsClientInstance.get();
         if (printer.config().ftp().logCommands()) {
             result.addProtocolCommandListener(getListener(printer.name()));
         }
@@ -344,7 +347,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
                 .setSortable(true).setComparator(FTPFile::getSize);
         final Grid.Column<FTPFile> coldDate
                 = setupColumn("Date", f -> DTF.format(f.getTimestampInstant().atOffset(ZoneOffset.UTC)))
-                .setSortable(true).setComparator(FTPFile::getTimestampInstant);
+                        .setSortable(true).setComparator(FTPFile::getTimestampInstant);
 
         grid.addComponentColumn(this::getComponentColumn);
         grid.addItemDoubleClickListener(l -> doDoubleClick(l.getItem()));

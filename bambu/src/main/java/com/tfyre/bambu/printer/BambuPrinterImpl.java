@@ -157,7 +157,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
             PARSER.merge(data, builder);
             return Optional.of(builder.build());
         } catch (InvalidProtocolBufferException ex) {
-            log.errorf(ex, "Cannot build message: %s", ex.getMessage());
+            log.errorf(ex, "Cannot build message: %s - %s", ex.getMessage(), data);
             return Optional.empty();
         }
     }

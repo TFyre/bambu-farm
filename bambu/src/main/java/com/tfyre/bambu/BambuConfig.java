@@ -14,6 +14,9 @@ import java.util.Optional;
 public interface BambuConfig {
 
     @WithDefault("false")
+    boolean useBouncyCastle();
+
+    @WithDefault("false")
     boolean darkMode();
 
     Map<String, Printer> printers();
