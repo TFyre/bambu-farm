@@ -191,6 +191,7 @@ If you want to modify the CSS, create a file next to the `.jar` file called `sty
 ```
 
 ### Bouncy Castle
+`X1C` needs SSL Session Reuse so that SD Card functionality can work. Reference: https://stackoverflow.com/a/77587106/23289205
 
 Add to `.env`:
 ```properties
