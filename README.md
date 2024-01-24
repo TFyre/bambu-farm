@@ -207,6 +207,13 @@ Add JVM startup flag:
 java -Djdk.tls.useExtendedMasterSecret=false -jar bambu-web-x.x.x-runner.jar
 ```
 
+### Uploading bigger files
+
+Add to `.env`:
+```properties
+quarkus.http.limits.max-body-size=30M
+```
+
 # Debug
 
 For debugging the application, add the following to .env and uncomment DEBUG or TRACE logging sections
