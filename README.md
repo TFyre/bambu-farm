@@ -100,6 +100,8 @@ You can now access it via http://127.0.0.1:8080 (username: admin / password: adm
 
 ## Minimal config
 
+**!!Remeber to replace `REPLACE_*` fields!!**
+
 Create an `.env` file with  the following config:
 ```properties
 quarkus.http.host=0.0.0.0
