@@ -15,6 +15,7 @@ import jakarta.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -323,18 +324,22 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     }
 
     @Override
-    public void commandPrintGCodeLine(final String data) {
-        logUser("%s: commandPrintGCodeLine: %s".formatted(name, data));
+    public void commandPrintGCodeLine(final String lines) {
+        logUser("%s: commandPrintGCodeLine: %s".formatted(name, lines));
         final BambuMessage message = BambuMessage.newBuilder()
                 .setPrint(
                         Print.newBuilder()
                                 .setSequenceId("%d".formatted(counter.incrementAndGet()))
                                 .setCommand("gcode_line")
-                                .setParam(data)
+                                .setParam(lines)
                 )
                 .build();
-        toJson(message).ifPresent(log::info);
         toJson(message).ifPresent(this::sendData);
+    }
+
+    @Override
+    public void commandPrintGCodeLine(final List<String> lines) {
+        commandPrintGCodeLine(String.join("\n", lines).concat("\n"));
     }
 
     @Override

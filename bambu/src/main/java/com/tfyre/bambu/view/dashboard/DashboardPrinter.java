@@ -24,6 +24,7 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -37,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import org.jboss.logging.Logger;
 
 /**
@@ -85,11 +88,13 @@ public class DashboardPrinter implements ShowInterface {
     private boolean processFull = true;
     private final boolean isAdmin;
     private int lastError = 0;
+    private double temperatureNozzle = 0;
+    private double temperatureBed = 0;
 
     private final Map<String, AmsHeader> amsHeaders = new HashMap<>();
     private final Map<String, AmsFilament> amsFilaments = new HashMap<>();
     private String printType = BambuConst.PRINT_TYPE_IDLE;
-    private boolean showPrinter;
+    private final boolean showPrinter;
 
     public DashboardPrinter(final BambuPrinter printer, final boolean showPrinter) {
         this.printer = printer;
@@ -225,7 +230,8 @@ public class DashboardPrinter implements ShowInterface {
             bedImage.setSrc(print.getBedTemper() > 0.0 ? Images.MONITOR_BED_TEMP_ACTIVE.getImage() : Images.MONITOR_BED_TEMP.getImage());
         }
         if (print.hasBedTargetTemper()) {
-            setTemperature(bedTarget, print.getBedTargetTemper());
+            temperatureBed = print.getBedTargetTemper();
+            setTemperature(bedTarget, temperatureBed);
         }
 
         //Nozzle & Target Temperature
@@ -234,7 +240,8 @@ public class DashboardPrinter implements ShowInterface {
             nozzleImage.setSrc(print.getNozzleTemper() > 0.0 ? Images.MONITOR_NOZZLE_TEMP_ACTIVE.getImage() : Images.MONITOR_NOZZLE_TEMP.getImage());
         }
         if (print.hasNozzleTargetTemper()) {
-            setTemperature(nozzleTarget, print.getNozzleTargetTemper());
+            temperatureNozzle = print.getNozzleTargetTemper();
+            setTemperature(nozzleTarget, temperatureNozzle);
         }
 
         //Frame/Chamber Temperature
@@ -447,12 +454,51 @@ public class DashboardPrinter implements ShowInterface {
         return result;
     }
 
+    private void confirmTemperature(final List<String> list) {
+        YesNoCancelDialog.show("Are you sure?", ync -> {
+            if (!ync.isConfirmed()) {
+                return;
+            }
+            printer.commandPrintGCodeLine(list);
+        });
+    }
+
+    private void confirmTemperature(final Supplier<Integer> current, final int maxTemp, final Function<Integer, String> function) {
+        final IntegerField temp = new IntegerField("Target Temperature");
+        temp.setMin(0);
+        temp.setMax(maxTemp);
+        temp.setStepButtonsVisible(true);
+        temp.setValue(current.get());
+        YesNoCancelDialog.show(List.of(temp), "Are you sure?", ync -> {
+            if (!ync.isConfirmed()) {
+                return;
+            }
+            if (temp.getValue() < 0 || temp.getValue() > maxTemp) {
+                showError("Invalid Temperature");
+                return;
+            }
+            printer.commandPrintGCodeLine(function.apply(temp.getValue()));
+        });
+    }
+
+    private <T extends Component> T wrapTemperature(final T result, final Supplier<Integer> current, final int maxTemp, final Function<Integer, String> function) {
+        if (!isAdmin) {
+            return result;
+        }
+        final ContextMenu menu = new ContextMenu(result);
+        menu.addItem("Set Target", l -> confirmTemperature(current, maxTemp, function));
+        final SubMenu preheat = menu.addItem("Preheat").getSubMenu();
+        preheat.addItem("PLA 55 / 220", l -> confirmTemperature(List.of(BambuConst.gcodeTargetTemperatureBed(55), BambuConst.gcodeTargetTemperatureNozzle(220))));
+        preheat.addItem("ABS 90 / 270", l -> confirmTemperature(List.of(BambuConst.gcodeTargetTemperatureBed(90), BambuConst.gcodeTargetTemperatureNozzle(270))));
+        return result;
+    }
+
     private FlexLayout buildStatus() {
         final FlexLayout result = new FlexLayout();
         result.addClassName("status");
         result.add(
-                getBadge("Nozzle", nozzleImage, nozzle, nozzleTarget),
-                getBadge("Bed", bedImage, bed, bedTarget),
+                wrapTemperature(getBadge("Nozzle", nozzleImage, nozzle, nozzleTarget), () -> (int) temperatureNozzle, BambuConst.TEMPERATURE_MAX_NOZZLE, BambuConst::gcodeTargetTemperatureNozzle),
+                wrapTemperature(getBadge("Bed", bedImage, bed, bedTarget), () -> (int) temperatureBed, BambuConst.TEMPERATURE_MAX_BED, BambuConst::gcodeTargetTemperatureBed),
                 //FIXME implement frame temperature detection (using printer model)
                 //getBadge("Frame", frameImage, frame),
                 wrapSpeedMenu(getBadge("Speed", speedImage, speed)),

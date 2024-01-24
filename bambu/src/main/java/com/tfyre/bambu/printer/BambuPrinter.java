@@ -4,6 +4,7 @@ import com.tfyre.bambu.model.BambuMessage;
 import com.vaadin.flow.server.StreamResource;
 import java.time.OffsetDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -38,7 +39,9 @@ public interface BambuPrinter {
 
     void commandSpeed(BambuConst.Speed speed);
 
-    void commandPrintGCodeLine(final String data);
+    void commandPrintGCodeLine(final String lines);
+
+    void commandPrintGCodeLine(final List<String> lines);
 
     void commandPrintGCodeFile(final String filename);
 

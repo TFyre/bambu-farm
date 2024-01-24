@@ -19,6 +19,8 @@ public class BambuConst {
     public static final Set<String> EXT = Set.of(/*FIXME not working FILE_GCODE,*/FILE_3MF);
     public static final String PATHSEP = "/";
     public static final String PRINT_TYPE_IDLE = "idle";
+    public static final int TEMPERATURE_MAX_BED = 100;
+    public static final int TEMPERATURE_MAX_NOZZLE = 300;
 
     public static final Map<String, String> FILAMENTS = Map.ofEntries(
             Map.entry("default", "Unknown"),
@@ -74,6 +76,14 @@ public class BambuConst {
 
     public static Optional<String> getFilament(final String filament) {
         return Optional.ofNullable(FILAMENTS.get(filament));
+    }
+
+    public static String gcodeTargetTemperatureBed(final int temperature) {
+        return "M140 S%d".formatted(Math.max(Math.min(temperature, TEMPERATURE_MAX_BED), 0));
+    }
+
+    public static String gcodeTargetTemperatureNozzle(final int temperature) {
+        return "M104 S%d".formatted(Math.max(Math.min(temperature, TEMPERATURE_MAX_NOZZLE), 0));
     }
 
     private BambuConst() {
