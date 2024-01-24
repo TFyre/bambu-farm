@@ -3,6 +3,7 @@ package com.tfyre.bambu;
 import com.tfyre.bambu.security.SecurityUtils;
 import com.tfyre.bambu.view.LogsView;
 import com.tfyre.bambu.view.MaintenanceView;
+import com.tfyre.bambu.view.PrinterView;
 import com.tfyre.bambu.view.SdCardView;
 import com.tfyre.bambu.view.dashboard.Dashboard;
 import com.vaadin.flow.component.AttachEvent;
@@ -43,6 +44,7 @@ public class MainLayout extends AppLayout {
 
     private static final Map<Class<? extends Component>, AccessRoute> MAP = makeEntries(Stream.of(
             SdCardView.class,
+            PrinterView.class,
             LogsView.class,
             MaintenanceView.class
     ));
@@ -135,6 +137,7 @@ public class MainLayout extends AppLayout {
 
         final Predicate<String> roleChecker = VaadinRequest.getCurrent()::isUserInRole;
         getVerticalLayout(roleChecker, Stream.of(
+                PrinterView.class,
                 SdCardView.class,
                 LogsView.class,
                 MaintenanceView.class))

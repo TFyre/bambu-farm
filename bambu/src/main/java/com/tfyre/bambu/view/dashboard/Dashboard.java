@@ -19,8 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.jboss.logging.Logger;
 import com.tfyre.bambu.printer.BambuPrinters;
-import com.vaadin.flow.component.orderedlayout.FlexLayout;
-import com.vaadin.flow.theme.lumo.LumoUtility;
+import com.vaadin.flow.component.html.Div;
 import jakarta.annotation.security.RolesAllowed;
 import java.time.Duration;
 
@@ -31,7 +30,7 @@ import java.time.Duration;
 @Route(value = "", layout = MainLayout.class)
 @PageTitle("Dashboard")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN, SystemRoles.ROLE_NORMAL })
-public class Dashboard extends FlexLayout {
+public class Dashboard extends Div {
 
     private static final Duration INTERVAL = Duration.ofSeconds(1);
 
@@ -60,7 +59,7 @@ public class Dashboard extends FlexLayout {
     }
 
     private Component handlePrinter(final BambuPrinter printer, final Consumer<Runnable> consumer) {
-        final DashboardPrinter card = new DashboardPrinter(printer);
+        final DashboardPrinter card = new DashboardPrinter(printer, true);
         consumer.accept(card::update);
         return card.build();
     }

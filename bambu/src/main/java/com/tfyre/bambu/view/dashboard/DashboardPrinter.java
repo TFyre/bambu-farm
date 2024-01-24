@@ -11,6 +11,7 @@ import com.tfyre.bambu.printer.BambuConst.Speed;
 import com.tfyre.bambu.printer.BambuErrors;
 import com.tfyre.bambu.security.SecurityUtils;
 import com.tfyre.bambu.view.LogsView;
+import com.tfyre.bambu.view.PrinterView;
 import com.tfyre.bambu.view.ShowInterface;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -88,9 +89,11 @@ public class DashboardPrinter implements ShowInterface {
     private final Map<String, AmsHeader> amsHeaders = new HashMap<>();
     private final Map<String, AmsFilament> amsFilaments = new HashMap<>();
     private String printType = BambuConst.PRINT_TYPE_IDLE;
+    private boolean showPrinter;
 
-    public DashboardPrinter(final BambuPrinter printer) {
+    public DashboardPrinter(final BambuPrinter printer, final boolean showPrinter) {
         this.printer = printer;
+        this.showPrinter = showPrinter;
         progressBar = newProgressBar();
         statusBox = newStatusBox();
         isAdmin = SecurityUtils.userHasAccess(SystemRoles.ROLE_ADMIN);
@@ -202,8 +205,8 @@ public class DashboardPrinter implements ShowInterface {
         }
 
         //FileName
-        if (print.hasGcodeFile()) {
-            progressFile.setText(print.getGcodeFile());
+        if (print.hasSubtaskName()) {
+            progressFile.setText(print.getSubtaskName());
         }
 
         //Time
@@ -359,8 +362,6 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private Component buildImage() {
-        thumbnailUpdated.getStyle().setColor("#fff");
-
         final Div result = new Div();
         result.addClassName("image");
         result.add(thumbnail, thumbnailUpdated);
@@ -437,6 +438,9 @@ public class DashboardPrinter implements ShowInterface {
             return result;
         }
         final ContextMenu menu = new ContextMenu(result);
+        if (showPrinter) {
+            menu.addItem("Show Printer", l -> UI.getCurrent().navigate(PrinterView.class, printer.getName()));
+        }
         menu.addItem("Show Log", l -> UI.getCurrent().navigate(LogsView.class, printer.getName()));
         menu.addItem("Request Full Status", l -> printer.commandFullStatus(true));
         menu.addItem("Clear Error", l -> printer.commandClearPrinterError());
@@ -447,8 +451,8 @@ public class DashboardPrinter implements ShowInterface {
         final FlexLayout result = new FlexLayout();
         result.addClassName("status");
         result.add(
-                getBadge("Bed", bedImage, bed, bedTarget),
                 getBadge("Nozzle", nozzleImage, nozzle, nozzleTarget),
+                getBadge("Bed", bedImage, bed, bedTarget),
                 //FIXME implement frame temperature detection (using printer model)
                 //getBadge("Frame", frameImage, frame),
                 wrapSpeedMenu(getBadge("Speed", speedImage, speed)),

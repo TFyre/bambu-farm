@@ -1,16 +1,12 @@
 .dashboard-view {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));    
     
     /*LumoUtility.Gap.MEDIUM*/
     gap: var(--lumo-space-m);
 
     /*LumoUtility.Padding.SMALL*/
     padding: var(--lumo-space-s);
-}
-
-.dashboard-printer {
-    min-width: 615px;
-    flex-grow: 1;
 }
 
 .dashboard-printer .name {
@@ -21,18 +17,29 @@
 }
 
 .dashboard-printer .image {
-    background-color: grey;
     flex-direction: column;
     display: flex;
     width: 100%;
     min-height: 371px;
     justify-content: center;
     align-items: center;
+
+    /*LumoUtility.Background.BASE*/
+    background-color: var(--lumo-base-color);
+
+    /*LumoUtility.BoxShadow.SMALL*/
+    box-shadow: var(--lumo-box-shadow-s);
+
+    /*LumoUtility.BorderRadius.LARGE*/
+    border-radius: var(--lumo-border-radius-l);
+
 }
 
 .dashboard-printer .image img {
-    max-height: 346px;
-    max-width: 615px;
+    height: 95%;
+    width: 95%;
+    max-height: 720px;
+    max-width: 1280px;
     object-fit: contain;
 }
 
@@ -143,4 +150,18 @@
 
 .dashboard-printer vaadin-progress-bar {
     height: 5px;
+}
+
+.printer-view {
+    flex-wrap: wrap;
+
+    /*LumoUtility.Gap.MEDIUM*/
+    gap: var(--lumo-space-m);
+
+    /*LumoUtility.Padding.SMALL*/
+    padding: var(--lumo-space-s);
+}
+
+.printer-view .content {
+    width: 100%;
 }

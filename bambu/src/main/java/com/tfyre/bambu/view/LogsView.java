@@ -67,8 +67,6 @@ public class LogsView extends VerticalLayout implements HasUrlParameter<String>,
             .appendValue(ChronoField.MILLI_OF_SECOND, 3)
             .toFormatter();
 
-    private final ComboBox<BambuPrinter> comboBox = new ComboBox<>();
-
     @Inject
     Logger log;
     @Inject
@@ -80,6 +78,7 @@ public class LogsView extends VerticalLayout implements HasUrlParameter<String>,
     private final TextArea json = new TextArea("RAW");
     private final TextArea parsed = new TextArea("Parsed");
     private final List<BambuPrinter.Message> messages = new ArrayList<>();
+    private final ComboBox<BambuPrinter> comboBox = new ComboBox<>();
 
     @Override
     public void setParameter(final BeforeEvent event, @OptionalParameter final String printerName) {
@@ -162,7 +161,7 @@ public class LogsView extends VerticalLayout implements HasUrlParameter<String>,
         addClassName("logs-view");
         setSizeFull();
         add(buildToolbar(), buildListBox());
-        _printer.ifPresent(this::buildList);
+        _printer.ifPresent(comboBox::setValue);
     }
 
     //FIXME Implement Export
