@@ -27,7 +27,7 @@ public interface ShowInterface {
         final Notification n = getNotificationSpan(error);
         n.setDuration(-1);
         n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-        n.setPosition(Notification.Position.MIDDLE);
+        n.setPosition(Notification.Position.BOTTOM_END);
         n.open();
     }
 
@@ -35,18 +35,20 @@ public interface ShowInterface {
         showError(ex.getMessage());
     }
 
-    default void showNotification(final String message) {
+    default void showNotification(final String message, final int duration) {
         final Notification n = getNotificationSpan(message);
-        n.setDuration(-1);
-        n.setPosition(Notification.Position.BOTTOM_CENTER);
+        n.setDuration(duration);
+        n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        n.setPosition(Notification.Position.BOTTOM_END);
         n.open();
     }
 
+    default void showNotification(final String message) {
+        showNotification(message, -1);
+    }
+
     default void showNotification(final String message, final Duration duration) {
-        final Notification n = getNotificationSpan(message);
-        n.setDuration((int) duration.toMillis());
-        n.setPosition(Notification.Position.BOTTOM_CENTER);
-        n.open();
+        showNotification(message, (int) duration.toMillis());
     }
 
     default void showErrorLog(final Throwable ex) {
@@ -58,7 +60,7 @@ public interface ShowInterface {
         final Notification n = getNotificationSpan(warning);
         n.setDuration(1500);
         n.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
-        n.setPosition(Notification.Position.BOTTOM_CENTER);
+        n.setPosition(Notification.Position.BOTTOM_END);
         n.open();
     }
 
