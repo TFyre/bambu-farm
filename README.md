@@ -186,10 +186,14 @@ If you want to modify the CSS, create a file next to the `.jar` file called `sty
 ```css
 /* Add your custom CSS here */
 
-/*Setting 2 display columns on ~1920x1080 display*/
-.dashboard-printer .image img {
-    max-height: 507px !important;
-    max-width: 900px !important;
+/*Setting 2 display columns*/
+.dashboard-view {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/*Setting 4 display columns*/
+.dashboard-view {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
 }
 ```
 
