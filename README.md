@@ -24,6 +24,7 @@ Technologies used:
 > In Bambu Studio/Orca slicer, make sure to slice the place and then use the "File -> Export -> Export plate sliced file". This creates a `.3mf` project with embedded `.gcode` plate.
 
 <sup>2</sup>**FTPS Connections needs SSL Session Reuse via [Bouncy Castle](#bouncy-castle)**
+> Without enabling bouncy castle, you will see `552 SSL connection failed: session resuse required`
 
 # Screenshots
 
@@ -194,6 +195,8 @@ If you want to modify the CSS, create a file next to the `.jar` file called `sty
 
 ### Bouncy Castle
 `X1C` needs SSL Session Reuse so that SD Card functionality can work. Reference: https://stackoverflow.com/a/77587106/23289205
+
+Without this you will see `552 SSL connection failed: session resuse required`.
 
 Add to `.env`:
 ```properties
