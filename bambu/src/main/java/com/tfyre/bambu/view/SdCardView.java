@@ -54,6 +54,7 @@ import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
@@ -242,7 +243,12 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
                 return false;
             }
             final List<FTPFile> files = Arrays.asList(client.listFiles());
-            ui.get().access(() -> grid.setItems(files));
+            ui.get().access(() -> {
+                grid.setItems(files);
+                if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
+                    showError(client.getReplyString());
+                }
+            });
             return true;
         });
     }

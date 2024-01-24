@@ -18,13 +18,6 @@ public class FTPSClientWithBC extends org.apache.commons.net.ftp.FTPSClient {
     }
 
     @Override
-    protected void _connectAction_() throws IOException {
-        super._connectAction_();
-        execPBSZ(0);
-        execPROT("P");
-    }
-
-    @Override
     protected void _prepareDataSocket_(Socket dataSocket) {
         if (_socket_ instanceof BCSSLSocket sslSocket) {
             final BCExtendedSSLSession bcSession = sslSocket.getBCSession();
