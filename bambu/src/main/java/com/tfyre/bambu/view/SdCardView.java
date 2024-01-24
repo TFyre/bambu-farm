@@ -34,6 +34,7 @@ import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
+import io.quarkus.runtime.configuration.MemorySize;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -56,6 +57,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
@@ -88,6 +90,9 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     ManagedExecutor executor;
     @Inject
     Instance<FTPSClient> ftpsClientInstance;
+
+    @ConfigProperty(name = "quarkus.http.limits.max-body-size")
+    MemorySize maxBodySize;
 
     private Optional<BambuPrinters.PrinterDetail> _printer = Optional.empty();
 
@@ -271,6 +276,11 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         connect.setEnabled(false);
         upload.setAcceptedFileTypes(BambuConst.EXT.toArray(String[]::new));
         upload.addSucceededListener(this::doUpload);
+        upload.setMaxFileSize((int) maxBodySize.asLongValue());
+        upload.setDropLabel(new Span("Drop file here (max size: %dM)".formatted(maxBodySize.asLongValue() / 1_000_000)));
+        upload.addFileRejectedListener(l -> {
+            showError(l.getErrorMessage());
+        });
         final HorizontalLayout result = new HorizontalLayout(new Span("Printers"), comboBox, connect, disconnect, new Span("Path"),
                 path, cdup, refresh, upload
         );
