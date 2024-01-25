@@ -16,6 +16,9 @@ public interface BambuConfig {
     @WithDefault("false")
     boolean useBouncyCastle();
 
+    @WithDefault("true")
+    boolean menuLeftClick();
+
     @WithDefault("false")
     boolean darkMode();
 

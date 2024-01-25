@@ -1,6 +1,32 @@
+@media screen and (min-width: 0px) and (max-width:1110px) {
+    :root {
+        --bambu-columns: calc(var(--bambu-default-columns,4) - 3);
+    }
+}
+@media screen and (min-width: 1111px) and (max-width:1650px) {
+    :root {
+        --bambu-columns: calc(var(--bambu-default-columns,4) - 2);
+    }
+}
+@media screen and (min-width: 1651px) and (max-width:2200px) {
+    :root {
+        --bambu-columns: calc(var(--bambu-default-columns,4) - 1);
+    }
+}
+@media screen and (min-width: 2201px) and (max-width:2750px) {
+    :root {
+        --bambu-columns: var(--bambu-default-columns,4);
+    }
+}
+@media screen and (min-width: 2751px){
+    :root {
+        --bambu-columns: calc(var(--bambu-default-columns,4) + 1);
+    }
+}
+
 .dashboard-view {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--bambu-columns), minmax(0, 1fr));
     
     /*LumoUtility.Gap.MEDIUM*/
     gap: var(--lumo-space-m);
@@ -14,6 +40,11 @@
     width: 100%;
     font-size: 2em;
     text-align: center;
+    padding-bottom: 10px;
+}
+
+.dashboard-printer .name > vaadin-button {
+    margin: 0.1rem;
 }
 
 .dashboard-printer .image {
@@ -36,11 +67,21 @@
 }
 
 .dashboard-printer .image img {
+    flex-grow: 1;
     height: 95%;
     width: 95%;
     max-height: 720px;
     max-width: 1280px;
     object-fit: contain;
+}
+
+.dashboard-printer .image .controls {
+    display: flex;
+    width: 100%;
+}
+
+.dashboard-printer .image .controls > div {
+    flex-grow: 10;
 }
 
 .dashboard-printer .status {
@@ -133,7 +174,7 @@
 
 .dashboard-printer .amstray .filament .color {
     width: 50px;
-    height: 50px;
+    min-height: 50px;
     border: 1px solid;
 
     /*LumoUtility.BoxShadow.SMALL*/

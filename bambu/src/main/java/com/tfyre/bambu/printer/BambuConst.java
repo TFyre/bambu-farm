@@ -86,7 +86,64 @@ public class BambuConst {
         return "M104 S%d".formatted(Math.max(Math.min(temperature, TEMPERATURE_MAX_NOZZLE), 0));
     }
 
+    public static String gcodeDisableSteppers() {
+        return "M18";
+    }
+
+    public static String gcodeFanSpeed(final Fan fan, final FanSpeed speed) {
+        return "M106 P%d S%d".formatted(fan.getValue(), speed.getValue());
+
+    }
+
     private BambuConst() {
+    }
+
+    public enum Fan {
+        PART("Part", 1),
+        AUX("AUX", 2),
+        CHAMBER("Chamber", 3);
+
+        private final String name;
+        private final int value;
+
+        private Fan(final String name, final int value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getValue() {
+            return value;
+        }
+
+    }
+
+    public enum FanSpeed {
+        OFF("Off", 0),
+        P25("25%", (int) (0.25 * 255)),
+        P50("50%", (int) (0.50 * 255)),
+        P75("75%", (int) (0.75 * 255)),
+        FULL("Full", (int) (1.0 * 255));
+
+        private final String name;
+        private final int value;
+
+        private FanSpeed(final String name, final int value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getValue() {
+            return value;
+        }
+
     }
 
     public enum LightMode {

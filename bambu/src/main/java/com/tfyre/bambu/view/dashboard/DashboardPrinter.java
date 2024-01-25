@@ -1,5 +1,6 @@
 package com.tfyre.bambu.view.dashboard;
 
+import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.SystemRoles;
 import com.tfyre.bambu.YesNoCancelDialog;
 import com.tfyre.bambu.model.AmsSingle;
@@ -13,13 +14,18 @@ import com.tfyre.bambu.security.SecurityUtils;
 import com.tfyre.bambu.view.LogsView;
 import com.tfyre.bambu.view.PrinterView;
 import com.tfyre.bambu.view.ShowInterface;
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -28,11 +34,14 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +55,7 @@ import org.jboss.logging.Logger;
  *
  * @author Francois Steyn - (fsteyn@tfyre.co.za)
  */
+@Dependent
 public class DashboardPrinter implements ShowInterface {
 
     private static final Logger log = Logger.getLogger(DashboardPrinter.class.getName());
@@ -62,7 +72,6 @@ public class DashboardPrinter implements ShowInterface {
             .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
             .toFormatter();
 
-    private final BambuPrinter printer;
     private final ProgressBar progressBar;
     private final Span progressFile = newSpan();
     private final Span progressTime = newSpan();
@@ -94,11 +103,14 @@ public class DashboardPrinter implements ShowInterface {
     private final Map<String, AmsHeader> amsHeaders = new HashMap<>();
     private final Map<String, AmsFilament> amsFilaments = new HashMap<>();
     private String printType = BambuConst.PRINT_TYPE_IDLE;
-    private final boolean showPrinter;
 
-    public DashboardPrinter(final BambuPrinter printer, final boolean showPrinter) {
-        this.printer = printer;
-        this.showPrinter = showPrinter;
+    private BambuPrinter printer;
+    private boolean fromDashboard;
+
+    @Inject
+    BambuConfig config;
+
+    public DashboardPrinter() {
         progressBar = newProgressBar();
         statusBox = newStatusBox();
         isAdmin = SecurityUtils.userHasAccess(SystemRoles.ROLE_ADMIN);
@@ -361,17 +373,86 @@ public class DashboardPrinter implements ShowInterface {
         });
     }
 
+    private void doConfirm(final BambuConst.CommandControl command) {
+        YesNoCancelDialog.show("%s: Are you sure?".formatted(command.getValue()), ync -> {
+            if (!ync.isConfirmed()) {
+                return;
+            }
+            printer.commandControl(command);
+        });
+    }
+
+    private void doConfirm(final String command) {
+        YesNoCancelDialog.show("Are you sure?", ync -> {
+            if (!ync.isConfirmed()) {
+                return;
+            }
+            printer.commandPrintGCodeLine(command);
+        });
+    }
+
+    private Button newButton(final String toolTip, final VaadinIcon icon, final ComponentEventListener<ClickEvent<Button>> clickListener) {
+        final Button result = new Button(new Icon(icon), clickListener);
+        result.setTooltipText(toolTip);
+        return result;
+    }
+
+    private Button fanControl(final String toolTip, final VaadinIcon icon) {
+        final Button result = new Button(new Icon(icon));
+        result.setTooltipText(toolTip);
+        final ContextMenu menu = newContextMenu(result);
+        EnumSet.allOf(BambuConst.Fan.class).forEach(fan -> {
+            final SubMenu fanMenu = menu.addItem(fan.getName()).getSubMenu();
+            EnumSet.allOf(BambuConst.FanSpeed.class).forEach(fanSpeed -> {
+                fanMenu.addItem(fanSpeed.getName(), l -> doConfirm(BambuConst.gcodeFanSpeed(fan, fanSpeed)));
+            });
+        });
+        return result;
+    }
+
     private Div buildName() {
-        printerName.addClassName("name");
+        final Div result = new Div();
+        result.addClassName("name");
         printerName.setTitle("--");
         printerName.setText(printer.getName());
-        return printerName;
+        result.add(printerName);
+        if (isAdmin) {
+            result.add(
+                    newButton("Show Logs", VaadinIcon.CLIPBOARD_TEXT, l -> UI.getCurrent().navigate(LogsView.class, printer.getName())),
+                    newButton("Request full status", VaadinIcon.REFRESH, l -> printer.commandFullStatus(true)),
+                    newButton("Clear Print Error", VaadinIcon.WARNING, l -> printer.commandClearPrinterError()),
+                    newButton("Resume Print", VaadinIcon.PLAY, l -> doConfirm(BambuConst.CommandControl.RESUME)),
+                    newButton("Pause Print", VaadinIcon.PAUSE, l -> doConfirm(BambuConst.CommandControl.PAUSE)),
+                    newButton("Stop Print", VaadinIcon.STOP, l -> doConfirm(BambuConst.CommandControl.STOP))
+            );
+            if (fromDashboard) {
+                result.add(newButton("Show Detail Printer", VaadinIcon.SEARCH_PLUS, l -> UI.getCurrent().navigate(PrinterView.class, printer.getName())));
+            } else {
+                result.add(
+                        newButton("Disable Stepper Motors", VaadinIcon.COGS, l -> doConfirm(BambuConst.gcodeDisableSteppers())),
+                        fanControl("Fan Control", VaadinIcon.ASTERISK)
+                );
+            }
+        }
+        return result;
+    }
+
+    private Component buildControls() {
+        final Div result = new Div();
+        result.addClassName("controls");
+        result.add(thumbnail, new Div("controls"));
+        return result;
     }
 
     private Component buildImage() {
         final Div result = new Div();
         result.addClassName("image");
-        result.add(thumbnail, thumbnailUpdated);
+        if (fromDashboard) {
+            result.add(thumbnail);
+        } else {
+            result.add(buildControls());
+        }
+        result.add(thumbnailUpdated);
         return result;
     }
 
@@ -394,11 +475,19 @@ public class DashboardPrinter implements ShowInterface {
         return result;
     }
 
+    private ContextMenu newContextMenu(final Component component) {
+        final ContextMenu result = new ContextMenu(component);
+        if (config.menuLeftClick()) {
+            result.setOpenOnClick(true);
+        }
+        return result;
+    }
+
     private <T extends Component> T wrapMonitorMenu(final T result) {
         if (!isAdmin) {
             return result;
         }
-        final ContextMenu menu = new ContextMenu(result);
+        final ContextMenu menu = newContextMenu(result);
         Arrays.asList(BambuConst.LightMode.values())
                 .forEach(lm -> {
                     menu.addItem("Set %s".formatted(lm.getValue()), l -> printer.commandLight(lm));
@@ -410,24 +499,13 @@ public class DashboardPrinter implements ShowInterface {
         if (!isAdmin) {
             return result;
         }
-        final ContextMenu menu = new ContextMenu(result);
-        final SubMenu control = menu.addItem("Control").getSubMenu();
-        Arrays.asList(BambuConst.CommandControl.values())
-                .forEach(cc -> control.addItem(cc.getValue(), l ->
-                        YesNoCancelDialog.show("%s: Are you sure?".formatted(cc.getValue()), ync -> {
-                            if (!ync.isConfirmed()) {
-                                return;
-                            }
-                            printer.commandControl(cc);
-                        })
-                ));
-        final SubMenu _speed = menu.addItem("Speed").getSubMenu();
+        final ContextMenu menu = newContextMenu(result);
         Arrays.asList(BambuConst.Speed.values())
                 .forEach(s -> {
                     if (s == BambuConst.Speed.UNKNOWN) {
                         return;
                     }
-                    _speed.addItem(s.getDescription(), l ->
+                    menu.addItem(s.getDescription(), l ->
                             YesNoCancelDialog.show("%s: Are you sure?".formatted(s.getDescription()), ync -> {
                                 if (!ync.isConfirmed()) {
                                     return;
@@ -437,20 +515,6 @@ public class DashboardPrinter implements ShowInterface {
                             )
                     );
                 });
-        return result;
-    }
-
-    private <T extends Component> T wrapNameMenu(final T result) {
-        if (!isAdmin) {
-            return result;
-        }
-        final ContextMenu menu = new ContextMenu(result);
-        if (showPrinter) {
-            menu.addItem("Show Printer", l -> UI.getCurrent().navigate(PrinterView.class, printer.getName()));
-        }
-        menu.addItem("Show Log", l -> UI.getCurrent().navigate(LogsView.class, printer.getName()));
-        menu.addItem("Request Full Status", l -> printer.commandFullStatus(true));
-        menu.addItem("Clear Error", l -> printer.commandClearPrinterError());
         return result;
     }
 
@@ -485,7 +549,7 @@ public class DashboardPrinter implements ShowInterface {
         if (!isAdmin) {
             return result;
         }
-        final ContextMenu menu = new ContextMenu(result);
+        final ContextMenu menu = newContextMenu(result);
         menu.addItem("Set Target", l -> confirmTemperature(current, maxTemp, function));
         final SubMenu preheat = menu.addItem("Preheat").getSubMenu();
         preheat.addItem("PLA 55 / 220", l -> confirmTemperature(List.of(BambuConst.gcodeTargetTemperatureBed(55), BambuConst.gcodeTargetTemperatureNozzle(220))));
@@ -610,10 +674,12 @@ public class DashboardPrinter implements ShowInterface {
         return result;
     }
 
-    public Component build() {
+    public Component build(final BambuPrinter printer, final boolean fromDashboard) {
+        this.printer = printer;
+        this.fromDashboard = fromDashboard;
         try {
             return createContent(
-                    wrapNameMenu(buildName()),
+                    buildName(),
                     buildImage(),
                     buildStatus(),
                     buildAms(),

@@ -22,6 +22,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.time.Duration;
 import java.util.Comparator;
@@ -48,6 +49,8 @@ public class PrinterView extends Div implements HasUrlParameter<String>, ShowInt
     BambuPrinters printers;
     @Inject
     ScheduledExecutorService ses;
+    @Inject
+    Instance<DashboardPrinter> cardInstance;
 
     private ScheduledFuture<?> future;
     private Optional<BambuPrinter> _printer = Optional.empty();
@@ -62,8 +65,8 @@ public class PrinterView extends Div implements HasUrlParameter<String>, ShowInt
     private void buildPrinter(final BambuPrinter printer) {
         cancelFuture();
         content.removeAll();
-        final DashboardPrinter card = new DashboardPrinter(printer, false);
-        content.add(card.build());
+        final DashboardPrinter card = cardInstance.get();
+        content.add(card.build(printer, false));
         final UI ui = getUI().get();
         future = ses.scheduleAtFixedRate(() -> ui.access(() -> card.update()), 0, INTERVAL.getSeconds(), TimeUnit.SECONDS);
     }
