@@ -21,6 +21,7 @@ import org.jboss.logging.Logger;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.vaadin.flow.component.html.Div;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.inject.Instance;
 import java.time.Duration;
 
 /**
@@ -39,9 +40,10 @@ public class Dashboard extends Div {
 
     @Inject
     BambuPrinters printers;
-
     @Inject
     ScheduledExecutorService ses;
+    @Inject
+    Instance<DashboardPrinter> cardInstance;
 
     private ScheduledFuture<?> future;
 
@@ -59,9 +61,9 @@ public class Dashboard extends Div {
     }
 
     private Component handlePrinter(final BambuPrinter printer, final Consumer<Runnable> consumer) {
-        final DashboardPrinter card = new DashboardPrinter(printer, true);
+        final DashboardPrinter card = cardInstance.get();
         consumer.accept(card::update);
-        return card.build();
+        return card.build(printer, true);
     }
 
     @Override

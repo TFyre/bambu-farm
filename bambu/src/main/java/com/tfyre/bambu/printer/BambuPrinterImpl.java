@@ -325,21 +325,22 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
 
     @Override
     public void commandPrintGCodeLine(final String lines) {
-        logUser("%s: commandPrintGCodeLine: %s".formatted(name, lines));
+        logUser("%s: commandPrintGCodeLine: [%s]".formatted(name, lines));
         final BambuMessage message = BambuMessage.newBuilder()
                 .setPrint(
                         Print.newBuilder()
                                 .setSequenceId("%d".formatted(counter.incrementAndGet()))
                                 .setCommand("gcode_line")
-                                .setParam(lines)
+                                .setParam(lines.concat("\n"))
                 )
                 .build();
+
         toJson(message).ifPresent(this::sendData);
     }
 
     @Override
     public void commandPrintGCodeLine(final List<String> lines) {
-        commandPrintGCodeLine(String.join("\n", lines).concat("\n"));
+        commandPrintGCodeLine(String.join("\n", lines));
     }
 
     @Override

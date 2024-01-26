@@ -40,7 +40,7 @@ import org.jboss.logging.Logger;
  */
 @Route(value = "maintenance", layout = MainLayout.class)
 @PageTitle("Maintenance")
-@RolesAllowed({ SystemRoles.ROLE_ADMIN })
+@RolesAllowed({SystemRoles.ROLE_ADMIN})
 public class MaintenanceView extends VerticalLayout implements ShowInterface, GridHelper<BambuPrinters.PrinterDetail> {
 
     private static final DateTimeFormatter DTF = new DateTimeFormatterBuilder()
@@ -113,35 +113,12 @@ public class MaintenanceView extends VerticalLayout implements ShowInterface, Gr
     private <T> Comparator<BambuPrinters.PrinterDetail> getODTComparator(
             final Function<BambuPrinter, Optional<T>> function1,
             final Function<T, OffsetDateTime> function2) {
-        return Comparator.comparing(pd ->
-                function1.apply(pd.printer())
+        return Comparator.comparing(pd
+                -> function1.apply(pd.printer())
                         .map(function2)
                         .map(odt -> odt.toEpochSecond())
                         .orElse(0l)
         );
-    }
-
-    private void doDialog(final BambuPrinters.PrinterDetail pd) {
-        final Dialog d = new Dialog();
-        d.setHeaderTitle("Send GCode (No Validation!!)");
-        final TextArea text = new TextArea();
-        text.setWidthFull();
-        text.setHeight(95, Unit.PERCENTAGE);
-        d.add(text);
-        final Button cancel = new Button("Cancel", e -> d.close());
-        cancel.addThemeVariants(ButtonVariant.LUMO_ERROR);
-        final Button ok = new Button("OK", e -> {
-            d.close();
-            final StringBuilder sb = new StringBuilder();
-            sb.append(text.getValue().trim().replaceAll("\n", "\\\n"));
-            sb.append("\n");
-            pd.printer().commandPrintGCodeLine(sb.toString());
-        });
-        ok.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        d.getFooter().add(cancel, ok);
-        d.setWidth(80, Unit.PERCENTAGE);
-        d.setHeight(80, Unit.PERCENTAGE);
-        d.open();
     }
 
     private void configureGrid() {
@@ -156,7 +133,7 @@ public class MaintenanceView extends VerticalLayout implements ShowInterface, Gr
                 .setSortable(true).setComparator(getODTComparator(BambuPrinter::getThumbnail, BambuPrinter.Thumbnail::lastUpdated));
 
         grid.addComponentColumn(v -> {
-            final Button gcode = new Button("", new Icon(VaadinIcon.COG), l -> doDialog(v));
+            final Button gcode = new Button("", new Icon(VaadinIcon.COG), l -> GCodeDialog.show(v.printer()));
             gcode.setTooltipText("Send GCode");
             return new HorizontalLayout(
                     newButton(v, "Enable", VaadinIcon.PLAY, printers::startPrinter),

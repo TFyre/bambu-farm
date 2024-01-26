@@ -296,7 +296,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         setSizeFull();
         configureGrid();
         add(buildToolbar(), grid);
-        _printer.ifPresent(this::buildList);
+        _printer.ifPresent(comboBox::setValue);
     }
 
     @Override

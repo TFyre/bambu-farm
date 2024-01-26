@@ -16,8 +16,17 @@ public interface BambuConfig {
     @WithDefault("false")
     boolean useBouncyCastle();
 
+    @WithDefault("true")
+    boolean menuLeftClick();
+
     @WithDefault("false")
     boolean darkMode();
+
+    @WithDefault("5000")
+    int moveXy();
+
+    @WithDefault("3000")
+    int moveZ();
 
     Map<String, Printer> printers();
 

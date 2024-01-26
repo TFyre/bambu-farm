@@ -2,11 +2,13 @@ package com.tfyre.bambu.view;
 
 import com.tfyre.bambu.MainLayout;
 import com.tfyre.bambu.SystemRoles;
+import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.bambu.view.dashboard.Dashboard;
 import com.tfyre.bambu.view.dashboard.DashboardPrinter;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -22,6 +24,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.time.Duration;
 import java.util.Comparator;
@@ -37,7 +40,7 @@ import org.jboss.logging.Logger;
  */
 @Route(value = "printer", layout = MainLayout.class)
 @PageTitle("Printer")
-@RolesAllowed({ SystemRoles.ROLE_ADMIN })
+@RolesAllowed({SystemRoles.ROLE_ADMIN})
 public class PrinterView extends Div implements HasUrlParameter<String>, ShowInterface {
 
     private static final Duration INTERVAL = Duration.ofSeconds(1);
@@ -48,6 +51,8 @@ public class PrinterView extends Div implements HasUrlParameter<String>, ShowInt
     BambuPrinters printers;
     @Inject
     ScheduledExecutorService ses;
+    @Inject
+    Instance<DashboardPrinter> cardInstance;
 
     private ScheduledFuture<?> future;
     private Optional<BambuPrinter> _printer = Optional.empty();
@@ -62,8 +67,8 @@ public class PrinterView extends Div implements HasUrlParameter<String>, ShowInt
     private void buildPrinter(final BambuPrinter printer) {
         cancelFuture();
         content.removeAll();
-        final DashboardPrinter card = new DashboardPrinter(printer, false);
-        content.add(card.build());
+        final DashboardPrinter card = cardInstance.get();
+        content.add(card.build(printer, false));
         final UI ui = getUI().get();
         future = ses.scheduleAtFixedRate(() -> ui.access(() -> card.update()), 0, INTERVAL.getSeconds(), TimeUnit.SECONDS);
     }
