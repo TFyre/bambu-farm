@@ -238,11 +238,6 @@ quarkus.log.file.path=application.log
 #quarkus.log.category."com.tfyre".level=TRACE
 ```
 
-# TODO
-
-* Move Axis
-* Colour Mapping when printing from frontend
-
 # Links
 
 ## Inspirational Web interface
