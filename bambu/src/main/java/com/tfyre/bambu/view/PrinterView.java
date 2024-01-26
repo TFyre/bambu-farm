@@ -2,11 +2,13 @@ package com.tfyre.bambu.view;
 
 import com.tfyre.bambu.MainLayout;
 import com.tfyre.bambu.SystemRoles;
+import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.bambu.view.dashboard.Dashboard;
 import com.tfyre.bambu.view.dashboard.DashboardPrinter;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -38,7 +40,7 @@ import org.jboss.logging.Logger;
  */
 @Route(value = "printer", layout = MainLayout.class)
 @PageTitle("Printer")
-@RolesAllowed({ SystemRoles.ROLE_ADMIN })
+@RolesAllowed({SystemRoles.ROLE_ADMIN})
 public class PrinterView extends Div implements HasUrlParameter<String>, ShowInterface {
 
     private static final Duration INTERVAL = Duration.ofSeconds(1);

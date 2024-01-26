@@ -11,6 +11,7 @@ import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuConst.Speed;
 import com.tfyre.bambu.printer.BambuErrors;
 import com.tfyre.bambu.security.SecurityUtils;
+import com.tfyre.bambu.view.GCodeDialog;
 import com.tfyre.bambu.view.LogsView;
 import com.tfyre.bambu.view.PrinterView;
 import com.tfyre.bambu.view.ShowInterface;
@@ -19,6 +20,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.html.Div;
@@ -47,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.jboss.logging.Logger;
@@ -340,7 +343,6 @@ public class DashboardPrinter implements ShowInterface {
         }
         printType = _printType;
         if (BambuConst.PRINT_TYPE_IDLE.equals(printType)) {
-            //FIXME: show green notice + print complete
             showNotification("%s: Printer Idle".formatted(printer.getName()));
         }
     }
@@ -430,7 +432,8 @@ public class DashboardPrinter implements ShowInterface {
             } else {
                 result.add(
                         newButton("Disable Stepper Motors", VaadinIcon.COGS, l -> doConfirm(BambuConst.gcodeDisableSteppers())),
-                        fanControl("Fan Control", VaadinIcon.ASTERISK)
+                        fanControl("Fan Control", VaadinIcon.ASTERISK),
+                        newButton("Send GCode", VaadinIcon.COG, l -> GCodeDialog.show(printer))
                 );
             }
         }
@@ -438,9 +441,63 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private Component buildControls() {
+        final BiConsumer<BambuConst.Move, Integer> move = (m, value)
+                -> printer.commandPrintGCodeLine(BambuConst.gcodeMoveXYZ(m, value));
+        final Consumer<Boolean> home = b
+                -> printer.commandPrintGCodeLine(b ? BambuConst.gcodeHomeXY() : BambuConst.gcodeHomeZ());
         final Div result = new Div();
-        result.addClassName("controls");
-        result.add(thumbnail, new Div("controls"));
+        result.addClassName("controlsbox");
+
+        final Div xyControl = new Div();
+        xyControl.addClassName("controlxy");
+        final Div up = new Div(
+                new Span("X/Y Control"),
+                newButton("Y+10", VaadinIcon.ANGLE_DOUBLE_UP, l -> move.accept(BambuConst.Move.Y, 10)),
+                newButton("Y+1", VaadinIcon.ANGLE_UP, l -> move.accept(BambuConst.Move.Y, 1))
+        );
+        up.addClassName("updown");
+
+        final Div leftRight = new Div(
+                newButton("X-10", VaadinIcon.ANGLE_DOUBLE_LEFT, l -> move.accept(BambuConst.Move.X, -10)),
+                newButton("X-1", VaadinIcon.ANGLE_LEFT, l -> move.accept(BambuConst.Move.X, -1)),
+                newButton("XY Home", VaadinIcon.HOME, l -> home.accept(true)),
+                newButton("X+1", VaadinIcon.ANGLE_RIGHT, l -> move.accept(BambuConst.Move.X, 1)),
+                newButton("X+10", VaadinIcon.ANGLE_DOUBLE_RIGHT, l -> move.accept(BambuConst.Move.X, 10))
+        );
+        leftRight.addClassName("leftright");
+        final Div down = new Div(
+                newButton("Y-1", VaadinIcon.ANGLE_DOWN, l -> move.accept(BambuConst.Move.Y, -1)),
+                newButton("Y-10", VaadinIcon.ANGLE_DOUBLE_DOWN, l -> move.accept(BambuConst.Move.Y, -10))
+        );
+        down.addClassName("updown");
+        xyControl.add(up, leftRight, down);
+
+        final Div zControl = new Div();
+        zControl.addClassName("controlz");
+        zControl.add(
+                new Span("Bed Control"),
+                newButton("Bed+10", VaadinIcon.ANGLE_DOUBLE_UP, l -> move.accept(BambuConst.Move.Z, -10)),
+                newButton("Bed+1", VaadinIcon.ANGLE_UP, l -> move.accept(BambuConst.Move.Z, -1)),
+                newButton("Bed Home", VaadinIcon.HOME, l -> home.accept(false)),
+                newButton("Bed-1", VaadinIcon.ANGLE_DOWN, l -> move.accept(BambuConst.Move.Z, 1)),
+                newButton("Bed-10", VaadinIcon.ANGLE_DOUBLE_DOWN, l -> move.accept(BambuConst.Move.Z, 10))
+        );
+
+        final Checkbox enableControl = new Checkbox("Enable Controls");
+        final Consumer<Boolean> setEnabled = enabled -> {
+            xyControl.setEnabled(enabled);
+            zControl.setEnabled(enabled);
+        };
+        enableControl.addValueChangeListener(l -> setEnabled.accept(l.getValue()));
+        setEnabled.accept(false);
+
+        final Div controlHeader = new Div(enableControl);
+        controlHeader.addClassName("controlheader");
+        final Div controlBody = new Div(xyControl, zControl);
+        controlBody.addClassName("controlbody");
+        final Div controls = new Div(controlHeader, controlBody);
+        controls.addClassName("controls");
+        result.add(new Div(thumbnail), controls);
         return result;
     }
 
@@ -505,8 +562,8 @@ public class DashboardPrinter implements ShowInterface {
                     if (s == BambuConst.Speed.UNKNOWN) {
                         return;
                     }
-                    menu.addItem(s.getDescription(), l ->
-                            YesNoCancelDialog.show("%s: Are you sure?".formatted(s.getDescription()), ync -> {
+                    menu.addItem(s.getDescription(), l
+                            -> YesNoCancelDialog.show("%s: Are you sure?".formatted(s.getDescription()), ync -> {
                                 if (!ync.isConfirmed()) {
                                     return;
                                 }

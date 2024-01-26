@@ -27,7 +27,7 @@
 .dashboard-view {
     display: grid;
     grid-template-columns: repeat(var(--bambu-columns), minmax(0, 1fr));
-    
+
     /*LumoUtility.Gap.MEDIUM*/
     gap: var(--lumo-space-m);
 
@@ -43,7 +43,7 @@
     padding-bottom: 10px;
 }
 
-.dashboard-printer .name > vaadin-button {
+.dashboard-printer .name vaadin-button {
     margin: 0.1rem;
 }
 
@@ -75,15 +75,6 @@
     object-fit: contain;
 }
 
-.dashboard-printer .image .controls {
-    display: flex;
-    width: 100%;
-}
-
-.dashboard-printer .image .controls > div {
-    flex-grow: 10;
-}
-
 .dashboard-printer .status {
     width: 100%;
     flex-wrap: wrap;
@@ -93,13 +84,13 @@
     font-weight: bolder;
     align-items: center;
     min-width: 50px;
-    
+
     /*LumoUtility.Padding.SMALL*/
     padding: var(--lumo-space-s);
-    
+
     /*LumoUtility.Margin.SMALL*/
     margin: var(--lumo-space-s);
-    
+
     /*LumoUtility.Flex.GROW*/
     flex-grow: 1;
 
@@ -128,15 +119,15 @@
     flex-wrap: wrap;
 }
 
-.dashboard-printer .amsheader > span {
+.dashboard-printer .amsheader span {
     flex-grow: 1;
 }
 
-.dashboard-printer .amsheader > span.filler {
+.dashboard-printer .amsheader span.filler {
     flex-grow: 10;
 }
 
-.dashboard-printer .amsheader > img {
+.dashboard-printer .amsheader img {
     flex-grow: 1;
     max-height: 30px;
 }
@@ -152,16 +143,16 @@
     flex-direction: column;
     font-weight: bolder;
     align-items: center;
-    
+
     /*LumoUtility.Padding.SMALL*/
     padding: var(--lumo-space-s);
-    
+
     /*LumoUtility.Margin.SMALL*/
     margin: var(--lumo-space-s);
 
     /*LumoUtility.Flex.GROW*/
     flex-grow: 1;
-    
+
     /*LumoUtility.Background.BASE*/
     background-color: var(--lumo-base-color);
 
@@ -205,4 +196,51 @@
 
 .printer-view .content {
     width: 100%;
+}
+
+.dashboard-printer .image .controlsbox {
+    display: flex;
+}
+
+.controlsbox .controls {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.controlsbox .controlheader {
+    display: flex;
+    justify-content: center;
+}
+
+.controlsbox .controlbody {
+    display: flex;
+}
+
+.controlxy {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.controlxy div.updown {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.controlxy div.leftright {
+    display: flex;
+}
+
+.controlxy vaadin-button,
+.controlz vaadin-button {
+    margin: 0.1rem;
+}
+
+.controlz {
+    margin-top: auto;
+    margin-bottom: auto;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    width: 150px;
 }

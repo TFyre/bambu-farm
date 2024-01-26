@@ -1,6 +1,7 @@
 package com.tfyre.bambu.printer;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -95,7 +96,48 @@ public class BambuConst {
 
     }
 
+    public static List<String> gcodeMoveXYZ(final Move move, final int value) {
+        return List.of(
+                "M211 S",
+                "M211 X1 Y1 Z1",
+                "M1002 push_ref_mode",
+                "G91",
+                "G1 %s%d".formatted(move.getValue(), value),
+                "M1002 pop_ref_mode",
+                "M211 R"
+        );
+    }
+
+    public static String gcodeHomeAll() {
+        return "G28";
+    }
+
+    public static String gcodeHomeXY() {
+        return "G28 X Y";
+    }
+
+    public static String gcodeHomeZ() {
+        return "G28 Z";
+    }
+
     private BambuConst() {
+    }
+
+    public enum Move {
+        X("X"),
+        Y("Y"),
+        Z("Z");
+
+        private final String value;
+
+        private Move(final String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
     }
 
     public enum Fan {
