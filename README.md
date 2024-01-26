@@ -183,17 +183,23 @@ bambu.users.guest.role=normal
 
 If you want to modify the CSS, create a file next to the `.jar` file called `styles.css`
 
+* Setting 1 display columns
+
 ```css
 /* Add your custom CSS here */
 
-/*Setting 2 display columns*/
-.dashboard-view {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+:root {
+  --bambu-default-columns: 1;
 }
+```
 
-/*Setting 4 display columns*/
-.dashboard-view {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+* Setting 5 display columns
+
+```css
+/* Add your custom CSS here */
+
+:root {
+  --bambu-default-columns: 5;
 }
 ```
 
