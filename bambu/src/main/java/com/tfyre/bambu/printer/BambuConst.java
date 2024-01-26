@@ -96,13 +96,13 @@ public class BambuConst {
 
     }
 
-    public static List<String> gcodeMoveXYZ(final Move move, final int value) {
+    public static List<String> gcodeMoveXYZ(final Move move, final int value, final int speed) {
         return List.of(
                 "M211 S",
                 "M211 X1 Y1 Z1",
                 "M1002 push_ref_mode",
                 "G91",
-                "G1 %s%d".formatted(move.getValue(), value),
+                "G1 %s%d F%d".formatted(move.getValue(), value, speed),
                 "M1002 pop_ref_mode",
                 "M211 R"
         );

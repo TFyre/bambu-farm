@@ -14,6 +14,7 @@ import com.tfyre.bambu.security.SecurityUtils;
 import com.tfyre.bambu.view.GCodeDialog;
 import com.tfyre.bambu.view.LogsView;
 import com.tfyre.bambu.view.PrinterView;
+import com.tfyre.bambu.view.SdCardView;
 import com.tfyre.bambu.view.ShowInterface;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
@@ -173,6 +174,12 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private void processAms(final com.tfyre.bambu.model.Ams ams) {
+        final String trayId;
+        if (isPrinterIdle() || !ams.hasTrayNow()) {
+            trayId = "-1";
+        } else {
+            trayId = ams.getTrayNow();
+        }
         ams.getAmsList().forEach(single -> {
             Optional.ofNullable(amsHeaders.get(getAmsHeaderId(single.getId()))).ifPresent(header -> {
                 setTemperature(header.temperature(), parseDouble(single.getTemp()));
@@ -187,6 +194,10 @@ public class DashboardPrinter implements ShowInterface {
                     }
                     filament.type().setText(BambuConst.getFilament(tray.getTrayInfoIdx()).orElse("Unknown"));
                     filament.color().getStyle().setBackgroundColor("#%s".formatted(tray.getTrayColor()));
+                    filament.div().removeClassName("active");
+                    if (trayId.equals(tray.getId())) {
+                        filament.div().addClassName("active");
+                    }
                 });
             });
         });
@@ -323,7 +334,8 @@ public class DashboardPrinter implements ShowInterface {
         if (error != lastError) {
             lastError = error;
             if (lastError != 0) {
-                showError("%s error: %s".formatted(printer.getName(), errorString));
+                showError("%s error[%d / %s]: %s".formatted(
+                        printer.getName(), lastError, Integer.toHexString(lastError), errorString));
             }
         }
 
@@ -336,22 +348,25 @@ public class DashboardPrinter implements ShowInterface {
         }
     }
 
+    private boolean isPrinterIdle() {
+        return BambuConst.PRINT_TYPE_IDLE.equals(printType);
+    }
+
     private void processPrintType() {
         final String _printType = printer.getPrintType();
         if (printType.equals(_printType)) {
             return;
         }
         printType = _printType;
-        if (BambuConst.PRINT_TYPE_IDLE.equals(printType)) {
+        if (isPrinterIdle()) {
             showNotification("%s: Printer Idle".formatted(printer.getName()));
         }
     }
 
     private void processMessage(final BambuPrinter.Message message) {
-        process(message.message().hasPrint(), message, message.message().getPrint(), this::processPrint);
-
-        processError(message);
         processPrintType();
+        process(message.message().hasPrint(), message, message.message().getPrint(), this::processPrint);
+        processError(message);
     }
 
     public void update() {
@@ -421,6 +436,7 @@ public class DashboardPrinter implements ShowInterface {
         if (isAdmin) {
             result.add(
                     newButton("Show Logs", VaadinIcon.CLIPBOARD_TEXT, l -> UI.getCurrent().navigate(LogsView.class, printer.getName())),
+                    newButton("Show SD Card", VaadinIcon.ARCHIVE, l -> UI.getCurrent().navigate(SdCardView.class, printer.getName())),
                     newButton("Request full status", VaadinIcon.REFRESH, l -> printer.commandFullStatus(true)),
                     newButton("Clear Print Error", VaadinIcon.WARNING, l -> printer.commandClearPrinterError()),
                     newButton("Resume Print", VaadinIcon.PLAY, l -> doConfirm(BambuConst.CommandControl.RESUME)),
@@ -441,8 +457,10 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private Component buildControls() {
-        final BiConsumer<BambuConst.Move, Integer> move = (m, value)
-                -> printer.commandPrintGCodeLine(BambuConst.gcodeMoveXYZ(m, value));
+        final BiConsumer<BambuConst.Move, Integer> movexy = (m, value)
+                -> printer.commandPrintGCodeLine(BambuConst.gcodeMoveXYZ(m, value, config.moveXy()));
+        final BiConsumer<BambuConst.Move, Integer> movez = (m, value)
+                -> printer.commandPrintGCodeLine(BambuConst.gcodeMoveXYZ(m, value, config.moveZ()));
         final Consumer<Boolean> home = b
                 -> printer.commandPrintGCodeLine(b ? BambuConst.gcodeHomeXY() : BambuConst.gcodeHomeZ());
         final Div result = new Div();
@@ -452,22 +470,22 @@ public class DashboardPrinter implements ShowInterface {
         xyControl.addClassName("controlxy");
         final Div up = new Div(
                 new Span("X/Y Control"),
-                newButton("Y+10", VaadinIcon.ANGLE_DOUBLE_UP, l -> move.accept(BambuConst.Move.Y, 10)),
-                newButton("Y+1", VaadinIcon.ANGLE_UP, l -> move.accept(BambuConst.Move.Y, 1))
+                newButton("Y+10", VaadinIcon.ANGLE_DOUBLE_UP, l -> movexy.accept(BambuConst.Move.Y, 10)),
+                newButton("Y+1", VaadinIcon.ANGLE_UP, l -> movexy.accept(BambuConst.Move.Y, 1))
         );
         up.addClassName("updown");
 
         final Div leftRight = new Div(
-                newButton("X-10", VaadinIcon.ANGLE_DOUBLE_LEFT, l -> move.accept(BambuConst.Move.X, -10)),
-                newButton("X-1", VaadinIcon.ANGLE_LEFT, l -> move.accept(BambuConst.Move.X, -1)),
+                newButton("X-10", VaadinIcon.ANGLE_DOUBLE_LEFT, l -> movexy.accept(BambuConst.Move.X, -10)),
+                newButton("X-1", VaadinIcon.ANGLE_LEFT, l -> movexy.accept(BambuConst.Move.X, -1)),
                 newButton("XY Home", VaadinIcon.HOME, l -> home.accept(true)),
-                newButton("X+1", VaadinIcon.ANGLE_RIGHT, l -> move.accept(BambuConst.Move.X, 1)),
-                newButton("X+10", VaadinIcon.ANGLE_DOUBLE_RIGHT, l -> move.accept(BambuConst.Move.X, 10))
+                newButton("X+1", VaadinIcon.ANGLE_RIGHT, l -> movexy.accept(BambuConst.Move.X, 1)),
+                newButton("X+10", VaadinIcon.ANGLE_DOUBLE_RIGHT, l -> movexy.accept(BambuConst.Move.X, 10))
         );
         leftRight.addClassName("leftright");
         final Div down = new Div(
-                newButton("Y-1", VaadinIcon.ANGLE_DOWN, l -> move.accept(BambuConst.Move.Y, -1)),
-                newButton("Y-10", VaadinIcon.ANGLE_DOUBLE_DOWN, l -> move.accept(BambuConst.Move.Y, -10))
+                newButton("Y-1", VaadinIcon.ANGLE_DOWN, l -> movexy.accept(BambuConst.Move.Y, -1)),
+                newButton("Y-10", VaadinIcon.ANGLE_DOUBLE_DOWN, l -> movexy.accept(BambuConst.Move.Y, -10))
         );
         down.addClassName("updown");
         xyControl.add(up, leftRight, down);
@@ -476,11 +494,11 @@ public class DashboardPrinter implements ShowInterface {
         zControl.addClassName("controlz");
         zControl.add(
                 new Span("Bed Control"),
-                newButton("Bed+10", VaadinIcon.ANGLE_DOUBLE_UP, l -> move.accept(BambuConst.Move.Z, -10)),
-                newButton("Bed+1", VaadinIcon.ANGLE_UP, l -> move.accept(BambuConst.Move.Z, -1)),
+                newButton("Bed+10", VaadinIcon.ANGLE_DOUBLE_UP, l -> movez.accept(BambuConst.Move.Z, -10)),
+                newButton("Bed+1", VaadinIcon.ANGLE_UP, l -> movez.accept(BambuConst.Move.Z, -1)),
                 newButton("Bed Home", VaadinIcon.HOME, l -> home.accept(false)),
-                newButton("Bed-1", VaadinIcon.ANGLE_DOWN, l -> move.accept(BambuConst.Move.Z, 1)),
-                newButton("Bed-10", VaadinIcon.ANGLE_DOUBLE_DOWN, l -> move.accept(BambuConst.Move.Z, 10))
+                newButton("Bed-1", VaadinIcon.ANGLE_DOWN, l -> movez.accept(BambuConst.Move.Z, 1)),
+                newButton("Bed-10", VaadinIcon.ANGLE_DOUBLE_DOWN, l -> movez.accept(BambuConst.Move.Z, 10))
         );
 
         final Checkbox enableControl = new Checkbox("Enable Controls");
@@ -654,10 +672,10 @@ public class DashboardPrinter implements ShowInterface {
     private Div buildAmsFilament(final String amsTrayId) {
         final Span color = new Span();
         color.addClassName("color");
-        final AmsFilament filament = new AmsFilament(amsTrayId, new Span(), color);
+        final Div result = new Div();
+        final AmsFilament filament = new AmsFilament(amsTrayId, result, new Span(), color);
         amsFilaments.put(amsTrayId, filament);
 
-        final Div result = new Div();
         result.addClassName("filament");
         result.add(filament.type(), filament.color());
         return result;
@@ -763,7 +781,7 @@ public class DashboardPrinter implements ShowInterface {
 
     }
 
-    private record AmsFilament(String id, Span type, Span color) {
+    private record AmsFilament(String id, Div div, Span type, Span color) {
 
     }
 

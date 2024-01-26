@@ -163,6 +163,11 @@
     border-radius: var(--lumo-border-radius-l);
 }
 
+.dashboard-printer .amstray .active {
+    --lumo-utility-border-color: var(--lumo-success-color);
+    border: 2px var(--lumo-utility-border-style, solid) var(--lumo-utility-border-color, var(--lumo-contrast-10pct));
+}
+
 .dashboard-printer .amstray .filament .color {
     width: 50px;
     min-height: 50px;
