@@ -24,6 +24,7 @@ import org.jboss.logging.Logger;
  */
 @ApplicationScoped
 public class FTPSClientProvider {
+
     private static final String SETTING = "jdk.tls.useExtendedMasterSecret";
 
     @Inject
@@ -41,7 +42,7 @@ public class FTPSClientProvider {
             log.info("BouncyCastle disabled");
             return;
         }
-        log.infof("BouncyCastle enabled: %s=[%s]",SETTING,System.getProperty(SETTING));
+        log.infof("BouncyCastle enabled: %s=[%s]", SETTING, System.getProperty(SETTING));
 
         Security.addProvider(new BouncyCastleJsseProvider());
         sslContext = SSLContext.getInstance("TLSv1.2", "BCJSSE");
