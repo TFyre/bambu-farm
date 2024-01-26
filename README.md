@@ -218,6 +218,22 @@ Add to `.env`:
 quarkus.http.limits.max-body-size=30M
 ```
 
+### Configure XY/Z movement speeds
+
+Add to `.env`:
+```properties
+# values are in mm/minute
+bambu.move-xy=5000
+bambu.move-z=3000
+```
+
+### Use Right click for menus
+
+Add to `.env`:
+```properties
+bambu.menu-left-click=false
+```
+
 # Debug
 
 For debugging the application, add the following to .env and uncomment DEBUG or TRACE logging sections
