@@ -335,7 +335,8 @@ public class DashboardPrinter implements ShowInterface {
             lastError = error;
             if (lastError != 0) {
                 showError("%s error[%d / %s]: %s".formatted(
-                        printer.getName(), lastError, Integer.toHexString(lastError), errorString));
+                        printer.getName(), lastError, Integer.toHexString(lastError), errorString),
+                        config.notificationDuration());
             }
         }
 
@@ -359,7 +360,7 @@ public class DashboardPrinter implements ShowInterface {
         }
         printType = _printType;
         if (isPrinterIdle()) {
-            showNotification("%s: Printer Idle".formatted(printer.getName()));
+            showNotification("%s: Printer Idle".formatted(printer.getName()), config.notificationDuration());
         }
     }
 
@@ -457,12 +458,12 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private Component buildControls() {
-        final BiConsumer<BambuConst.Move, Integer> movexy = (m, value)
-                -> printer.commandPrintGCodeLine(BambuConst.gcodeMoveXYZ(m, value, config.moveXy()));
-        final BiConsumer<BambuConst.Move, Integer> movez = (m, value)
-                -> printer.commandPrintGCodeLine(BambuConst.gcodeMoveXYZ(m, value, config.moveZ()));
-        final Consumer<Boolean> home = b
-                -> printer.commandPrintGCodeLine(b ? BambuConst.gcodeHomeXY() : BambuConst.gcodeHomeZ());
+        final BiConsumer<BambuConst.Move, Integer> movexy = (m, value) ->
+                printer.commandPrintGCodeLine(BambuConst.gcodeMoveXYZ(m, value, config.moveXy()));
+        final BiConsumer<BambuConst.Move, Integer> movez = (m, value) ->
+                printer.commandPrintGCodeLine(BambuConst.gcodeMoveXYZ(m, value, config.moveZ()));
+        final Consumer<Boolean> home = b ->
+                printer.commandPrintGCodeLine(b ? BambuConst.gcodeHomeXY() : BambuConst.gcodeHomeZ());
         final Div result = new Div();
         result.addClassName("controlsbox");
 
@@ -515,7 +516,7 @@ public class DashboardPrinter implements ShowInterface {
         controlBody.addClassName("controlbody");
         final Div controls = new Div(controlHeader, controlBody);
         controls.addClassName("controls");
-        result.add(new Div(thumbnail), controls);
+        result.add(thumbnail, controls);
         return result;
     }
 
@@ -580,8 +581,8 @@ public class DashboardPrinter implements ShowInterface {
                     if (s == BambuConst.Speed.UNKNOWN) {
                         return;
                     }
-                    menu.addItem(s.getDescription(), l
-                            -> YesNoCancelDialog.show("%s: Are you sure?".formatted(s.getDescription()), ync -> {
+                    menu.addItem(s.getDescription(), l ->
+                            YesNoCancelDialog.show("%s: Are you sure?".formatted(s.getDescription()), ync -> {
                                 if (!ync.isConfirmed()) {
                                     return;
                                 }

@@ -13,6 +13,9 @@ import java.util.Optional;
 @ConfigMapping(prefix = "bambu")
 public interface BambuConfig {
 
+    @WithDefault("5m")
+    Duration notificationDuration();
+
     @WithDefault("false")
     boolean useBouncyCastle();
 

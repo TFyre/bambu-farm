@@ -23,12 +23,20 @@ public interface ShowInterface {
         return n;
     }
 
-    default void showError(final String error) {
+    default void showError(final String error, final int duration) {
         final Notification n = getNotificationSpan(error);
-        n.setDuration(-1);
+        n.setDuration(duration);
         n.addThemeVariants(NotificationVariant.LUMO_ERROR);
         n.setPosition(Notification.Position.BOTTOM_END);
         n.open();
+    }
+
+    default void showError(final String error) {
+        showError(error, -1);
+    }
+
+    default void showError(final String error, final Duration duration) {
+        showError(error, (int) duration.toMillis());
     }
 
     default void showError(final Throwable ex) {

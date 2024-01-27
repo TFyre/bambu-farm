@@ -205,6 +205,8 @@
 
 .dashboard-printer .image .controlsbox {
     display: flex;
+    /*LumoUtility.Gap.MEDIUM*/
+    gap: var(--lumo-space-m);
 }
 
 .controlsbox .controls {
