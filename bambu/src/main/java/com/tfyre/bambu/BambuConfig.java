@@ -31,6 +31,8 @@ public interface BambuConfig {
     @WithDefault("3000")
     int moveZ();
 
+    Optional<String> liveViewUrl();
+
     Map<String, Printer> printers();
 
     Map<String, User> users();
@@ -98,6 +100,9 @@ public interface BambuConfig {
 
             @WithDefault("6000")
             int port();
+
+            @WithDefault("false")
+            boolean liveView();
 
             Optional<String> url();
 

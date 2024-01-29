@@ -55,10 +55,18 @@ public class BambuPrinterStream {
         client = vertx.createNetClient(options);
     }
 
+    private boolean liveView() {
+        return config.stream().liveView();
+    }
+
     public void setup(final Scheduler scheduler, final String name, final BambuConfig.Printer config, final Consumer<BambuPrinter.Thumbnail> consumer) {
         this.name = name;
         this.config = config;
         this.consumer = consumer;
+
+        if (liveView()) {
+            return;
+        }
 
         scheduler.newJob("%s.checkLastImage#%s".formatted(getClass().getName(), name))
                 .setInterval("1m")
@@ -140,12 +148,18 @@ public class BambuPrinterStream {
     }
 
     public void start() {
+        if (liveView()) {
+            return;
+        }
         nextImage = OffsetDateTime.now();
         running.set(true);
         startStream();
     }
 
     public void stop() {
+        if (liveView()) {
+            return;
+        }
         running.set(false);
         log.infof("%s: stopping", name);
         closeSocket();

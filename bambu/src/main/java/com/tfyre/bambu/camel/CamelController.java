@@ -8,11 +8,9 @@ import com.tfyre.bambu.printer.BambuPrinterException;
 import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import java.util.Optional;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.StartupListener;
-import org.apache.camel.model.RouteDefinition;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 

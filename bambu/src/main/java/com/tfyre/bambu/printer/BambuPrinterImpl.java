@@ -45,6 +45,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     private Optional<BambuPrinter.Message> status = Optional.empty();
     private Optional<BambuPrinter.Message> fullStatus = Optional.empty();
     private Optional<BambuPrinter.Thumbnail> thumbnail = Optional.empty();
+    private Optional<String> iframe = Optional.empty();
 
     private final BlockingQueue<BambuPrinter.Message> lastMessages = new LinkedBlockingQueue<>(MAX_ITEMS);
     private final AtomicLong counter = new AtomicLong();
@@ -55,6 +56,8 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     Logger log;
     @Inject
     CamelContext context;
+    @Inject
+    BambuConfig bambuConfig;
 
     private Endpoint endpoint;
     private ProducerTemplate producerTemplate;
@@ -88,10 +91,22 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
         }
     }
 
+    private void buildIFrame() {
+        if (!config.stream().liveView()) {
+            return;
+        }
+        iframe = config.stream().url()
+                .or(() -> bambuConfig.liveViewUrl().map(url -> "%s%s".formatted(url, config.deviceId())));
+        if (iframe.isEmpty()) {
+            log.errorf("%s: Live View needs [bambu.printers.XXX.stream.url] or [bambu.live-view-url] configured", name);
+        }
+    }
+
     public void setup(final Scheduler scheduler, final String name, final BambuConfig.Printer config, final Endpoint endpoint) {
         this.name = name;
         this.config = config;
         this.endpoint = endpoint;
+        buildIFrame();
         scheduler.newJob("%s.requestFullStatus#%s".formatted(getClass().getName(), name))
                 .setInterval("1m")
                 .setTask(e -> commandFullStatusInternal(false, false))
@@ -136,6 +151,11 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     @Override
     public Optional<BambuPrinter.Message> getFullStatus() {
         return fullStatus;
+    }
+
+    @Override
+    public Optional<String> getIFrame() {
+        return iframe;
     }
 
     @Override

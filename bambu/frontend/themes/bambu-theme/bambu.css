@@ -75,6 +75,18 @@
     object-fit: contain;
 }
 
+.dashboard-printer .image iframe {
+    flex-grow: 1;
+    width: 95%;
+    max-height: 720px;
+    max-width: 1280px;
+    object-fit: contain;
+}
+
+.controlsbox iframe {
+    height: 100vh;
+}
+
 .dashboard-printer .status {
     width: 100%;
     flex-wrap: wrap;
@@ -205,6 +217,9 @@
 
 .dashboard-printer .image .controlsbox {
     display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
     /*LumoUtility.Gap.MEDIUM*/
     gap: var(--lumo-space-m);
 }

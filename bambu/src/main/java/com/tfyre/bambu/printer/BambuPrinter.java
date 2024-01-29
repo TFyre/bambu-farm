@@ -25,6 +25,8 @@ public interface BambuPrinter {
 
     Optional<Message> getFullStatus();
 
+    Optional<String> getIFrame();
+
     Optional<Thumbnail> getThumbnail();
 
     Collection<Message> getLastMessages();

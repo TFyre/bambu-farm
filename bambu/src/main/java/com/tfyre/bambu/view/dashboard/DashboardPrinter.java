@@ -10,6 +10,7 @@ import com.tfyre.bambu.model.Tray;
 import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuConst.Speed;
 import com.tfyre.bambu.printer.BambuErrors;
+import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.bambu.security.SecurityUtils;
 import com.tfyre.bambu.view.GCodeDialog;
 import com.tfyre.bambu.view.LogsView;
@@ -25,6 +26,7 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.IFrame;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -94,6 +96,7 @@ public class DashboardPrinter implements ShowInterface {
     private final Image speedImage = new Image(Images.MONITOR_SPEED.getImage(), "Speed");
     private final Span speed = newSpan();
     private final Image thumbnail = new Image();
+    private final IFrame iframe = new IFrame();
     private final Span thumbnailUpdated = newSpan();
     private final Div printerName = new Div();
     private String thumbnailId;
@@ -108,6 +111,7 @@ public class DashboardPrinter implements ShowInterface {
     private final Map<String, AmsFilament> amsFilaments = new HashMap<>();
     private String printType = BambuConst.PRINT_TYPE_IDLE;
 
+    private Component thumbnailOrIframe;
     private BambuPrinter printer;
     private boolean fromDashboard;
 
@@ -516,7 +520,7 @@ public class DashboardPrinter implements ShowInterface {
         controlBody.addClassName("controlbody");
         final Div controls = new Div(controlHeader, controlBody);
         controls.addClassName("controls");
-        result.add(thumbnail, controls);
+        result.add(thumbnailOrIframe, controls);
         return result;
     }
 
@@ -524,7 +528,7 @@ public class DashboardPrinter implements ShowInterface {
         final Div result = new Div();
         result.addClassName("image");
         if (fromDashboard) {
-            result.add(thumbnail);
+            result.add(thumbnailOrIframe);
         } else {
             result.add(buildControls());
         }
@@ -750,9 +754,19 @@ public class DashboardPrinter implements ShowInterface {
         return result;
     }
 
+    private Component getThumbnailOrIframe() {
+        return printer.getIFrame()
+                .map(url -> {
+                    iframe.setSrc(url);
+                    return (Component) iframe;
+                })
+                .orElse(thumbnail);
+    }
+
     public Component build(final BambuPrinter printer, final boolean fromDashboard) {
         this.printer = printer;
         this.fromDashboard = fromDashboard;
+        thumbnailOrIframe = getThumbnailOrIframe();
         try {
             return createContent(
                     buildName(),
