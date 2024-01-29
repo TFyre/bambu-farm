@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+    liveview:
+        image: linuxserver/ffmpeg
+        restart: always
+        environment:
+            PRINTER_HOST: FIXME
+            PRINTER_USER: bblp
+            PRINTER_DEVICE_ID: FIXME
+            PRINTER_ACCESS_CODE: FIXME
+            PRINTER_PORT: 322
+            PRINTER_URL: /streaming/live/1
+            RTSP_SERVER: mediamtx:8554
+        entrypoint:
+            - "bash"
+            - "-c"
+            - >
+              /usr/local/bin/ffmpeg
+              -re -stream_loop -1
+              -i rtsps://$${PRINTER_USER}:$${PRINTER_ACCESS_CODE}@$${PRINTER_HOST}:$${PRINTER_PORT}$${PRINTER_URL}
+              -c:v copy -f rtsp -rtsp_transport tcp
+              rtsp://$${RTSP_SERVER}/$${PRINTER_DEVICE_ID}

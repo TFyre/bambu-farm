@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+    mediamtx:
+        image: bluenviron/mediamtx
+        restart: always
+        volumes:
+            - ./mediamtx.yml:/mediamtx.yml
+        ports:
+            #RTSP
+            #- '8554:8554' 
+
+            #WebRTC
+            - '8189:8189/tcp'
+            - '8189:8189/udp'
+            #- '8888:8888'
+            - '8889:8889'
+    printer1:
+        extends:
+            file: common-liveview.yml
+            service: liveview
+        depends_on:
+            - mediamtx
+        environment:
+            PRINTER_HOST: FIXME_this_is_my_printer_ip_or_host
+            PRINTER_DEVICE_ID: FIXME_this_is_my_device_id
+            PRINTER_ACCESS_CODE: FIXME_this_is_my_printer_access_code
+
+#    printer2:
+#        extends:
+#            file: common-liveview.yml
+#            service: liveview
+#        depends_on:
+#            - mediamtx
+#        environment:
+#            PRINTER_HOST: FIXME_this_is_my_printer_ip_or_host
+#            PRINTER_DEVICE_ID: FIXME_this_is_my_device_id
+#            PRINTER_ACCESS_CODE: FIXME_this_is_my_printer_access_code
+#
