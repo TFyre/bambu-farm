@@ -64,11 +64,11 @@ public class BambuPrintersImpl implements BambuPrinters {
     }
 
     @Override
-    public PrinterDetail newPrinter(final String name, final BambuConfig.Printer config, final Endpoint endpoint) {
+    public PrinterDetail newPrinter(final String id, final String name, final BambuConfig.Printer config, final Endpoint endpoint) {
         final BambuPrinter printer = _bambuPrinter.get();
         Consumer<BambuPrinter.Thumbnail> consumer = getConsumer(name);
         if (printer instanceof BambuPrinterImpl impl) {
-            impl.setup(scheduler, name, config, endpoint);
+            impl.setup(scheduler, name, config, endpoint, id);
             consumer = impl::setThumbnail;
         }
 
@@ -79,7 +79,7 @@ public class BambuPrintersImpl implements BambuPrinters {
         final BambuPrinterStream stream = _bambuPrinterStream.get();
         stream.setup(scheduler, name, config, consumer);
 
-        final PrinterDetail result = new PrinterDetail(name, new AtomicBoolean(), config, printer, Processor.class.cast(printer), stream);
+        final PrinterDetail result = new PrinterDetail(id, name, new AtomicBoolean(), config, printer, Processor.class.cast(printer), stream);
         map.put(name, result);
         return result;
     }

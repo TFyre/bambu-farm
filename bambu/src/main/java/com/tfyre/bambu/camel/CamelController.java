@@ -73,7 +73,7 @@ public class CamelController extends AbstractMqttController implements StartupLi
         final Endpoint consumer = getMqttEndpoint(consumerTopic, getUrl(config), config.username(), config.accessCode());
         final Endpoint printer = getPrinterEndpoint(name);
 
-        final BambuPrinters.PrinterDetail detail = printers.newPrinter(name, config, printer);
+        final BambuPrinters.PrinterDetail detail = printers.newPrinter(id, name, config, printer);
 
         //producer
         from(printer)

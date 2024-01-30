@@ -15,6 +15,28 @@ services:
             - '8189:8189/udp'
             #- '8888:8888'
             - '8889:8889'
+
+    bambuweb:
+        image: azul/zulu-openjdk:21-latest
+        restart: always
+        volumes:
+            - ./bambu-web-X.X.X-runner.jar:/bambu-web-runner.jar
+            - ./bambu-web-env.txt:/.env
+        ports:
+            - '8081:8080'
+        entrypoint: /usr/bin/java -Djdk.tls.useExtendedMasterSecret=false -jar bambu-web-runner.jar
+
+    nginx:
+        image: nginx:stable-alpine
+        restart: always
+        volumes:
+            - ./reverse-proxy.conf:/etc/nginx/conf.d/default.conf
+        ports:
+            - '8080:80'
+        depends_on:
+            - mediamtx
+            - bambuweb
+
     printer1:
         extends:
             file: common-liveview.yml

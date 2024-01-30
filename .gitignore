@@ -21,5 +21,6 @@ bambu/styles.css
 /docker/bambu-local-dev/*.srl
 /docker/bambu-local-dev/*.csr
 
-/docker/bambu-liveview/compose.yaml
+/docker/bambu-liveview/bambu-web-*
+/docker/bambu-liveview/compose.yml
 /docker/bambu-liveview/mediamtx.yml

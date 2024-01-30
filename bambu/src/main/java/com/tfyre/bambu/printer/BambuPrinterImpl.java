@@ -91,22 +91,22 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
         }
     }
 
-    private void buildIFrame() {
+    private void buildIFrame(final String id) {
         if (!config.stream().liveView()) {
             return;
         }
         iframe = config.stream().url()
-                .or(() -> bambuConfig.liveViewUrl().map(url -> "%s%s".formatted(url, config.deviceId())));
+                .or(() -> bambuConfig.liveViewUrl().map(url -> "%s%s".formatted(url, id)));
         if (iframe.isEmpty()) {
             log.errorf("%s: Live View needs [bambu.printers.XXX.stream.url] or [bambu.live-view-url] configured", name);
         }
     }
 
-    public void setup(final Scheduler scheduler, final String name, final BambuConfig.Printer config, final Endpoint endpoint) {
+    public void setup(final Scheduler scheduler, final String name, final BambuConfig.Printer config, final Endpoint endpoint, final String id) {
         this.name = name;
         this.config = config;
         this.endpoint = endpoint;
-        buildIFrame();
+        buildIFrame(id);
         scheduler.newJob("%s.requestFullStatus#%s".formatted(getClass().getName(), name))
                 .setInterval("1m")
                 .setTask(e -> commandFullStatusInternal(false, false))

@@ -21,7 +21,7 @@ public interface BambuPrinters {
 
     Optional<PrinterDetail> getPrinterDetail(final String name);
 
-    PrinterDetail newPrinter(final String name, final BambuConfig.Printer config, final Endpoint endpoint);
+    PrinterDetail newPrinter(final String id, final String name, final BambuConfig.Printer config, final Endpoint endpoint);
 
     void startPrinter(final String name) throws BambuPrinterException;
 
@@ -31,7 +31,7 @@ public interface BambuPrinters {
 
     void stopPrinters() throws BambuPrinterException;
 
-    record PrinterDetail(String name, AtomicBoolean running, BambuConfig.Printer config, BambuPrinter printer, Processor processor, BambuPrinterStream stream) {
+    record PrinterDetail(String id, String name, AtomicBoolean running, BambuConfig.Printer config, BambuPrinter printer, Processor processor, BambuPrinterStream stream) {
 
         public boolean isRunning() {
             return running.get();
