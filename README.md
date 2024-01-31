@@ -12,12 +12,12 @@ Technologies used:
 
 | Feature | A1 | A1 Mini | P1P | P1S | X1C|
 |--|:--:|:--:|:--:|:--:|:--:|
-|**Remote View**|<ul><li>[x] </li></ul>|?|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[ ] </li></ul>|
-|**Upload to SD card**|<ul><li>[x] </li></ul>|?|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] <sup>2</sup></li></ul>|
-|**Print .3mf from SD card**<sup>1</sup>|<ul><li>[x] </li></ul>|?|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] <sup>2</sup></li></ul>|
+|**Remote View**|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] <sup>3</sup></li></ul>|
+|**Upload to SD card**|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] <sup>2</sup></li></ul>|
+|**Print .3mf from SD card**<sup>1</sup>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] <sup>2</sup></li></ul>|
 |**Print .gcode from SD card**|?|?|?|?|?|
 |**AMS**|?|?|?|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|
-|**Send Custom GCode**|?|?|?|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|
+|**Send Custom GCode**|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|
 
 <sup>1</sup>**Currently only .3mf sliced projects are supported.**
 
@@ -25,6 +25,8 @@ Technologies used:
 
 <sup>2</sup>**FTPS Connections needs SSL Session Reuse via [Bouncy Castle](#bouncy-castle)**
 > Without enabling bouncy castle, you will see `552 SSL connection failed: session resuse required`
+
+<sup>3</sup>Getting the **LiveView** to work requires a different setup requiring additional software. For more details check the [docker/bambu-liveview](docker/bambu-liveview) README.
 
 # Screenshots
 

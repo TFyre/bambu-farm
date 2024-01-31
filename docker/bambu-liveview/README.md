@@ -2,7 +2,8 @@
 
 Docker compose environment for X1C Printers to enable liveview.
 
-| **REMEMBER to enable `LAN Mode Liveview` on the printer**
+> [!IMPORTANT]
+> REMEMBER to enable `LAN Mode Liveview` on the printer
 
 # MediaMTX Container
 
@@ -23,6 +24,22 @@ Enable Proper IP
 webrtcAdditionalHosts: [10.0.0.456, my.dynamic.dns.com]
 ```
 
+# Bambu Web
+
+* Download the [latest](/releases/latest) version of bambu-web-X.X.X-runner.jar
+* `bambu-web-env.txt` is the config file instead of normal `.env`
+* Update `compose.yml` and replace `bambu-web-X.X.X-runner.jar` with the correct version
+
+Enable the following in `bambu-web-env.txt`:
+```properties
+bambu.live-view-url=/_camerastream/
+```
+
+If you have a full custom url for the printer:
+```properties
+bambu.printers.PRINTER_ID.stream.url=https://my_stream_domain.com/mystream
+```
+
 # Adding your printers
 
 **Copy `example - compose.yaml` to `compose.yml`**
@@ -38,17 +55,22 @@ Edit `compose.yml` and fix the printers (lines with FIXME)
             - mediamtx
         environment:
             PRINTER_HOST: FIXME_this_is_my_printer_ip_or_host
-            PRINTER_DEVICE_ID: FIXME_this_is_my_device_id
+            PRINTER_ID: ([^1])FIXME_this_is_my_printer_id_from_env
             PRINTER_ACCESS_CODE: FIXME_this_is_my_printer_access_code
 ```
+
+> [!NOTE]
+> `PRINTER_ID` is the printer id in the `.env` configuration file eg: 
+> ```properties
+> bambu.printer.PRINTER_ID.name=My Printer Name
+> ```
 
 # Ports required for outside access
 
 | PORT | UDP/TCP | Purpose |
 |--|--|--|
-|8189|UDP|Streaming for WebRTC|
-|8189|TCP|Streaming for WebRTC|
-|8889|TCP|HTTP for WebRTC|
+|8189|TCP+UDP|Streaming for WebRTC|
+|8080|TCP|HTTP for BambuWeb & WebRTC|
 
 # Starting
 

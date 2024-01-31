@@ -7,7 +7,7 @@ services:
         environment:
             PRINTER_HOST: FIXME
             PRINTER_USER: bblp
-            PRINTER_DEVICE_ID: FIXME
+            PRINTER_ID: FIXME
             PRINTER_ACCESS_CODE: FIXME
             PRINTER_PORT: 322
             PRINTER_URL: /streaming/live/1
@@ -20,4 +20,4 @@ services:
               -re -stream_loop -1
               -i rtsps://$${PRINTER_USER}:$${PRINTER_ACCESS_CODE}@$${PRINTER_HOST}:$${PRINTER_PORT}$${PRINTER_URL}
               -c:v copy -f rtsp -rtsp_transport tcp
-              rtsp://$${RTSP_SERVER}/$${PRINTER_DEVICE_ID}
+              rtsp://$${RTSP_SERVER}/$${PRINTER_ID}

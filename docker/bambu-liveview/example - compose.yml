@@ -45,7 +45,7 @@ services:
             - mediamtx
         environment:
             PRINTER_HOST: FIXME_this_is_my_printer_ip_or_host
-            PRINTER_DEVICE_ID: FIXME_this_is_my_device_id
+            PRINTER_ID: FIXME_this_is_my_printer_id
             PRINTER_ACCESS_CODE: FIXME_this_is_my_printer_access_code
 
 #    printer2:
@@ -56,6 +56,6 @@ services:
 #            - mediamtx
 #        environment:
 #            PRINTER_HOST: FIXME_this_is_my_printer_ip_or_host
-#            PRINTER_DEVICE_ID: FIXME_this_is_my_device_id
+#            PRINTER_ID: FIXME_this_is_my_printer_id
 #            PRINTER_ACCESS_CODE: FIXME_this_is_my_printer_access_code
 #
