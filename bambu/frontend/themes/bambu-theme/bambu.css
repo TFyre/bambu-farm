@@ -49,6 +49,7 @@
 
 .dashboard-printer .image {
     flex-direction: column;
+    flex-grow: 1;
     display: flex;
     width: 100%;
     min-height: 371px;
