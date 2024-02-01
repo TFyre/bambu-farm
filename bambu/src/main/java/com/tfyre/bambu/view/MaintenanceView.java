@@ -8,18 +8,15 @@ import com.tfyre.bambu.printer.BambuPrinterException;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
@@ -40,8 +37,8 @@ import org.jboss.logging.Logger;
  */
 @Route(value = "maintenance", layout = MainLayout.class)
 @PageTitle("Maintenance")
-@RolesAllowed({SystemRoles.ROLE_ADMIN})
-public class MaintenanceView extends VerticalLayout implements ShowInterface, GridHelper<BambuPrinters.PrinterDetail> {
+@RolesAllowed({ SystemRoles.ROLE_ADMIN })
+public class MaintenanceView extends VerticalLayout implements ShowInterface, GridHelper<BambuPrinters.PrinterDetail>, UpdateHeader {
 
     private static final DateTimeFormatter DTF = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
@@ -76,15 +73,8 @@ public class MaintenanceView extends VerticalLayout implements ShowInterface, Gr
         addClassName("maintenance-view");
         setSizeFull();
         configureGrid();
-        add(buildToolbar(), grid);
+        add(grid);
         refreshItems();
-    }
-
-    private Component buildToolbar() {
-        final HorizontalLayout result = new HorizontalLayout();
-        result.setWidthFull();
-        result.add(new Button("Refresh", new Icon(VaadinIcon.REFRESH), l -> refreshItems()));
-        return result;
     }
 
     private Button newButton(final BambuPrinters.PrinterDetail pd, final String action, final VaadinIcon icon, final BambuPrinterConsumer<String> consumer) {
@@ -113,8 +103,8 @@ public class MaintenanceView extends VerticalLayout implements ShowInterface, Gr
     private <T> Comparator<BambuPrinters.PrinterDetail> getODTComparator(
             final Function<BambuPrinter, Optional<T>> function1,
             final Function<T, OffsetDateTime> function2) {
-        return Comparator.comparing(pd
-                -> function1.apply(pd.printer())
+        return Comparator.comparing(pd ->
+                function1.apply(pd.printer())
                         .map(function2)
                         .map(odt -> odt.toEpochSecond())
                         .orElse(0l)
@@ -143,6 +133,11 @@ public class MaintenanceView extends VerticalLayout implements ShowInterface, Gr
         });
 
         grid.sort(GridSortOrder.asc(colName).build());
+    }
+
+    @Override
+    public void updateHeader(final HasComponents component) {
+        component.add(new Button("Refresh", new Icon(VaadinIcon.REFRESH), l -> refreshItems()));
     }
 
 }

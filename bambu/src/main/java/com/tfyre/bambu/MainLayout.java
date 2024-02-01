@@ -5,13 +5,16 @@ import com.tfyre.bambu.view.LogsView;
 import com.tfyre.bambu.view.MaintenanceView;
 import com.tfyre.bambu.view.PrinterView;
 import com.tfyre.bambu.view.SdCardView;
+import com.tfyre.bambu.view.UpdateHeader;
 import com.tfyre.bambu.view.dashboard.Dashboard;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -50,6 +53,7 @@ public class MainLayout extends AppLayout {
     ));
 
     private final HorizontalLayout header = new HorizontalLayout();
+    private final Div headerContent = new Div();
     private final List<VerticalLayout> drawerItems = new ArrayList<>();
     private final Checkbox darkMode = new Checkbox("Dark Theme");
 
@@ -101,7 +105,8 @@ public class MainLayout extends AppLayout {
                 .set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");
 
-        header.add(new DrawerToggle(), logo, darkMode);
+        headerContent.addClassName("header-content");
+        header.add(new DrawerToggle(), logo, darkMode, headerContent);
 
         if (SecurityUtils.isLoggedIn()) {
             header.add(new Button("Logout", e -> SecurityUtils.logout()));
@@ -167,6 +172,26 @@ public class MainLayout extends AppLayout {
                             .collect(Collectors.toSet());
                     return new AccessRoute(clazz, name, roles);
                 }));
+    }
+
+    @Override
+    public void showRouterLayoutContent(final HasElement content) {
+        super.showRouterLayoutContent(content);
+
+        if (content instanceof Dashboard) {
+        } else {
+            headerContent.add(new RouterLink("Back to Dashboard", Dashboard.class));
+        }
+
+        if (content instanceof UpdateHeader updateHeader) {
+            updateHeader.updateHeader(headerContent);
+        }
+    }
+
+    @Override
+    public void removeRouterLayoutContent(final HasElement oldContent) {
+        super.removeRouterLayoutContent(oldContent);
+        headerContent.removeAll();
     }
 
     private record AccessRoute(Class<? extends Component> component, String name, Set<String> roles) {

@@ -466,6 +466,8 @@ public class DashboardPrinter implements ShowInterface {
                 printer.commandPrintGCodeLine(BambuConst.gcodeMoveXYZ(m, value, config.moveXy()));
         final BiConsumer<BambuConst.Move, Integer> movez = (m, value) ->
                 printer.commandPrintGCodeLine(BambuConst.gcodeMoveXYZ(m, value, config.moveZ()));
+        final Consumer<Boolean> movee = (up) ->
+                printer.commandPrintGCodeLine(BambuConst.gcodeMoveExtruder(up));
         final Consumer<Boolean> home = b ->
                 printer.commandPrintGCodeLine(b ? BambuConst.gcodeHomeXY() : BambuConst.gcodeHomeZ());
         final Div result = new Div();
@@ -506,17 +508,35 @@ public class DashboardPrinter implements ShowInterface {
                 newButton("Bed-10", VaadinIcon.ANGLE_DOUBLE_DOWN, l -> movez.accept(BambuConst.Move.Z, 10))
         );
 
+        final Div extruder = new Div();
+        extruder.addClassName("extruder");
+        final Span spacer1 = new Span();
+        spacer1.addClassName("spacer");
+        final Span spacer2 = new Span();
+        spacer2.addClassName("spacer");
+        final Span spacer3 = new Span();
+        spacer3.addClassName("spacer");
+        extruder.add(
+                new Span("Extruder"),
+                spacer1,
+                newButton("Extruder-10", VaadinIcon.ANGLE_UP, l -> movee.accept(true)),
+                spacer2,
+                newButton("Extruder+10", VaadinIcon.ANGLE_DOWN, l -> movee.accept(false)),
+                spacer3
+        );
+
         final Checkbox enableControl = new Checkbox("Enable Controls");
         final Consumer<Boolean> setEnabled = enabled -> {
             xyControl.setEnabled(enabled);
             zControl.setEnabled(enabled);
+            extruder.setEnabled(enabled);
         };
         enableControl.addValueChangeListener(l -> setEnabled.accept(l.getValue()));
         setEnabled.accept(false);
 
         final Div controlHeader = new Div(enableControl);
         controlHeader.addClassName("controlheader");
-        final Div controlBody = new Div(xyControl, zControl);
+        final Div controlBody = new Div(xyControl, zControl, extruder);
         controlBody.addClassName("controlbody");
         final Div controls = new Div(controlHeader, controlBody);
         controls.addClassName("controls");

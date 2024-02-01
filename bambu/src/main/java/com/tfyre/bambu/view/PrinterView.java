@@ -9,12 +9,11 @@ import com.tfyre.bambu.view.dashboard.DashboardPrinter;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
@@ -39,7 +38,7 @@ import org.jboss.logging.Logger;
 @Route(value = "printer", layout = MainLayout.class)
 @PageTitle("Printer")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class PrinterView extends Div implements HasUrlParameter<String>, ShowInterface {
+public class PrinterView extends Div implements HasUrlParameter<String>, ShowInterface, UpdateHeader {
 
     private static final Duration INTERVAL = Duration.ofSeconds(1);
 
@@ -71,16 +70,6 @@ public class PrinterView extends Div implements HasUrlParameter<String>, ShowInt
         future = ses.scheduleAtFixedRate(() -> ui.access(() -> card.update()), 0, INTERVAL.getSeconds(), TimeUnit.SECONDS);
     }
 
-    private Component buildToolbar() {
-        comboBox.setItemLabelGenerator(BambuPrinter::getName);
-        comboBox.setItems(printers.getPrinters().stream().sorted(Comparator.comparing(BambuPrinter::getName)).toList());
-        comboBox.addValueChangeListener(l -> buildPrinter(l.getValue()));
-        final HorizontalLayout result = new HorizontalLayout(new Span("Printers"), comboBox, new RouterLink("Back to Dashboard", Dashboard.class));
-        result.setWidthFull();
-        result.setAlignItems(Alignment.CENTER);
-        return result;
-    }
-
     private Component buildContent() {
         content.setClassName("content");
         return content;
@@ -88,8 +77,12 @@ public class PrinterView extends Div implements HasUrlParameter<String>, ShowInt
 
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
         addClassName("printer-view");
-        add(buildToolbar(), buildContent());
+        add(buildContent());
+        comboBox.setItemLabelGenerator(BambuPrinter::getName);
+        comboBox.setItems(printers.getPrinters().stream().sorted(Comparator.comparing(BambuPrinter::getName)).toList());
+        comboBox.addValueChangeListener(l -> buildPrinter(l.getValue()));
         _printer.ifPresent(comboBox::setValue);
     }
 
@@ -106,6 +99,12 @@ public class PrinterView extends Div implements HasUrlParameter<String>, ShowInt
     protected void onDetach(final DetachEvent detachEvent) {
         super.onDetach(detachEvent);
         cancelFuture();
+    }
+
+    @Override
+    public void updateHeader(final HasComponents component) {
+        component.add(new Span("Printers"), comboBox);
+
     }
 
 }

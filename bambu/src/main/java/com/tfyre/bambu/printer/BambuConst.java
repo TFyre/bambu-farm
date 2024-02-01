@@ -108,6 +108,13 @@ public class BambuConst {
         );
     }
 
+    public static List<String> gcodeMoveExtruder(final boolean up) {
+        return List.of(
+                "M83",
+                "G0 %s%d F900".formatted(Move.E.getValue(), up ? -10 : 10)
+        );
+    }
+
     public static String gcodeHomeAll() {
         return "G28";
     }
@@ -124,6 +131,7 @@ public class BambuConst {
     }
 
     public enum Move {
+        E("E"),
         X("X"),
         Y("Y"),
         Z("Z");

@@ -49,6 +49,7 @@ public class Dashboard extends Div {
 
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
         final List<Runnable> runnables = new ArrayList<>();
         final UI ui = attachEvent.getUI();
         addClassName("dashboard-view");

@@ -24,6 +24,15 @@
     }
 }
 
+.header-content {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+
+    /*LumoUtility.Gap.MEDIUM*/
+    gap: var(--lumo-space-m);
+}
+
 .dashboard-view {
     display: grid;
     grid-template-columns: repeat(var(--bambu-columns), minmax(0, 1fr));
@@ -255,7 +264,8 @@
 }
 
 .controlxy vaadin-button,
-.controlz vaadin-button {
+.controlz vaadin-button,
+.extruder vaadin-button {
     margin: 0.1rem;
 }
 
@@ -266,4 +276,14 @@
     align-items: center;
     flex-direction: column;
     width: 150px;
+}
+
+.extruder {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.extruder .spacer {
+    flex-grow: 1;
 }

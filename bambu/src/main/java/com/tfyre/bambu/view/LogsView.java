@@ -11,6 +11,7 @@ import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -48,7 +49,7 @@ import org.jboss.logging.Logger;
 @Route(value = "logs", layout = MainLayout.class)
 @PageTitle("Logs")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class LogsView extends VerticalLayout implements HasUrlParameter<String>, ShowInterface {
+public class LogsView extends VerticalLayout implements HasUrlParameter<String>, ShowInterface, UpdateHeader {
 
     private static final ObjectMapper OM = new ObjectMapper();
     private static final JsonFormat.Printer PRINTER = JsonFormat.printer().preservingProtoFieldNames();
@@ -143,25 +144,28 @@ public class LogsView extends VerticalLayout implements HasUrlParameter<String>,
         return result;
     }
 
-    private Component buildToolbar() {
+    private void buildToolbar() {
         comboBox.setItemLabelGenerator(BambuPrinter::getName);
         comboBox.setItems(printers.getPrinters().stream().sorted(Comparator.comparing(BambuPrinter::getName)).toList());
         comboBox.addValueChangeListener(l -> buildList(l.getValue()));
         filter.addValueChangeListener(l -> buildFilter());
         filter.setValueChangeMode(ValueChangeMode.TIMEOUT);
-        final Button refresh = new Button("Refresh", new Icon(VaadinIcon.REFRESH), l -> Optional.ofNullable(comboBox.getValue()).ifPresent(this::buildList));
-        final HorizontalLayout result = new HorizontalLayout(new Span("Printers"), comboBox, refresh, new Span("Filter"), filter);
-        result.setWidthFull();
-        result.setAlignItems(Alignment.CENTER);
-        return result;
     }
 
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
         addClassName("logs-view");
         setSizeFull();
-        add(buildToolbar(), buildListBox());
+        buildToolbar();
+        add(buildListBox());
         _printer.ifPresent(comboBox::setValue);
+    }
+
+    @Override
+    public void updateHeader(final HasComponents component) {
+        final Button refresh = new Button("Refresh", new Icon(VaadinIcon.REFRESH), l -> Optional.ofNullable(comboBox.getValue()).ifPresent(this::buildList));
+        component.add(new Span("Printers"), comboBox, refresh, new Span("Filter"), filter);
     }
 
     //FIXME Implement Export
