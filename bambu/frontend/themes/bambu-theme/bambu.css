@@ -79,17 +79,14 @@
 .dashboard-printer .image img {
     min-width: 0;
     flex-grow: 1;
-    height: 95%;
-    width: 95%;
-    max-height: 720px;
-    max-width: 1280px;
-    object-fit: contain;
+    margin: 10px;
 }
 
 .dashboard-printer .image iframe {
     flex-grow: 1;
-    width: 95%;
-    aspect-ration: 16/9;
+    margin: 10px;
+    aspect-ration: 16/10;
+    border: 0px;
 }
 
 .dashboard-printer .status {
