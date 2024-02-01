@@ -129,7 +129,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     }
 
     public void setFullStatus(final BambuPrinter.Message fullStatus) {
-        addLast(fullStatus);
+        setStatus(fullStatus);
         this.fullStatus = Optional.of(fullStatus);
     }
 

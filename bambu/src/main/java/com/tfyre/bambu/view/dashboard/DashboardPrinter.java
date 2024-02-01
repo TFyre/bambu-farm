@@ -10,7 +10,6 @@ import com.tfyre.bambu.model.Tray;
 import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuConst.Speed;
 import com.tfyre.bambu.printer.BambuErrors;
-import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.bambu.security.SecurityUtils;
 import com.tfyre.bambu.view.GCodeDialog;
 import com.tfyre.bambu.view.LogsView;
