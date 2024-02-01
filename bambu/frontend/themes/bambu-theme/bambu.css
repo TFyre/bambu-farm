@@ -64,7 +64,7 @@
     width: 100%;
     min-height: 371px;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
 
     /*LumoUtility.Background.BASE*/
     background-color: var(--lumo-base-color);
