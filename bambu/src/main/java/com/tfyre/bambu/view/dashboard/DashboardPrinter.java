@@ -453,7 +453,8 @@ public class DashboardPrinter implements ShowInterface {
                 result.add(
                         newButton("Disable Stepper Motors", VaadinIcon.COGS, l -> doConfirm(BambuConst.gcodeDisableSteppers())),
                         fanControl("Fan Control", VaadinIcon.ASTERISK),
-                        newButton("Send GCode", VaadinIcon.COG, l -> GCodeDialog.show(printer))
+                        newButton("Send GCode", VaadinIcon.COG, l -> GCodeDialog.show(printer)),
+                        newButton("Back to Dashboard", VaadinIcon.ARROW_BACKWARD, l -> UI.getCurrent().navigate(Dashboard.class))
                 );
             }
         }
