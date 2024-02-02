@@ -49,6 +49,12 @@ public interface BambuPrinter {
 
     void commandPrintProjectFile(final String filename, final int plateId, final boolean useAms, final boolean timelapse, final boolean bedLevelling);
 
+    void commandFilamentLoad(final int amsTrayId);
+
+    void commandFilamentUnload();
+
+    void commandFilamentSetting(final int amsId, final int trayId, final Filament filament, final String value, final int minTemp, final int maxTemp);
+
     record Message(OffsetDateTime lastUpdated, BambuMessage message, String raw) {
 
     }

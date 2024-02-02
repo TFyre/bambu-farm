@@ -39,6 +39,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -172,7 +173,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         if (printer.config().ftp().logCommands()) {
             result.addProtocolCommandListener(getListener(printer.name()));
         }
-        result.setUseEPSVwithIPv4(true);
+        //result.setUseEPSVwithIPv4(true);
         //sent: USER bblp
         //recv: 331
         //org.apache.commons.net.MalformedServerReplyException: Truncated server reply: '331 '
@@ -327,7 +328,14 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         final StreamResource stream = new StreamResource(fileName, () -> {
             try {
                 client.setFileType(FTP.BINARY_FILE_TYPE);
-                return new BufferedInputStream(client.retrieveFileStream(file.getName()));
+                try (final InputStream s = client.retrieveFileStream(file.getName())) {
+                    return new ByteArrayInputStream(s.readAllBytes());
+                    //return new BufferedInputStream(s);
+                } finally {
+                    if (!client.completePendingCommand()) {
+                        log.error("could not complete pending command");
+                    }
+                }
             } catch (IOException ex) {
                 log.errorf(ex, "Cannot find file: %s - %s", file.getName(), ex.getMessage());
             }
@@ -438,14 +446,25 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         final Checkbox useAMS = new Checkbox("Use AMS", comboBox.getValue().config().useAms());
         final Checkbox timelapse = new Checkbox("Timelapse", comboBox.getValue().config().timelapse());
         final Checkbox bedLevelling = new Checkbox("Bed Levelling", comboBox.getValue().config().bedLevelling());
-        YesNoCancelDialog.show(List.of(plateId, useAMS, timelapse, bedLevelling), "Confirm to print: %s".formatted(file.getName()), ync -> {
+
+        final String fileName = buildFileName(file.getName());
+        final boolean is3mf = fileName.endsWith(BambuConst.FILE_3MF);
+
+        final List<Component> list;
+        if (is3mf) {
+            list = List.of(plateId, useAMS, timelapse, bedLevelling);
+
+        } else {
+            list = List.of(useAMS, timelapse, bedLevelling);
+        }
+
+        YesNoCancelDialog.show(list, "Confirm to print: %s".formatted(file.getName()), ync -> {
             if (!ync.isConfirmed()) {
                 return;
             }
-            final String fileName = buildFileName(file.getName());
             if (fileName.endsWith(BambuConst.FILE_GCODE)) {
                 comboBox.getValue().printer().commandPrintGCodeFile(fileName);
-            } else if (fileName.endsWith(BambuConst.FILE_3MF)) {
+            } else if (is3mf) {
                 comboBox.getValue().printer().commandPrintProjectFile(fileName, plateId.getValue(), useAMS.getValue(), timelapse.getValue(), bedLevelling.getValue());
             } else {
                 showError("Unknown File: %s".formatted(fileName));

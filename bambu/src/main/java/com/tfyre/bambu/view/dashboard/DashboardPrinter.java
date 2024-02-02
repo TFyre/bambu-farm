@@ -10,7 +10,10 @@ import com.tfyre.bambu.model.Tray;
 import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuConst.Speed;
 import com.tfyre.bambu.printer.BambuErrors;
+import com.tfyre.bambu.printer.Filament;
+import com.tfyre.bambu.printer.Utils;
 import com.tfyre.bambu.security.SecurityUtils;
+import com.tfyre.bambu.view.FilamentView;
 import com.tfyre.bambu.view.GCodeDialog;
 import com.tfyre.bambu.view.LogsView;
 import com.tfyre.bambu.view.PrinterView;
@@ -24,6 +27,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.contextmenu.SubMenu;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.IFrame;
 import com.vaadin.flow.component.html.Image;
@@ -145,18 +149,6 @@ public class DashboardPrinter implements ShowInterface {
         span.setText("%.2fºC".formatted(value));
     }
 
-    private double parseDouble(final String value) {
-        if (value == null) {
-            return 0;
-        }
-        try {
-            return Double.parseDouble(value);
-        } catch (NumberFormatException ex) {
-            log.errorf("%s: Cannot parseDouble [%s]", printer.getName(), value);
-            return 0;
-        }
-    }
-
     private Images getHumidityImage(final String id) {
         if ("0".equals(id)) {
             return Images.AMS_HUMIDITY_0;
@@ -185,17 +177,17 @@ public class DashboardPrinter implements ShowInterface {
         }
         ams.getAmsList().forEach(single -> {
             Optional.ofNullable(amsHeaders.get(getAmsHeaderId(single.getId()))).ifPresent(header -> {
-                setTemperature(header.temperature(), parseDouble(single.getTemp()));
+                setTemperature(header.temperature(), Utils.parseDouble(printer.getName(), single.getTemp(), 0));
                 header.humidity().setSrc(getHumidityImage(single.getHumidity()).getImage());
             });
 
             single.getTrayList().forEach(tray -> {
-                Optional.ofNullable(amsFilaments.get(getFilamentTrayId(single, tray))).ifPresent(filament -> {
+                Optional.ofNullable(amsFilaments.get(getFilamentTrayKey(single, tray))).ifPresent(filament -> {
                     if (!tray.hasTrayInfoIdx()) {
                         filament.type().setText("Empty");
                         return;
                     }
-                    filament.type().setText(BambuConst.getFilament(tray.getTrayInfoIdx()).orElse("Unknown"));
+                    filament.type().setText(Filament.getFilamentDescription(tray.getTrayInfoIdx()));
                     filament.color().getStyle().setBackgroundColor("#%s".formatted(tray.getTrayColor()));
                     filament.div().removeClassName("active");
                     if (trayId.equals(tray.getId())) {
@@ -207,11 +199,11 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private void processVtTray(final com.tfyre.bambu.model.VtTray tray) {
-        Optional.ofNullable(amsHeaders.get(getTrayId(tray.getId()))).ifPresent(header -> {
-            setTemperature(header.temperature(), parseDouble(tray.getTrayTemp()));
+        Optional.ofNullable(amsHeaders.get(getTrayKey(tray.getId()))).ifPresent(header -> {
+            setTemperature(header.temperature(), Utils.parseDouble(printer.getName(), tray.getTrayTemp(), 0));
         });
-        Optional.ofNullable(amsFilaments.get(getTrayId(tray.getId()))).ifPresent(filament -> {
-            filament.type().setText(BambuConst.getFilament(tray.getTrayInfoIdx()).orElse("Unknown"));
+        Optional.ofNullable(amsFilaments.get(getTrayKey(tray.getId()))).ifPresent(filament -> {
+            filament.type().setText(Filament.getFilamentDescription(tray.getTrayInfoIdx()));
             filament.color().getStyle().setBackgroundColor("#%s".formatted(tray.getTrayColor()));
         });
     }
@@ -403,13 +395,17 @@ public class DashboardPrinter implements ShowInterface {
         });
     }
 
-    private void doConfirm(final String command) {
+    private void doConfirm(final Runnable runnable) {
         YesNoCancelDialog.show("Are you sure?", ync -> {
             if (!ync.isConfirmed()) {
                 return;
             }
-            printer.commandPrintGCodeLine(command);
+            runnable.run();
         });
+    }
+
+    private void doConfirm(final String command) {
+        doConfirm(() -> printer.commandPrintGCodeLine(command));
     }
 
     private Button newButton(final String toolTip, final VaadinIcon icon, final ComponentEventListener<ClickEvent<Button>> clickListener) {
@@ -694,27 +690,57 @@ public class DashboardPrinter implements ShowInterface {
         return result;
     }
 
-    private Div buildAmsFilament(final String amsTrayId) {
-        final Span color = new Span();
-        color.addClassName("color");
-        final Div result = new Div();
-        final AmsFilament filament = new AmsFilament(amsTrayId, result, new Span(), color);
-        amsFilaments.put(amsTrayId, filament);
+    private void doFilamentConfigure(final AmsFilament filament) {
+        FilamentView.show(printer, filament.amsId(), filament.trayId());
+    }
 
-        result.addClassName("filament");
-        result.add(filament.type(), filament.color());
+    private Div wrapAmsFilament(final AmsFilament filament) {
+        final Div result = filament.div();
+        if (!isAdmin) {
+            return result;
+        }
+        final ContextMenu menu = newContextMenu(result);
+        menu.addItem("Configure", l -> doFilamentConfigure(filament));
+        menu.addItem("Load", l -> doConfirm(() -> printer.commandFilamentLoad(filament.trayId())));
+        menu.addItem("Unload", l -> doConfirm(printer::commandFilamentUnload));
+
         return result;
     }
 
-    private String getFilamentTrayId(final AmsSingle single, final Tray tray) {
-        return "single[%s]tray[%s]".formatted(single.getId(), tray.getId());
+    private Div buildAmsFilament(final String key, final int amsId, final int trayId) {
+        final Span color = new Span();
+        color.addClassName("color");
+        final Div result = new Div();
+        final AmsFilament filament = new AmsFilament(amsId, trayId, result, new Span(), color);
+        amsFilaments.put(key, filament);
+
+        result.addClassName("filament");
+        result.add(filament.type(), filament.color());
+        return wrapAmsFilament(filament);
+    }
+
+    private Div buildAmsFilament(final AmsSingle single, final Tray tray) {
+        final int amsId = Utils.parseInt(printer.getName(), single.getId(), BambuConst.AMS_TRAY_UNLOAD);
+        final int trayId = Utils.parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
+        return buildAmsFilament(getFilamentTrayKey(amsId, trayId), amsId, trayId);
+    }
+
+    private String getFilamentTrayKey(final int amsId, final int trayId) {
+        return "single[%d]tray[%d]".formatted(amsId, trayId);
+    }
+
+    private String getFilamentTrayKey(final AmsSingle single, final Tray tray) {
+        return getFilamentTrayKey(
+                Utils.parseInt(printer.getName(), single.getId(), BambuConst.AMS_TRAY_UNLOAD),
+                Utils.parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD)
+        );
     }
 
     private String getAmsHeaderId(final String id) {
         return "AMS#%s".formatted(id);
     }
 
-    private String getTrayId(final String id) {
+    private String getTrayKey(final String id) {
         return "Tray#%s".formatted(id);
     }
 
@@ -742,17 +768,18 @@ public class DashboardPrinter implements ShowInterface {
                     getAmsHeaderId(single.getId()),
                     true,
                     single.getTrayList().stream()
-                            .map(tray -> buildAmsFilament(getFilamentTrayId(single, tray)))
+                            .map(tray -> buildAmsFilament(single, tray))
                             .toList()
             ));
         });
     }
 
     private void buildVtTray(final Div parent, final com.tfyre.bambu.model.VtTray tray) {
+        final int trayId = Utils.parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
         parent.add(buildTray(
-                getTrayId(tray.getId()),
+                getTrayKey(tray.getId()),
                 false,
-                List.of(buildAmsFilament(getTrayId(tray.getId())))
+                List.of(buildAmsFilament(getTrayKey(tray.getId()), BambuConst.AMS_TRAY_UNLOAD, trayId))
         ));
     }
 
@@ -816,7 +843,11 @@ public class DashboardPrinter implements ShowInterface {
 
     }
 
-    private record AmsFilament(String id, Div div, Span type, Span color) {
+    private record AmsFilament(int amsId, int trayId, Div div, Span type, Span color) {
+
+        public int amsTrayId() {
+            return amsId * 4 + trayId;
+        }
 
     }
 

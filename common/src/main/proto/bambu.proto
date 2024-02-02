@@ -200,6 +200,18 @@ message Print {
   optional bool use_ams = 71;
   optional string reason = 72;
   optional string result = 73;
+
+  optional int32 target = 74;
+  optional int32 curr_temp = 75;
+  optional int32 tar_temp = 76;
+
+  optional int32 ams_id = 77;
+  optional int32 tray_id = 78;
+  optional string tray_info_idx = 79;
+  optional string tray_color  = 80;
+  optional int32 nozzle_temp_min = 81;
+  optional int32 nozzle_temp_max = 82;
+  optional string tray_type = 83;
 }
 
 message System {

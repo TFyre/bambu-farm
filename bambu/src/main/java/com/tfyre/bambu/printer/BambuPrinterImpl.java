@@ -294,6 +294,56 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     }
 
     @Override
+    public void commandFilamentLoad(final int amsTrayId) {
+        logUser("%s: commandFilamentLoad %d".formatted(name, amsTrayId));
+        final BambuMessage message = BambuMessage.newBuilder()
+                .setPrint(
+                        com.tfyre.bambu.model.Print.newBuilder()
+                                .setSequenceId("%d".formatted(counter.incrementAndGet()))
+                                .setCommand("ams_change_filament")
+                                .setTarget(amsTrayId)
+                                .setCurrTemp(BambuConst.AMS_TRAY_TEMP)
+                                .setTarTemp(BambuConst.AMS_TRAY_TEMP)
+                )
+                .build();
+        toJson(message).ifPresent(this::sendData);
+    }
+
+    @Override
+    public void commandFilamentSetting(final int amsId, final int trayId, final Filament filament, final String color, final int minTemp, final int maxTemp) {
+        logUser("%s: commandFilamentSetting ams[%d] tray[%d] filament[%s] color[%s] min[%d] max[%d]"
+                .formatted(name, amsId, trayId, filament, color, minTemp, maxTemp));
+        final BambuMessage message = BambuMessage.newBuilder()
+                .setPrint(
+                        com.tfyre.bambu.model.Print.newBuilder()
+                                .setSequenceId("%d".formatted(counter.incrementAndGet()))
+                                .setCommand("ams_filament_setting")
+                                .setAmsId(amsId)
+                                .setTrayId(trayId)
+                                .setTrayInfoIdx(filament.getCode())
+                                .setTrayColor(color)
+                                .setNozzleTempMin(minTemp)
+                                .setNozzleTempMax(maxTemp)
+                                .setTrayType(filament.getType().getDescription())
+                )
+                .build();
+        toJson(message).ifPresent(this::sendData);
+    }
+
+    @Override
+    public void commandFilamentUnload() {
+        logUser("%s: commandFilamentUnload".formatted(name));
+        final BambuMessage message = BambuMessage.newBuilder()
+                .setPrint(
+                        com.tfyre.bambu.model.Print.newBuilder()
+                                .setSequenceId("%d".formatted(counter.incrementAndGet()))
+                                .setCommand("unload_filament")
+                )
+                .build();
+        toJson(message).ifPresent(this::sendData);
+    }
+
+    @Override
     public void commandControl(final BambuConst.CommandControl control) {
         logUser("%s: commandControl: %s".formatted(name, control));
         final BambuMessage message = BambuMessage.newBuilder()
