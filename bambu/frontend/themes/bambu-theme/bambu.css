@@ -64,7 +64,7 @@
     width: 100%;
     min-height: 371px;
     justify-content: center;
-    align-items: stretch;
+    align-items: center;
 
     /*LumoUtility.Background.BASE*/
     background-color: var(--lumo-base-color);
@@ -79,14 +79,26 @@
 .dashboard-printer .image img {
     min-width: 0;
     flex-grow: 1;
+    height: 95%;
+    width: 95%;
+    max-height: 720px;
+    max-width: 1280px;
+    object-fit: contain;
     margin: 10px;
 }
 
 .dashboard-printer .image iframe {
     flex-grow: 1;
+    width: 95%;
+    max-height: 720px;
+    max-width: 1280px;
+    object-fit: contain;
     margin: 10px;
-    aspect-ration: 16/10;
     border: 0px;
+}
+
+.controlsbox iframe {
+    height: 60vh;
 }
 
 .dashboard-printer .status {
