@@ -43,7 +43,11 @@ openjdk version "21.0.1" 2023-10-17 LTS
 OpenJDK Runtime Environment Zulu21.30+15-CA (build 21.0.1+12-LTS)
 OpenJDK 64-Bit Server VM Zulu21.30+15-CA (build 21.0.1+12-LTS, mixed mode, sharing)
 ```
-* Download the latest `bambu-web-*-runner.jar` from [releases](https://github.com/TFyre/bambu-farm/releases/latest) into a new folder
+* Download the latest `bambu-web-*-runner.jar` from [releases](https://github.com/TFyre/bambu-farm/releases/latest) into a new folder (or use the 1 liner below):
+```bash
+curl -s https://api.github.com/repos/tfyre/bambu-farm/releases/latest \
+  | grep browser_download_url | cut -d'"' -f4 | xargs curl -LO
+```
 * Create a `.env` config file from [Minimal Config](#minimal-config)
   * *Check out the [Full Config Options](#full-config-options) section if you want to tweak some settings*
 * Run with `java -jar bambu-web-x.x.x-runner.jar`
