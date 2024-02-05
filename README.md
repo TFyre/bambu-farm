@@ -23,7 +23,7 @@ Technologies used:
   > In Bambu Studio/Orca slicer, make sure to slice the place and then use the "File -> Export -> Export plate sliced file". This creates a `.3mf` project with embedded `.gcode` plate.
 2. **FTPS Connections needs SSL Session Reuse via [Bouncy Castle](#bouncy-castle)**
 > Without enabling bouncy castle, you will see `552 SSL connection failed: session resuse required`
-3. Getting the **LiveView** to work requires a different setup requiring additional software. For more details check the [docker/bambu-liveview](docker/bambu-liveview) README.
+3. Getting the **LiveView** to work requires additional software. For more details check the [docker/bambu-liveview](docker/bambu-liveview) README.
 
 # Screenshots
 
