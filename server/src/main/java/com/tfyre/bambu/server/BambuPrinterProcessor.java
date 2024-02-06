@@ -22,14 +22,13 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
-import org.apache.camel.StartupListener;
 import org.jboss.logging.Logger;
 
 /**
  *
  * @author Francois Steyn - (fsteyn@tfyre.co.za)
  */
-public class BambuPrinterProcessor implements Processor, StartupListener {
+public class BambuPrinterProcessor implements Processor {
 
     private static final Logger log = Logger.getLogger(BambuPrinterProcessor.class.getName());
     private static final JsonFormat.Printer PRINTER = JsonFormat.printer().preservingProtoFieldNames();
@@ -43,11 +42,9 @@ public class BambuPrinterProcessor implements Processor, StartupListener {
     private final AtomicInteger time = new AtomicInteger(RND.nextInt(100));
     private final Endpoint endpoint;
     private ProducerTemplate producerTemplate;
-    private final Scheduler scheduler;
     private final String name;
 
-    public BambuPrinterProcessor(final Scheduler scheduler, final Endpoint endpoint, final String name) {
-        this.scheduler = scheduler;
+    public BambuPrinterProcessor(final Endpoint endpoint, final String name) {
         this.endpoint = endpoint;
         this.name = name;
     }
@@ -127,9 +124,8 @@ public class BambuPrinterProcessor implements Processor, StartupListener {
                 .ifPresent(this::sendData);
     }
 
-    @Override
-    public void onCamelContextStarted(final CamelContext context, boolean alreadyStarted) throws Exception {
-        log.debug("onCamelContextStarted");
+    public void start(final CamelContext context, final Scheduler scheduler) {
+        log.debug("start");
         producerTemplate = context.createProducerTemplate();
         scheduler.newJob("%s#%s".formatted(getClass().getSimpleName(), this.name))
                 .setInterval("1s")

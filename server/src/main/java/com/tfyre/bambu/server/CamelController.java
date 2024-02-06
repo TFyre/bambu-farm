@@ -6,8 +6,11 @@ import io.quarkus.runtime.Startup;
 import io.quarkus.scheduler.Scheduler;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
+import org.apache.camel.StartupListener;
 import org.jboss.logging.Logger;
 
 /**
@@ -16,7 +19,7 @@ import org.jboss.logging.Logger;
  */
 @Startup
 @ApplicationScoped
-public class CamelController extends AbstractMqttController {
+public class CamelController extends AbstractMqttController implements StartupListener {
 
     @Inject
     BambuConfig config;
@@ -24,22 +27,30 @@ public class CamelController extends AbstractMqttController {
     Logger log;
     @Inject
     Scheduler scheduler;
-    @Inject
-    CamelContext camelContext;
+
+    private final List<BambuPrinterProcessor> list = new ArrayList<>();
+
+    @Override
+    public void onCamelContextStarted(final CamelContext context, final boolean alreadyStarted) throws Exception {
+
+    }
+
+    @Override
+    public void onCamelContextFullyStarted(final CamelContext context, final boolean alreadyStarted) throws Exception {
+        log.info("Starting all printers");
+        list.forEach(p -> p.start(context, scheduler));
+    }
 
     @Override
     public void configure() throws Exception {
+        getCamelContext().addStartupListener(this);
         config.printers().forEach(this::configurePrinter);
         log.info("configured");
     }
 
     private BambuPrinterProcessor newPrinter(final Endpoint endpoint, final String name) {
-        final BambuPrinterProcessor printer = new BambuPrinterProcessor(scheduler, endpoint, name);
-        try {
-            camelContext.addStartupListener(printer);
-        } catch (Exception ex) {
-            log.errorf(ex, "Error registring startupLister %s", name);
-        }
+        final BambuPrinterProcessor printer = new BambuPrinterProcessor(endpoint, name);
+        list.add(printer);
         return printer;
     }
 
