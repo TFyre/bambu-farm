@@ -207,4 +207,48 @@ public class BambuConst {
 
     }
 
+    public enum Color {
+        COL00(0xffffff),
+        COL01(0xfff144),
+        COL02(0xdcf478),
+        COL03(0x0acc38),
+        COL04(0x057748),
+        COL05(0x0d6284),
+        COL06(0x0ee2a0),
+        COL07(0x76d9f4),
+        COL08(0x46a8f9),
+        COL09(0x2850e0),
+        COL10(0x443089),
+        COL11(0xa03cf7),
+        COL12(0xf330f9),
+        COL13(0xd4b1dd),
+        COL14(0xf95d73),
+        COL15(0xf72323),
+        COL16(0x7c4b00),
+        COL17(0xf98c36),
+        COL18(0xfcecd6),
+        COL19(0xd3c5a3),
+        COL20(0xaf7933),
+        COL21(0x898989),
+        COL22(0xbcbcbc),
+        COL23(0x161616);
+
+        private final long color;
+        private final String htmlColor;
+
+        private Color(final long color) {
+            this.color = color;
+            this.htmlColor = "#%06X".formatted(color);
+        }
+
+        public long getColor() {
+            return color;
+        }
+
+        public String getHtmlColor() {
+            return htmlColor;
+        }
+
+    }
+
 }

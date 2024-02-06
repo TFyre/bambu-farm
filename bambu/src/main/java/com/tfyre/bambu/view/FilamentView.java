@@ -9,7 +9,10 @@ import com.tfyre.bambu.printer.Utils;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Input;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import jakarta.xml.bind.DatatypeConverter;
 import java.util.Comparator;
@@ -27,7 +30,7 @@ public class FilamentView extends FormLayout implements ShowInterface {
     private static final Logger log = Logger.getLogger(FilamentView.class.getName());
 
     private final ComboBox<Filament> filaments = new ComboBox<>("Filament");
-    private final ColorField color = new ColorField("Color");
+    private final ColorField color = new ColorField("Custom Color");
     private final IntegerField minTemp = new IntegerField("Min Temperature");
     private final IntegerField maxTemp = new IntegerField("Max Temperature");
 
@@ -104,6 +107,7 @@ public class FilamentView extends FormLayout implements ShowInterface {
     }
 
     public FilamentView build(final String printerName, final Optional<Tray> tray) {
+        addClassName("filament-view");
         filaments.setItemLabelGenerator(Filament::getDescription);
         filaments.setItems(getFilaments());
 
@@ -121,6 +125,7 @@ public class FilamentView extends FormLayout implements ShowInterface {
         });
 
         add(filaments, color, minTemp, maxTemp);
+        setColspan(color, 2);
 
         return this;
     }
@@ -131,8 +136,20 @@ public class FilamentView extends FormLayout implements ShowInterface {
 
         public ColorField(final String label) {
             input.setType("color");
-            add(input);
             setLabel(label);
+
+            final Div presets = new Div();
+            add(input, presets);
+            presets.addClassName("presets");
+
+            EnumSet.allOf(BambuConst.Color.class).forEach(c -> {
+                final Div preset = new Div();
+                preset.addClassName("preset");
+                preset.getStyle().setBackgroundColor(c.getHtmlColor());
+                preset.addClickListener(l -> setPresentationValue(c.getHtmlColor()));
+                presets.add(preset);
+            });
+
         }
 
         @Override

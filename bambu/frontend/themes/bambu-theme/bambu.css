@@ -291,3 +291,25 @@
 .extruder .spacer {
     flex-grow: 1;
 }
+
+.filament-view .presets {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.filament-view .presets .preset {
+    width: 30px;
+    height: 30px;
+
+    /*LumoUtility.Padding.SMALL*/
+    padding: var(--lumo-space-s);
+
+    /*LumoUtility.Margin.SMALL*/
+    margin: var(--lumo-space-s);
+
+    /*LumoUtility.BoxShadow.SMALL*/
+    box-shadow: var(--lumo-box-shadow-s);
+
+    /*LumoUtility.BorderRadius.LARGE*/
+    border-radius: var(--lumo-border-radius-l);
+}
