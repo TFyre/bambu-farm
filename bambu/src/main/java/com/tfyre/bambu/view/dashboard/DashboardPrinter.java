@@ -426,12 +426,22 @@ public class DashboardPrinter implements ShowInterface {
         return result;
     }
 
+    private Div newDiv(final String className, final Component... components) {
+        final Div result = new Div(components);
+        result.addClassName(className);
+        return result;
+    }
+
+    private Span newSpan(final String className) {
+        final Span result = new Span();
+        result.addClassName(className);
+        return result;
+    }
+
     private Div buildName() {
-        final Div result = new Div();
-        result.addClassName("name");
+        final Div result = newDiv("name", printerName);
         printerName.setTitle("--");
         printerName.setText(printer.getName());
-        result.add(printerName);
         if (isAdmin) {
             result.add(
                     newButton("Show Logs", VaadinIcon.CLIPBOARD_TEXT, l -> UI.getCurrent().navigate(LogsView.class, printer.getName())),
@@ -465,36 +475,27 @@ public class DashboardPrinter implements ShowInterface {
                 printer.commandPrintGCodeLine(BambuConst.gcodeMoveExtruder(up));
         final Consumer<Boolean> home = b ->
                 printer.commandPrintGCodeLine(b ? BambuConst.gcodeHomeXY() : BambuConst.gcodeHomeZ());
-        final Div result = new Div();
-        result.addClassName("controlsbox");
 
-        final Div xyControl = new Div();
-        xyControl.addClassName("controlxy");
-        final Div up = new Div(
-                new Span("X/Y Control"),
-                newButton("Y+10", VaadinIcon.ANGLE_DOUBLE_UP, l -> movexy.accept(BambuConst.Move.Y, 10)),
-                newButton("Y+1", VaadinIcon.ANGLE_UP, l -> movexy.accept(BambuConst.Move.Y, 1))
+        final Div xyControl = newDiv("controlxy",
+                newDiv("updown",
+                        new Span("X/Y Control"),
+                        newButton("Y+10", VaadinIcon.ANGLE_DOUBLE_UP, l -> movexy.accept(BambuConst.Move.Y, 10)),
+                        newButton("Y+1", VaadinIcon.ANGLE_UP, l -> movexy.accept(BambuConst.Move.Y, 1))
+                ),
+                newDiv("leftright",
+                        newButton("X-10", VaadinIcon.ANGLE_DOUBLE_LEFT, l -> movexy.accept(BambuConst.Move.X, -10)),
+                        newButton("X-1", VaadinIcon.ANGLE_LEFT, l -> movexy.accept(BambuConst.Move.X, -1)),
+                        newButton("XY Home", VaadinIcon.HOME, l -> home.accept(true)),
+                        newButton("X+1", VaadinIcon.ANGLE_RIGHT, l -> movexy.accept(BambuConst.Move.X, 1)),
+                        newButton("X+10", VaadinIcon.ANGLE_DOUBLE_RIGHT, l -> movexy.accept(BambuConst.Move.X, 10))
+                ),
+                newDiv("updown",
+                        newButton("Y-1", VaadinIcon.ANGLE_DOWN, l -> movexy.accept(BambuConst.Move.Y, -1)),
+                        newButton("Y-10", VaadinIcon.ANGLE_DOUBLE_DOWN, l -> movexy.accept(BambuConst.Move.Y, -10))
+                )
         );
-        up.addClassName("updown");
 
-        final Div leftRight = new Div(
-                newButton("X-10", VaadinIcon.ANGLE_DOUBLE_LEFT, l -> movexy.accept(BambuConst.Move.X, -10)),
-                newButton("X-1", VaadinIcon.ANGLE_LEFT, l -> movexy.accept(BambuConst.Move.X, -1)),
-                newButton("XY Home", VaadinIcon.HOME, l -> home.accept(true)),
-                newButton("X+1", VaadinIcon.ANGLE_RIGHT, l -> movexy.accept(BambuConst.Move.X, 1)),
-                newButton("X+10", VaadinIcon.ANGLE_DOUBLE_RIGHT, l -> movexy.accept(BambuConst.Move.X, 10))
-        );
-        leftRight.addClassName("leftright");
-        final Div down = new Div(
-                newButton("Y-1", VaadinIcon.ANGLE_DOWN, l -> movexy.accept(BambuConst.Move.Y, -1)),
-                newButton("Y-10", VaadinIcon.ANGLE_DOUBLE_DOWN, l -> movexy.accept(BambuConst.Move.Y, -10))
-        );
-        down.addClassName("updown");
-        xyControl.add(up, leftRight, down);
-
-        final Div zControl = new Div();
-        zControl.addClassName("controlz");
-        zControl.add(
+        final Div zControl = newDiv("controlz",
                 new Span("Bed Control"),
                 newButton("Bed+10", VaadinIcon.ANGLE_DOUBLE_UP, l -> movez.accept(BambuConst.Move.Z, -10)),
                 newButton("Bed+1", VaadinIcon.ANGLE_UP, l -> movez.accept(BambuConst.Move.Z, -1)),
@@ -503,72 +504,43 @@ public class DashboardPrinter implements ShowInterface {
                 newButton("Bed-10", VaadinIcon.ANGLE_DOUBLE_DOWN, l -> movez.accept(BambuConst.Move.Z, 10))
         );
 
-        final Div extruder = new Div();
-        extruder.addClassName("extruder");
-        final Span spacer1 = new Span();
-        spacer1.addClassName("spacer");
-        final Span spacer2 = new Span();
-        spacer2.addClassName("spacer");
-        final Span spacer3 = new Span();
-        spacer3.addClassName("spacer");
-        extruder.add(
+        final Div extruder = newDiv("extruder",
                 new Span("Extruder"),
-                spacer1,
+                newSpan("spacer"),
                 newButton("Extruder-10", VaadinIcon.ANGLE_UP, l -> movee.accept(true)),
-                spacer2,
+                newSpan("spacer"),
                 newButton("Extruder+10", VaadinIcon.ANGLE_DOWN, l -> movee.accept(false)),
-                spacer3
+                newSpan("spacer")
         );
+
         final Button homeAll = newButton("All Home", VaadinIcon.HOME, l -> printer.commandPrintGCodeLine(BambuConst.gcodeHomeAll()));
 
-        final Checkbox enableControl = new Checkbox("Enable Controls");
         final Consumer<Boolean> setEnabled = enabled -> {
             xyControl.setEnabled(enabled);
             zControl.setEnabled(enabled);
             extruder.setEnabled(enabled);
             homeAll.setEnabled(enabled);
         };
-        enableControl.addValueChangeListener(l -> setEnabled.accept(l.getValue()));
+        final Checkbox enableControl = new Checkbox("Enable Controls", l -> setEnabled.accept(l.getValue()));
         setEnabled.accept(false);
 
-        final Div controlHeader = new Div(enableControl, homeAll);
-        controlHeader.addClassName("controlheader");
-        final Div controlBody = new Div(xyControl, zControl, extruder);
-        controlBody.addClassName("controlbody");
-        final Div controls = new Div(controlHeader, controlBody);
-        controls.addClassName("controls");
-        result.add(thumbnailOrIframe, controls);
-        return result;
+        return newDiv("controlsbox", thumbnailOrIframe,
+                newDiv("controls",
+                        newDiv("controlheader", enableControl, homeAll),
+                        newDiv("controlbody", xyControl, zControl, extruder)));
     }
 
     private Component buildImage() {
-        final Div result = new Div();
-        result.addClassName("image");
-        if (fromDashboard) {
-            result.add(thumbnailOrIframe);
-        } else {
-            result.add(buildControls());
-        }
-        result.add(thumbnailUpdated);
-        return result;
-    }
-
-    private VerticalLayout getBadge() {
-        final VerticalLayout result = new VerticalLayout();
-        result.setMargin(true);
-        result.setSpacing(false);
-        result.setSizeUndefined();
-        return result;
-    }
-
-    private VerticalLayout getBadge(final String toolTip, final Component... components) {
-        final VerticalLayout result = getBadge();
-        result.addClassNames(
-                "badge",
-                toolTip.toLowerCase()
+        return newDiv("image",
+                fromDashboard ? thumbnailOrIframe : buildControls(),
+                thumbnailUpdated
         );
+    }
+
+    private Div getBadge(final String toolTip, final Component... components) {
+        final Div result = newDiv("badge", components);
+        result.addClassName(toolTip.toLowerCase());
         result.getElement().setProperty("title", toolTip);
-        result.add(components);
         return result;
     }
 
@@ -701,22 +673,14 @@ public class DashboardPrinter implements ShowInterface {
 
     private Div buildAmsHeader(final AmsHeader header) {
         amsHeaders.put(header.id(), header);
-        final Div result = new Div();
-        result.addClassName("amsheader");
-        final Span name = new Span(header.id());
-        final Span filler = new Span();
-        filler.addClassName("filler");
-        result.add(name, filler);
+        final Div result = newDiv("amsheader",
+                new Span(header.id()),
+                newSpan("filler")
+        );
         if (printer.getModel() == BambuConst.PrinterModel.X1C) {
             result.add(header.temperature());
         }
         result.add(header.humidity());
-        return result;
-    }
-
-    private Div buildAmsTray() {
-        final Div result = new Div();
-        result.addClassName("amstray");
         return result;
     }
 
@@ -738,13 +702,10 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private Div buildAmsFilament(final String key, final int amsId, final int trayId) {
-        final Span color = new Span();
-        color.addClassName("color");
-        final Div result = new Div();
-        final AmsFilament filament = new AmsFilament(amsId, trayId, result, new Span(), color);
+        final Div result = newDiv("filament");
+        final AmsFilament filament = new AmsFilament(amsId, trayId, result, new Span(), newSpan("color"));
         amsFilaments.put(key, filament);
 
-        result.addClassName("filament");
         result.add(filament.type(), filament.color());
         return wrapAmsFilament(filament);
     }
@@ -777,19 +738,13 @@ public class DashboardPrinter implements ShowInterface {
     private Div buildTray(final String amsHeaderId, final boolean hasHumidity, final List<Div> filaments) {
         final Image image = new Image(Images.AMS_HUMIDITY_0.getImage(), "Humidity");
         image.setTitle("Humidity");
-        final AmsHeader amsHeader = new AmsHeader(amsHeaderId,
-                new Span("--"),
-                image
-        );
+        final AmsHeader amsHeader = new AmsHeader(amsHeaderId, newSpan(), image);
         if (!hasHumidity) {
             amsHeader.humidity().getStyle().setDisplay(Style.Display.NONE);
         }
-        final Div trayL = buildAmsTray();
+        final Div trayL = newDiv("amstray");
         filaments.forEach(trayL::add);
-        final Div layout = new Div();
-        layout.addClassName("ams");
-        layout.add(buildAmsHeader(amsHeader), trayL);
-        return layout;
+        return newDiv("ams", buildAmsHeader(amsHeader), trayL);
     }
 
     private void buildAms(final Div parent, final com.tfyre.bambu.model.Ams ams) {
@@ -814,8 +769,7 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private Div buildAms() {
-        final Div result = new Div();
-        result.addClassName("filaments");
+        final Div result = newDiv("filaments");
         printer.getFullStatus().ifPresent(m -> {
             if (!m.message().hasPrint() || !m.message().getPrint().hasAms()) {
                 return;

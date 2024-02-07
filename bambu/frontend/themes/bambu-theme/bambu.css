@@ -107,6 +107,9 @@
 }
 
 .dashboard-printer .badge {
+    display: flex;
+    flex-direction: column;
+
     font-weight: bolder;
     align-items: center;
     min-width: 50px;
