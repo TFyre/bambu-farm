@@ -1,5 +1,6 @@
 package com.tfyre.bambu.printer;
 
+import com.tfyre.bambu.BambuConfig;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,31 @@ public class BambuConst {
     public static final int TEMPERATURE_MAX_NOZZLE = 300;
     public static final int AMS_TRAY_UNLOAD = 255;
     public static final int AMS_TRAY_TEMP = 210;
+
+    public static final List<BambuConfig.Temperature> PREHEAT = List.of(
+            newTemperature("Off 0 / 0", 0, 0),
+            newTemperature("PLA 55 / 220", 55, 220),
+            newTemperature("ABS 90 / 270", 90, 270)
+    );
+
+    private static BambuConfig.Temperature newTemperature(final String name, final int bed, final int nozzle) {
+        return new BambuConfig.Temperature() {
+            @Override
+            public String name() {
+                return name;
+            }
+
+            @Override
+            public int bed() {
+                return bed;
+            }
+
+            @Override
+            public int nozzle() {
+                return nozzle;
+            }
+        };
+    }
 
     public static String gcodeTargetTemperatureBed(final int temperature) {
         return "M140 S%d".formatted(Math.max(Math.min(temperature, TEMPERATURE_MAX_BED), 0));

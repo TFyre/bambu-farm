@@ -646,9 +646,29 @@ public class DashboardPrinter implements ShowInterface {
         }
         final ContextMenu menu = newContextMenu(result);
         menu.addItem("Set Target", l -> confirmTemperature(current, maxTemp, function));
+
+        final List<BambuConfig.Temperature> list = config.preheat().orElse(BambuConst.PREHEAT);
+
+        if (list.isEmpty()) {
+            return result;
+        }
+
         final SubMenu preheat = menu.addItem("Preheat").getSubMenu();
-        preheat.addItem("PLA 55 / 220", l -> confirmTemperature(List.of(BambuConst.gcodeTargetTemperatureBed(55), BambuConst.gcodeTargetTemperatureNozzle(220))));
-        preheat.addItem("ABS 90 / 270", l -> confirmTemperature(List.of(BambuConst.gcodeTargetTemperatureBed(90), BambuConst.gcodeTargetTemperatureNozzle(270))));
+        list.forEach(t -> {
+            if (t.bed() < 0 || t.bed() > BambuConst.TEMPERATURE_MAX_BED) {
+                log.errorf("Skipping invalid bed preheat: %d", t.bed());
+                return;
+            }
+            if (t.nozzle() < 0 || t.nozzle() > BambuConst.TEMPERATURE_MAX_NOZZLE) {
+                log.errorf("Skipping invalid nozzle preheat: %d", t.nozzle());
+                return;
+            }
+
+            preheat.addItem(t.name(), l -> confirmTemperature(List.of(
+                    BambuConst.gcodeTargetTemperatureBed(t.bed()),
+                    BambuConst.gcodeTargetTemperatureNozzle(t.nozzle()))));
+
+        });
         return result;
     }
 

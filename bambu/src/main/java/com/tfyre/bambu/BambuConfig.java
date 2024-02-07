@@ -5,6 +5,7 @@ import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithConverter;
 import io.smallrye.config.WithDefault;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,6 +39,8 @@ public interface BambuConfig {
     Map<String, Printer> printers();
 
     Map<String, User> users();
+
+    Optional<List<Temperature>> preheat();
 
     public interface Printer {
 
@@ -125,5 +128,14 @@ public interface BambuConfig {
 
         Optional<Boolean> darkMode();
 
+    }
+
+    public interface Temperature {
+
+        String name();
+
+        int bed();
+
+        int nozzle();
     }
 }
