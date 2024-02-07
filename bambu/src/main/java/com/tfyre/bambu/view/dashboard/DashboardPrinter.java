@@ -519,17 +519,19 @@ public class DashboardPrinter implements ShowInterface {
                 newButton("Extruder+10", VaadinIcon.ANGLE_DOWN, l -> movee.accept(false)),
                 spacer3
         );
+        final Button homeAll = newButton("All Home", VaadinIcon.HOME, l -> printer.commandPrintGCodeLine(BambuConst.gcodeHomeAll()));
 
         final Checkbox enableControl = new Checkbox("Enable Controls");
         final Consumer<Boolean> setEnabled = enabled -> {
             xyControl.setEnabled(enabled);
             zControl.setEnabled(enabled);
             extruder.setEnabled(enabled);
+            homeAll.setEnabled(enabled);
         };
         enableControl.addValueChangeListener(l -> setEnabled.accept(l.getValue()));
         setEnabled.accept(false);
 
-        final Div controlHeader = new Div(enableControl);
+        final Div controlHeader = new Div(enableControl, homeAll);
         controlHeader.addClassName("controlheader");
         final Div controlBody = new Div(xyControl, zControl, extruder);
         controlBody.addClassName("controlbody");

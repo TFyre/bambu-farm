@@ -241,11 +241,13 @@
 .controlsbox .controls {
     margin-top: auto;
     margin-bottom: auto;
+    margin-right: 10px;
 }
 
 .controlsbox .controlheader {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 }
 
 .controlsbox .controlbody {
