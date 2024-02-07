@@ -1,6 +1,8 @@
 package com.tfyre.bambu;
 
+import com.tfyre.bambu.printer.BambuConst.PrinterModel;
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithConverter;
 import io.smallrye.config.WithDefault;
 import java.time.Duration;
 import java.util.Map;
@@ -67,6 +69,10 @@ public interface BambuConfig {
         Ftp ftp();
 
         Stream stream();
+
+        @WithDefault("unknown")
+        @WithConverter(PrinterModelConverter.class)
+        PrinterModel model();
 
         public interface Mqtt {
 

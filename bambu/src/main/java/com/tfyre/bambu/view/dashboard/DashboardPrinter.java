@@ -27,7 +27,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.contextmenu.SubMenu;
-import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.IFrame;
 import com.vaadin.flow.component.html.Image;
@@ -658,9 +657,14 @@ public class DashboardPrinter implements ShowInterface {
         result.addClassName("status");
         result.add(
                 wrapTemperature(getBadge("Nozzle", nozzleImage, nozzle, nozzleTarget), () -> (int) temperatureNozzle, BambuConst.TEMPERATURE_MAX_NOZZLE, BambuConst::gcodeTargetTemperatureNozzle),
-                wrapTemperature(getBadge("Bed", bedImage, bed, bedTarget), () -> (int) temperatureBed, BambuConst.TEMPERATURE_MAX_BED, BambuConst::gcodeTargetTemperatureBed),
-                //FIXME implement frame temperature detection (using printer model)
-                //getBadge("Frame", frameImage, frame),
+                wrapTemperature(getBadge("Bed", bedImage, bed, bedTarget), () -> (int) temperatureBed, BambuConst.TEMPERATURE_MAX_BED, BambuConst::gcodeTargetTemperatureBed)
+        );
+
+        if (printer.getModel() == BambuConst.PrinterModel.X1C) {
+            result.add(getBadge("Frame", frameImage, frame));
+        }
+
+        result.add(
                 wrapSpeedMenu(getBadge("Speed", speedImage, speed)),
                 wrapMonitorMenu(getBadge("Lamp", monitorLamp, monitorLampText))
         );
@@ -680,7 +684,11 @@ public class DashboardPrinter implements ShowInterface {
         final Span name = new Span(header.id());
         final Span filler = new Span();
         filler.addClassName("filler");
-        result.add(name, filler, header.temperature(), header.humidity());
+        result.add(name, filler);
+        if (printer.getModel() == BambuConst.PrinterModel.X1C) {
+            result.add(header.temperature());
+        }
+        result.add(header.humidity());
         return result;
     }
 

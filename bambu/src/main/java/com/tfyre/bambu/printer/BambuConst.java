@@ -3,6 +3,7 @@ package com.tfyre.bambu.printer;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -247,6 +248,32 @@ public class BambuConst {
 
         public String getHtmlColor() {
             return htmlColor;
+        }
+
+    }
+
+    public enum PrinterModel {
+        UNKNOWN("unknown"),
+        A1("a1"),
+        A1MINI("a1mini"),
+        P1P("p1p"),
+        P1S("p1s"),
+        X1C("x1c");
+
+        private static final Map<String, PrinterModel> MAP = EnumSet.allOf(PrinterModel.class).stream().collect(Collectors.toMap(PrinterModel::getModel, Function.identity()));
+
+        private final String model;
+
+        private PrinterModel(final String model) {
+            this.model = model;
+        }
+
+        public String getModel() {
+            return model;
+        }
+
+        public static Optional<PrinterModel> fromModel(final String model) {
+            return Optional.ofNullable(MAP.get(model));
         }
 
     }

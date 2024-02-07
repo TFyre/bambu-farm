@@ -6,6 +6,7 @@ import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.model.BambuMessage;
 import com.tfyre.bambu.model.Print;
 import com.tfyre.bambu.model.Pushing;
+import com.tfyre.bambu.printer.BambuConst.PrinterModel;
 import com.tfyre.bambu.security.SecurityUtils;
 import com.vaadin.flow.server.VaadinSession;
 import io.quarkus.scheduler.Scheduler;
@@ -64,6 +65,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     private int printerError;
     private int totalLayerNum;
     private String printType = BambuConst.PRINT_TYPE_IDLE;
+    private PrinterModel model = BambuConst.PrinterModel.UNKNOWN;
 
     public BambuPrinterImpl() {
     }
@@ -104,6 +106,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
 
     public void setup(final Scheduler scheduler, final String name, final BambuConfig.Printer config, final Endpoint endpoint, final String id) {
         this.name = name;
+        this.model = config.model();
         this.config = config;
         this.endpoint = endpoint;
         buildIFrame(id);
@@ -116,6 +119,11 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public PrinterModel getModel() {
+        return model;
     }
 
     @Override

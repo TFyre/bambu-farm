@@ -1,6 +1,7 @@
 package com.tfyre.bambu.printer;
 
 import com.tfyre.bambu.model.BambuMessage;
+import com.tfyre.bambu.printer.BambuConst.PrinterModel;
 import com.vaadin.flow.server.StreamResource;
 import java.time.OffsetDateTime;
 import java.util.Collection;
@@ -14,6 +15,8 @@ import java.util.Optional;
 public interface BambuPrinter {
 
     String getName();
+
+    PrinterModel getModel();
 
     int getPrintError();
 
