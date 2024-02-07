@@ -142,6 +142,7 @@ bambu.printers.myprinter1.ip=REPLACE_WITH_DEVICE_IP
 bambu.printers.myprinter1.use-ams=true
 bambu.printers.myprinter1.timelapse=true
 bambu.printers.myprinter1.bed-levelling=true
+bambu.printers.myprinter1.model=unknown / a1 / a1mini / p1p / p1s / x1c
 bambu.printers.myprinter1.mqtt.port=8883
 bambu.printers.myprinter1.mqtt.url=ssl://${bambu.printers.myprinter1.ip}:${bambu.printers.myprinter1.mqtt.port}
 bambu.printers.myprinter1.mqtt.report-topic=device/${bambu.printers.myprinter1.device-id}/report
@@ -152,6 +153,7 @@ bambu.printers.myprinter1.ftp.port=990
 bambu.printers.myprinter1.ftp.url=ftps://${bambu.printers.myprinter1.ip}:${bambu.printers.myprinter1.ftp.port}
 bambu.printers.myprinter1.ftp.log-commands=false
 bambu.printers.myprinter1.stream.port=6000
+bambu.printers.myprinter1.stream.live-view=false
 bambu.printers.myprinter1.stream.url=ssl://${bambu.printers.myprinter1.ip}:${bambu.printers.myprinter1.stream.port}
 #Restart stream if no images received interval
 bambu.printers.myprinter1.stream.watch-dog=5m
@@ -182,29 +184,34 @@ bambu.users.guest.password=guest
 bambu.users.guest.role=normal
 ```
 
-### Custom CSS
+### Notification Duration
 
-If you want to modify the CSS, create a file next to the `.jar` file called `styles.css`
+Default display duration for notifications is 5 minutes
 
-* Setting 1 display columns
-
-```css
-/* Add your custom CSS here */
-
-:root {
-  --bambu-default-columns: 1;
-}
+```properties
+bambu.notification-duration=5m
 ```
 
-* Setting 5 display columns
+### Live View
 
-```css
-/* Add your custom CSS here */
+> [!NOTE]
+> Getting the **LiveView** to work requires additional software. For more details check the [docker/bambu-liveview](docker/bambu-liveview) README.
 
-:root {
-  --bambu-default-columns: 5;
-}
+
+```properties
+bambu.live-view-url=/_camerastream/
+
+# For each printer:
+bambu.printers.PRINTER_ID.stream.live-view=true
+
+# Default LiveView URL
+bambu.printers.PRINTER_ID.stream.url=${bambu.live-view-url}${PRINTER_ID}
+
+# Custom LiveView URL
+bambu.printers.PRINTER_ID.stream.url=https://my_stream_domain.com/mystream
+# 
 ```
+
 
 ### Bouncy Castle
 `X1C` needs SSL Session Reuse so that SD Card functionality can work. Reference: https://stackoverflow.com/a/77587106/23289205
@@ -241,6 +248,30 @@ bambu.move-z=3000
 Add to `.env`:
 ```properties
 bambu.menu-left-click=false
+```
+
+### Custom CSS
+
+If you want to modify the CSS, create a file next to the `.jar` file called `styles.css`
+
+* Setting 1 display columns
+
+```css
+/* Add your custom CSS here */
+
+:root {
+  --bambu-default-columns: 1;
+}
+```
+
+* Setting 5 display columns
+
+```css
+/* Add your custom CSS here */
+
+:root {
+  --bambu-default-columns: 5;
+}
 ```
 
 # Debug

@@ -33,6 +33,9 @@ webrtcAdditionalHosts: [10.0.0.456, my.dynamic.dns.com]
 Enable the following in `bambu-web-env.txt`:
 ```properties
 bambu.live-view-url=/_camerastream/
+
+#For Each Printer:
+bambu.printers.PRINTER_ID.stream.live-view=true
 ```
 
 If you have a full custom url for the printer:
