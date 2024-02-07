@@ -184,6 +184,21 @@ bambu.users.guest.password=guest
 bambu.users.guest.role=normal
 ```
 
+### Preheat
+
+Default preheat configuration is below:
+```properties
+bambu.preheat[0].name=Off 0/0
+bambu.preheat[0].bed=0
+bambu.preheat[0].nozzle=0
+bambu.preheat[1].name=PLA 55/220
+bambu.preheat[1].bed=55
+bambu.preheat[1].nozzle=220
+bambu.preheat[2].name=ABS 90/270
+bambu.preheat[2].bed=90
+bambu.preheat[2].nozzle=270
+```
+
 ### Notification Duration
 
 Default display duration for notifications is 5 minutes
