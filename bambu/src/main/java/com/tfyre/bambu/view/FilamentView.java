@@ -11,8 +11,6 @@ import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Input;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import jakarta.xml.bind.DatatypeConverter;
 import java.util.Comparator;
@@ -146,7 +144,10 @@ public class FilamentView extends FormLayout implements ShowInterface {
                 final Div preset = new Div();
                 preset.addClassName("preset");
                 preset.getStyle().setBackgroundColor(c.getHtmlColor());
-                preset.addClickListener(l -> setPresentationValue(c.getHtmlColor()));
+                preset.addClickListener(l -> {
+                    input.setValue(c.getHtmlColor());
+                    updateValue();
+                });
                 presets.add(preset);
             });
 
