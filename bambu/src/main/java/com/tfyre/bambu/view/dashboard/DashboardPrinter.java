@@ -149,19 +149,16 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private Images getHumidityImage(final String id) {
-        if ("0".equals(id)) {
-            return Images.AMS_HUMIDITY_0;
-        }
-        if ("1".equals(id)) {
+        if ("2".equals(id)) {
             return Images.AMS_HUMIDITY_1;
         }
-        if ("2".equals(id)) {
+        if ("3".equals(id)) {
             return Images.AMS_HUMIDITY_2;
         }
-        if ("3".equals(id)) {
+        if ("4".equals(id)) {
             return Images.AMS_HUMIDITY_3;
         }
-        if ("4".equals(id)) {
+        if ("5".equals(id)) {
             return Images.AMS_HUMIDITY_4;
         }
         return Images.AMS_HUMIDITY_0;
