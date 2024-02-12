@@ -86,8 +86,14 @@ public class BambuPrinterProcessor implements Processor {
         }
     }
 
+    private Optional<String> fromMap(final String name) {
+        return Optional.ofNullable(MAP.computeIfAbsent(name, this::getDataFromResource));
+    }
+
     private BambuMessage.Builder fromResource(final String name) {
-        final String data = MAP.computeIfAbsent(name, this::getDataFromResource);
+        final String data = fromMap("%s-%s".formatted(name, this.name))
+                .or(() -> fromMap(name))
+                .get();
         return fromJson(data);
     }
 

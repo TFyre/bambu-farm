@@ -11,14 +11,12 @@ import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuConst.Speed;
 import com.tfyre.bambu.printer.BambuErrors;
 import com.tfyre.bambu.printer.Filament;
-import com.tfyre.bambu.printer.Utils;
 import com.tfyre.bambu.security.SecurityUtils;
 import com.tfyre.bambu.view.FilamentView;
 import com.tfyre.bambu.view.GCodeDialog;
 import com.tfyre.bambu.view.LogsView;
 import com.tfyre.bambu.view.PrinterView;
 import com.tfyre.bambu.view.SdCardView;
-import com.tfyre.bambu.view.ShowInterface;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -58,15 +56,16 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.jboss.logging.Logger;
+import com.tfyre.bambu.view.NotificationHelper;
+import com.tfyre.bambu.view.ViewHelper;
 
 /**
  *
  * @author Francois Steyn - (fsteyn@tfyre.co.za)
  */
 @Dependent
-public class DashboardPrinter implements ShowInterface {
+public class DashboardPrinter implements NotificationHelper, ViewHelper {
 
-    private static final Logger log = Logger.getLogger(DashboardPrinter.class.getName());
     //DateTimeFormatter.ISO_DATE_TIME;
     private static final DateTimeFormatter DTF = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
@@ -118,12 +117,19 @@ public class DashboardPrinter implements ShowInterface {
     private boolean fromDashboard;
 
     @Inject
+    Logger log;
+    @Inject
     BambuConfig config;
 
     public DashboardPrinter() {
         progressBar = newProgressBar();
         statusBox = newStatusBox();
         isAdmin = SecurityUtils.userHasAccess(SystemRoles.ROLE_ADMIN);
+    }
+
+    @Override
+    public Logger getLogger() {
+        return log;
     }
 
     private Span newSpan() {
@@ -173,7 +179,7 @@ public class DashboardPrinter implements ShowInterface {
         }
         ams.getAmsList().forEach(single -> {
             Optional.ofNullable(amsHeaders.get(getAmsHeaderId(single.getId()))).ifPresent(header -> {
-                setTemperature(header.temperature(), Utils.parseDouble(printer.getName(), single.getTemp(), 0));
+                setTemperature(header.temperature(), parseDouble(printer.getName(), single.getTemp(), 0));
                 header.humidity().setSrc(getHumidityImage(single.getHumidity()).getImage());
             });
 
@@ -196,27 +202,12 @@ public class DashboardPrinter implements ShowInterface {
 
     private void processVtTray(final com.tfyre.bambu.model.VtTray tray) {
         Optional.ofNullable(amsHeaders.get(getTrayKey(tray.getId()))).ifPresent(header -> {
-            setTemperature(header.temperature(), Utils.parseDouble(printer.getName(), tray.getTrayTemp(), 0));
+            setTemperature(header.temperature(), parseDouble(printer.getName(), tray.getTrayTemp(), 0));
         });
         Optional.ofNullable(amsFilaments.get(getTrayKey(tray.getId()))).ifPresent(filament -> {
             filament.type().setText(Filament.getFilamentDescription(tray.getTrayInfoIdx()));
             filament.color().getStyle().setBackgroundColor("#%s".formatted(tray.getTrayColor()));
         });
-    }
-
-    private String formatTime(final Duration duration) {
-        final StringBuilder sb = new StringBuilder();
-        final long days = duration.toDays();
-        if (days > 0) {
-            sb.append(days)
-                    .append(" day(s) ");
-        }
-        sb
-                .append(duration.toHoursPart())
-                .append(" hour(s) ")
-                .append(duration.toMinutesPart())
-                .append(" minute(s)");
-        return sb.toString();
     }
 
     private void processPrint(final BambuPrinter.Message message, final Print print) {
@@ -420,18 +411,6 @@ public class DashboardPrinter implements ShowInterface {
                 fanMenu.addItem(fanSpeed.getName(), l -> doConfirm(BambuConst.gcodeFanSpeed(fan, fanSpeed)));
             });
         });
-        return result;
-    }
-
-    private Div newDiv(final String className, final Component... components) {
-        final Div result = new Div(components);
-        result.addClassName(className);
-        return result;
-    }
-
-    private Span newSpan(final String className) {
-        final Span result = new Span();
-        result.addClassName(className);
         return result;
     }
 
@@ -708,8 +687,8 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private Div buildAmsFilament(final AmsSingle single, final Tray tray) {
-        final int amsId = Utils.parseInt(printer.getName(), single.getId(), BambuConst.AMS_TRAY_UNLOAD);
-        final int trayId = Utils.parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
+        final int amsId = parseInt(printer.getName(), single.getId(), BambuConst.AMS_TRAY_UNLOAD);
+        final int trayId = parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
         return buildAmsFilament(getFilamentTrayKey(amsId, trayId), amsId, trayId);
     }
 
@@ -719,8 +698,8 @@ public class DashboardPrinter implements ShowInterface {
 
     private String getFilamentTrayKey(final AmsSingle single, final Tray tray) {
         return getFilamentTrayKey(
-                Utils.parseInt(printer.getName(), single.getId(), BambuConst.AMS_TRAY_UNLOAD),
-                Utils.parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD)
+                parseInt(printer.getName(), single.getId(), BambuConst.AMS_TRAY_UNLOAD),
+                parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD)
         );
     }
 
@@ -757,7 +736,7 @@ public class DashboardPrinter implements ShowInterface {
     }
 
     private void buildVtTray(final Div parent, final com.tfyre.bambu.model.VtTray tray) {
-        final int trayId = Utils.parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
+        final int trayId = parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
         parent.add(buildTray(
                 getTrayKey(tray.getId()),
                 false,

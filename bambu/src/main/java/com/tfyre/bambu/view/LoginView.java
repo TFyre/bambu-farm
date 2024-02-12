@@ -25,7 +25,7 @@ import java.util.Optional;
  */
 @Route(LoginView.LOGIN)
 @PageTitle("Login")
-public class LoginView extends VerticalLayout implements BeforeEnterObserver, ShowInterface {
+public class LoginView extends VerticalLayout implements BeforeEnterObserver, NotificationHelper {
 
     protected static final String LOGIN = "login";
 

@@ -11,7 +11,7 @@ import org.jboss.logging.Logger;
  *
  * @author Francois Steyn - (fsteyn@tfyre.co.za)
  */
-public interface ShowInterface {
+public interface NotificationHelper {
 
     default Notification getNotificationSpan(final String content) {
         final Span s = new Span(content);

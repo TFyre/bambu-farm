@@ -38,7 +38,7 @@ import org.jboss.logging.Logger;
 @Route(value = "printer", layout = MainLayout.class)
 @PageTitle("Printer")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class PrinterView extends Div implements HasUrlParameter<String>, ShowInterface, UpdateHeader {
+public class PrinterView extends Div implements HasUrlParameter<String>, NotificationHelper, UpdateHeader {
 
     private static final Duration INTERVAL = Duration.ofSeconds(1);
 

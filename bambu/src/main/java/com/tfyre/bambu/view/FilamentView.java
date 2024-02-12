@@ -5,7 +5,6 @@ import com.tfyre.bambu.model.Tray;
 import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.printer.Filament;
-import com.tfyre.bambu.printer.Utils;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -23,7 +22,7 @@ import org.jboss.logging.Logger;
  *
  * @author Francois Steyn - (fsteyn@tfyre.co.za)
  */
-public class FilamentView extends FormLayout implements ShowInterface {
+public class FilamentView extends FormLayout implements NotificationHelper, ViewHelper {
 
     private static final Logger log = Logger.getLogger(FilamentView.class.getName());
 
@@ -31,6 +30,11 @@ public class FilamentView extends FormLayout implements ShowInterface {
     private final ColorField color = new ColorField("Custom Color");
     private final IntegerField minTemp = new IntegerField("Min Temperature");
     private final IntegerField maxTemp = new IntegerField("Max Temperature");
+
+    @Override
+    public Logger getLogger() {
+        return log;
+    }
 
     private static Optional<Tray> fromPrinter(final BambuPrinter printer, final int amsId, final int trayId) {
         final String ams = Integer.toString(amsId);
@@ -118,8 +122,8 @@ public class FilamentView extends FormLayout implements ShowInterface {
         tray.ifPresent(t -> {
             filaments.setValue(Filament.getFilament(t.getTrayInfoIdx()).orElse(Filament.UNKNOWN));
             color.setValue("#%.6s".formatted(t.getTrayColor()));
-            minTemp.setValue(Utils.parseInt(printerName, t.getNozzleTempMin(), 190));
-            maxTemp.setValue(Utils.parseInt(printerName, t.getNozzleTempMax(), 220));
+            minTemp.setValue(parseInt(printerName, t.getNozzleTempMin(), 190));
+            maxTemp.setValue(parseInt(printerName, t.getNozzleTempMax(), 220));
         });
 
         add(filaments, color, minTemp, maxTemp);

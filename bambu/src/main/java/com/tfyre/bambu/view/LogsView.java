@@ -49,7 +49,7 @@ import org.jboss.logging.Logger;
 @Route(value = "logs", layout = MainLayout.class)
 @PageTitle("Logs")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class LogsView extends VerticalLayout implements HasUrlParameter<String>, ShowInterface, UpdateHeader {
+public class LogsView extends VerticalLayout implements HasUrlParameter<String>, NotificationHelper, UpdateHeader {
 
     private static final ObjectMapper OM = new ObjectMapper();
     private static final JsonFormat.Printer PRINTER = JsonFormat.printer().preservingProtoFieldNames();

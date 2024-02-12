@@ -7,7 +7,6 @@ import com.tfyre.bambu.printer.BambuPrinterConsumer;
 import com.tfyre.bambu.printer.BambuPrinterException;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -38,7 +37,7 @@ import org.jboss.logging.Logger;
 @Route(value = "maintenance", layout = MainLayout.class)
 @PageTitle("Maintenance")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class MaintenanceView extends VerticalLayout implements ShowInterface, GridHelper<BambuPrinters.PrinterDetail>, UpdateHeader {
+public class MaintenanceView extends VerticalLayout implements NotificationHelper, GridHelper<BambuPrinters.PrinterDetail>, UpdateHeader {
 
     private static final DateTimeFormatter DTF = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()

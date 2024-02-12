@@ -69,7 +69,7 @@ import org.jboss.logging.Logger;
 @Route(value = "sdcard", layout = MainLayout.class)
 @PageTitle("SD Card")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class SdCardView extends VerticalLayout implements HasUrlParameter<String>, ShowInterface, GridHelper<FTPFile> {
+public class SdCardView extends VerticalLayout implements HasUrlParameter<String>, NotificationHelper, GridHelper<FTPFile> {
 
     private static final DateTimeFormatter DTF = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()

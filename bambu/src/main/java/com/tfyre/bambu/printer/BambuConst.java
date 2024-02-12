@@ -24,6 +24,7 @@ public class BambuConst {
     public static final String PRINT_TYPE_IDLE = "idle";
     public static final int TEMPERATURE_MAX_BED = 100;
     public static final int TEMPERATURE_MAX_NOZZLE = 300;
+    public static final int AMS_TRAY_VIRTUAL = 254;
     public static final int AMS_TRAY_UNLOAD = 255;
     public static final int AMS_TRAY_TEMP = 210;
 
