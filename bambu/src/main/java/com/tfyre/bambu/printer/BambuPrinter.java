@@ -34,6 +34,12 @@ public interface BambuPrinter {
 
     Collection<Message> getLastMessages();
 
+    boolean isBlocked();
+
+    boolean isIdle();
+
+    void setBlocked(final boolean blocked);
+
     void commandFullStatus(final boolean force);
 
     void commandClearPrinterError();
@@ -50,7 +56,8 @@ public interface BambuPrinter {
 
     void commandPrintGCodeFile(final String filename);
 
-    void commandPrintProjectFile(final String filename, final int plateId, final boolean useAms, final boolean timelapse, final boolean bedLevelling);
+    void commandPrintProjectFile(final String filename, final int plateId, final boolean useAms, final boolean timelapse, final boolean bedLevelling,
+            final List<Integer> amsMapping);
 
     void commandFilamentLoad(final int amsTrayId);
 

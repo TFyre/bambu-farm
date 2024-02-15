@@ -1,11 +1,11 @@
 package com.tfyre.bambu.view;
 
-import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.MainLayout;
 import com.tfyre.bambu.SystemRoles;
 import com.tfyre.bambu.YesNoCancelDialog;
 import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuPrinters;
+import com.tfyre.ftp.BambuFtp;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
@@ -38,11 +38,9 @@ import io.quarkus.runtime.configuration.MemorySize;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -52,8 +50,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import org.apache.commons.net.ProtocolCommandEvent;
-import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
@@ -90,7 +86,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     @Inject
     ManagedExecutor executor;
     @Inject
-    Instance<FTPSClient> ftpsClientInstance;
+    Instance<BambuFtp> clientInstance;
 
     @ConfigProperty(name = "quarkus.http.limits.max-body-size")
     MemorySize maxBodySize;
@@ -106,7 +102,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     private final Button refresh = new Button("Refresh", new Icon(VaadinIcon.REFRESH), l -> doRefresh());
     private final MemoryBuffer buffer = new MemoryBuffer();
     private final Upload upload = new Upload(buffer);
-    private FTPSClient client;
+    private BambuFtp client;
 
     @Override
     public Grid<FTPFile> getGrid() {
@@ -136,50 +132,16 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         if (client == null) {
             return;
         }
-        final FTPSClient _client = client;
+        final BambuFtp _client = client;
         client = null;
         if (!_client.isConnected()) {
             return;
         }
         grid.setItems(List.of());
         runCallable(() -> {
-            _client.quit();
-            _client.disconnect();
+            _client.doClose();
             return true;
         });
-    }
-
-    private ProtocolCommandListener getListener(final String name) {
-        return new ProtocolCommandListener() {
-
-            private void log(ProtocolCommandEvent event) {
-                log.infof("%s: command[%s] message[%s]", name, event.getCommand(), event.getMessage().trim());
-            }
-
-            @Override
-            public void protocolCommandSent(ProtocolCommandEvent event) {
-                log(event);
-            }
-
-            @Override
-            public void protocolReplyReceived(ProtocolCommandEvent event) {
-                log(event);
-            }
-        };
-    }
-
-    private FTPSClient getFtpsClient(final BambuPrinters.PrinterDetail printer) {
-        final FTPSClient result = ftpsClientInstance.get();
-        if (printer.config().ftp().logCommands()) {
-            result.addProtocolCommandListener(getListener(printer.name()));
-        }
-        //result.setUseEPSVwithIPv4(true);
-        //sent: USER bblp
-        //recv: 331
-        //org.apache.commons.net.MalformedServerReplyException: Truncated server reply: '331 '
-        //at org.apache.commons.net.ftp.FTP.getReply(FTP.java:609)
-        result.setStrictReplyParsing(false);
-        return result;
     }
 
     private void setConnectDisconnect(final boolean canConnect) {
@@ -193,29 +155,20 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
 
     private void buildList(final BambuPrinters.PrinterDetail printer) {
         disconnect();
-        client = getFtpsClient(printer);
+        client = clientInstance.get().setup(printer);
         setConnectDisconnect(true);
-    }
-
-    private URI getURI(final BambuConfig.Printer config) {
-        return URI.create(config.ftp().url().orElseGet(() -> "ftps://%s:%d".formatted(config.ip(), config.ftp().port())));
     }
 
     private void doConnect() {
         connect.setEnabled(false);
         final Optional<UI> ui = getUI();
-        final BambuConfig.Printer config = comboBox.getValue().config();
-        final URI uri = getURI(config);
         runCallable(() -> {
-            if (!client.isConnected()) {
-                client.connect(uri.getHost(), uri.getPort());
-            }
-            if (!client.login(config.username(), config.accessCode())) {
+            client.doConnect();
+            client.doLogin();
+            if (!client.doLogin()) {
                 ui.get().access(() -> showError("Login Failed"));
                 return true;
             }
-            client.execPROT("P");
-            client.enterLocalPassiveMode();
             ui.get().access(() -> setConnectDisconnect(false));
             doPath(path.getValue());
             return true;
@@ -227,8 +180,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         grid.setItems(List.of());
         final Optional<UI> ui = getUI();
         runCallable(() -> {
-            client.quit();
-            client.disconnect();
+            client.doClose();
             ui.get().access(() -> setConnectDisconnect(true));
             return true;
         });
@@ -404,8 +356,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         final InputStream inputStream = buffer.getInputStream();
         showNotification("Uploading to Printer");
         runCallable(() -> {
-            client.setFileType(FTP.BINARY_FILE_TYPE);
-            client.storeFile(event.getFileName(), inputStream);
+            client.doUpload(event.getFileName(), inputStream);
             ui.get().access(() -> showNotification("Uploaded: %s".formatted(event.getFileName())));
             doRefresh();
             return true;
@@ -465,7 +416,9 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
             if (fileName.endsWith(BambuConst.FILE_GCODE)) {
                 comboBox.getValue().printer().commandPrintGCodeFile(fileName);
             } else if (is3mf) {
-                comboBox.getValue().printer().commandPrintProjectFile(fileName, plateId.getValue(), useAMS.getValue(), timelapse.getValue(), bedLevelling.getValue());
+                comboBox.getValue().printer().commandPrintProjectFile(fileName, plateId.getValue(),
+                        useAMS.getValue(), timelapse.getValue(), bedLevelling.getValue(),
+                        List.of());
             } else {
                 showError("Unknown File: %s".formatted(fileName));
             }

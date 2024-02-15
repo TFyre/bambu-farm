@@ -1,7 +1,7 @@
 package com.tfyre.bambu.view;
 
+import com.tfyre.bambu.YesNoCancelDialog;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import java.time.Duration;
@@ -88,6 +88,15 @@ public interface ViewHelper {
         final Span result = new Span();
         result.addClassName(className);
         return result;
+    }
+
+    default void doConfirm(final Runnable runnable) {
+        YesNoCancelDialog.show("Are you sure?", ync -> {
+            if (!ync.isConfirmed()) {
+                return;
+            }
+            runnable.run();
+        });
     }
 
 }

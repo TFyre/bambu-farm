@@ -14,7 +14,6 @@ import java.security.SecureRandom;
 import java.security.Security;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
-import org.apache.commons.net.ftp.FTPSClient;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.jboss.logging.Logger;
 
@@ -51,11 +50,11 @@ public class FTPSClientProvider {
 
     @Produces
     @Dependent
-    public FTPSClient provide() {
+    public BambuFtp provide() {
         if (!config.useBouncyCastle()) {
-            return new FTPSClient(true);
+            return new BambuFtp();
         }
-        return new FTPSClientWithBC(sslContext);
+        return new BambuFtp(sslContext);
     }
 
 }

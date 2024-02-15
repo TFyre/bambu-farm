@@ -66,8 +66,24 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     private int totalLayerNum;
     private String printType = BambuConst.PRINT_TYPE_IDLE;
     private PrinterModel model = BambuConst.PrinterModel.UNKNOWN;
+    private boolean blocked;
 
     public BambuPrinterImpl() {
+    }
+
+    @Override
+    public boolean isBlocked() {
+        return blocked;
+    }
+
+    @Override
+    public boolean isIdle() {
+        return BambuConst.PRINT_TYPE_IDLE.equals(printType);
+    }
+
+    @Override
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
     }
 
     private void setLastPrint(final Print print) {
@@ -232,7 +248,6 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
         final String user = SecurityUtils.getPrincipal().map(p -> p.getName()).orElse("null");
         final String ip = Optional.ofNullable(VaadinSession.getCurrent()).map(vs -> vs.getBrowser().getAddress()).orElse("null");
         log.infof("%s user[%s] ip[%s]", data, user, ip);
-
     }
 
     private void commandFullStatusInternal(final boolean fromUser, final boolean force) {
@@ -437,9 +452,9 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     }
 
     @Override
-    public void commandPrintProjectFile(final String filename, final int plateId, final boolean useAms, final boolean timelapse, final boolean bedLevelling) {
+    public void commandPrintProjectFile(final String filename, final int plateId, final boolean useAms, final boolean timelapse, final boolean bedLevelling, final List<Integer> amsMapping) {
         final String _filename = stripSlash(filename);
-        logUser("%s: commandPrintProject: %s ams[%s] timelapse[%s] bedlevelling[%s]".formatted(name, _filename, useAms, timelapse, bedLevelling));
+        logUser("%s: commandPrintProject: %s ams[%s] timelapse[%s] bedlevelling[%s] amsMapping[%s]".formatted(name, _filename, useAms, timelapse, bedLevelling, amsMapping));
         final int pos = _filename.lastIndexOf(".");
         final String taskName = pos == -1 ? _filename : _filename.substring(0, pos);
         final BambuMessage message = BambuMessage.newBuilder()
@@ -462,7 +477,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
                                 .setFlowCali(true)
                                 .setVibrationCali(true)
                                 .setLayerInspect(true)
-                                .setAmsMapping("")
+                                .addAllAmsMapping(amsMapping)
                                 .setUseAms(useAms)
                 )
                 .build();

@@ -196,7 +196,7 @@ message Print {
   optional bool flow_cali = 67;
   optional bool vibration_cali = 68;
   optional bool layer_inspect = 69;
-  optional string ams_mapping = 70;
+  repeated int32 ams_mapping = 70;
   optional bool use_ams = 71;
   optional string reason = 72;
   optional string result = 73;

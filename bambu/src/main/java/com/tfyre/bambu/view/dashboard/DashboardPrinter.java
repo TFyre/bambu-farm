@@ -382,15 +382,6 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         });
     }
 
-    private void doConfirm(final Runnable runnable) {
-        YesNoCancelDialog.show("Are you sure?", ync -> {
-            if (!ync.isConfirmed()) {
-                return;
-            }
-            runnable.run();
-        });
-    }
-
     private void doConfirm(final String command) {
         doConfirm(() -> printer.commandPrintGCodeLine(command));
     }
