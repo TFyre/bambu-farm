@@ -1,6 +1,7 @@
 package com.tfyre.bambu;
 
 import com.tfyre.bambu.security.SecurityUtils;
+import com.tfyre.bambu.view.batchprint.BatchPrintView;
 import com.tfyre.bambu.view.LogsView;
 import com.tfyre.bambu.view.MaintenanceView;
 import com.tfyre.bambu.view.PrinterView;
@@ -48,6 +49,7 @@ public class MainLayout extends AppLayout {
     private static final Map<Class<? extends Component>, AccessRoute> MAP = makeEntries(Stream.of(
             SdCardView.class,
             PrinterView.class,
+            BatchPrintView.class,
             LogsView.class,
             MaintenanceView.class
     ));
@@ -143,6 +145,7 @@ public class MainLayout extends AppLayout {
         final Predicate<String> roleChecker = VaadinRequest.getCurrent()::isUserInRole;
         getVerticalLayout(roleChecker, Stream.of(
                 PrinterView.class,
+                BatchPrintView.class,
                 SdCardView.class,
                 LogsView.class,
                 MaintenanceView.class))

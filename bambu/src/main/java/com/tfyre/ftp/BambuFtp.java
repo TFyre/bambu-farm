@@ -2,7 +2,6 @@ package com.tfyre.ftp;
 
 import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.printer.BambuPrinters;
-import jakarta.enterprise.context.Dependent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;

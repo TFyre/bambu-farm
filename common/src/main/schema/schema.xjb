@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<jaxb:bindings
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+    xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
+    xmlns:basic="http://jaxb2-commons.dev.java.net/basic"
+    xmlns:ci="http://jaxb.dev.java.net/plugin/code-injector"
+    xmlns:copyable="http://jaxb2-commons.dev.java.net/basic/copyable"
+    xmlns:equals="http://jaxb2-commons.dev.java.net/basic/equals"
+    xmlns:hashCode="http://jaxb2-commons.dev.java.net/basic/hashCode"
+    xmlns:mergeable="http://jaxb2-commons.dev.java.net/basic/mergeable"
+    xmlns:toString="http://jaxb2-commons.dev.java.net/basic/toString"
+    xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
+    xmlns:annox="http://annox.dev.java.net"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/jaxb ../jaxb/bindingschema_2_0.xsd"
+    jaxb:extensionBindingPrefixes="basic xjc ci annox"
+    version="3.0"
+>
+
+
+    <jaxb:globalBindings generateIsSetMethod="true">
+        <jaxb:serializable uid="201401010001"/>
+    </jaxb:globalBindings>
+
+    <jaxb:bindings schemaLocation="slice-info-1.0.xsd">
+        <jaxb:schemaBindings>
+            <jaxb:package name="com.tfyre.schema" />
+        </jaxb:schemaBindings>
+        <jaxb:bindings node="//xs:complexType[@name='headerItem']//xs:attribute[@name='value']">
+            <jaxb:property name="valueAttr"/>
+        </jaxb:bindings>              
+        <jaxb:bindings node="//xs:complexType[@name='metadata']//xs:attribute[@name='value']">
+            <jaxb:property name="valueAttr"/>
+        </jaxb:bindings>              
+    </jaxb:bindings>
+</jaxb:bindings>

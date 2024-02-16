@@ -319,3 +319,135 @@
     /*LumoUtility.BorderRadius.LARGE*/
     border-radius: var(--lumo-border-radius-l);
 }
+
+.batchprint-view .filaments {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;    
+}
+
+.batchprint-view-menu vaadin-context-menu-list-box::part(items) {
+    display: flex;
+}
+
+.batchprint-view-menu vaadin-context-menu-item {
+    padding: 0px;
+}
+
+.batchprint-view-menu vaadin-context-menu-item::part(checkmark) {
+    display: none;
+}
+
+.batchprint-view .contrast,
+.batchprint-view-menu .contrast{
+    color: white;    
+}
+
+.batchprint-view .filaments .filament,
+.batchprint-view-menu .filament {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    flex-basis: 0;
+    align-items: center;
+    justify-content: space-between;
+
+    /*LumoUtility.Padding.SMALL*/
+    padding: var(--lumo-space-s);
+
+    /*LumoUtility.Margin.SMALL*/
+    margin: var(--lumo-space-s);
+
+    /*LumoUtility.BoxShadow.SMALL*/
+    box-shadow: var(--lumo-box-shadow-s);
+
+    /*LumoUtility.BorderRadius.LARGE*/
+    border-radius: var(--lumo-border-radius-l);
+}
+
+.batchprint-view .mapping .filament {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    /*LumoUtility.Padding.SMALL*/
+    padding: var(--lumo-space-s);
+
+    /*LumoUtility.Margin.SMALL*/
+    margin: var(--lumo-space-s);
+
+    /*LumoUtility.BoxShadow.SMALL*/
+    box-shadow: var(--lumo-box-shadow-s);
+
+    /*LumoUtility.BorderRadius.LARGE*/
+    border-radius: var(--lumo-border-radius-l);
+}
+
+.batchprint-view .mapping .filamenttop,
+.batchprint-view-menu .filamenttop {
+    justify-content: center;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.batchprint-view .mapping .filamentbottom,
+.batchprint-view-menu .filamentbottom {
+    justify-content: center;
+    padding-top: 0px;
+    margin-top: 0px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.batchprint-view .mapping {
+    display: flex;
+    flex-direction: column;
+}
+
+.batchprint-view vaadin-grid-sorter {
+    width: 100%;
+}
+
+.batchprint-view .header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+
+    gap: var(--lumo-space-l);
+}
+
+.batchprint-view .header .actions {
+    display: flex;
+    flex-direction: column;
+}
+
+.batchprint-view .actions .detail,
+.batchprint-view .actions .options,
+.batchprint-view .actions .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: var(--lumo-space-l);
+}
+
+.batchprint-view .buttons vaadin-button {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+
+.batchprint-view .header img {
+    background-color: var(--lumo-base-color);
+    box-shadow: var(--lumo-box-shadow-s);
+    border-radius: var(--lumo-border-radius-l);
+}
+
+.batchprint-view .filamentmapping {
+    display: flex;
+    flex-direction: row;
+    align-content: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}

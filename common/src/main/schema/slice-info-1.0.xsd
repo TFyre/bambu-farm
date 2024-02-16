@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:annotation>
+        <xs:documentation>
+            Slice Info
+        </xs:documentation>
+    </xs:annotation>
+    <xs:element name="config" type="config"/>
+    <xs:complexType name="headerItem">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="key" use="optional"/>
+                <xs:attribute type="xs:string" name="value" use="optional"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="header">
+        <xs:sequence>
+            <xs:element type="headerItem" name="header_item" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="metadata">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="key" use="optional"/>
+                <xs:attribute type="xs:string" name="value" use="optional"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="object">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:short" name="identify_id" use="optional"/>
+                <xs:attribute type="xs:string" name="name" use="optional"/>
+                <xs:attribute type="xs:string" name="skipped" use="optional"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="filament">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:byte" name="id" use="optional"/>
+                <xs:attribute type="xs:string" name="type" use="optional"/>
+                <xs:attribute type="xs:string" name="color" use="optional"/>
+                <xs:attribute type="xs:float" name="used_m" use="optional"/>
+                <xs:attribute type="xs:float" name="used_g" use="optional"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="warning">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="msg" use="optional"/>
+                <xs:attribute type="xs:byte" name="level" use="optional"/>
+                <xs:attribute type="xs:string" name="error_code" use="optional"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="plate">
+        <xs:sequence>
+            <xs:element type="metadata" name="metadata" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element type="object" name="object" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element type="filament" name="filament" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element type="warning" name="warning"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="config">
+        <xs:sequence>
+            <xs:element type="header" name="header"/>
+            <xs:element type="plate" name="plate" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>
