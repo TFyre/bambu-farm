@@ -56,6 +56,7 @@ import org.jboss.logging.Logger;
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
 public class BatchPrintView extends VerticalLayout implements NotificationHelper, FilamentHelper, GridHelper<PrinterMapping> {
 
+    private static final String IMAGE_CLASS = "small";
     private static final SerializablePredicate<PrinterMapping> PREDICATE = pm -> true;
 
     @Inject
@@ -212,13 +213,7 @@ public class BatchPrintView extends VerticalLayout implements NotificationHelper
         actions.setVisible(isVisible);
     }
 
-    @Override
-    protected void onAttach(final AttachEvent attachEvent) {
-        super.onAttach(attachEvent);
-        addClassName("batchprint-view");
-        setSizeFull();
-        configurePlateLookup();
-        configureGrid();
+    private void configureUpload() {
         upload.setAcceptedFileTypes(BambuConst.FILE_3MF);
         upload.addSucceededListener(e -> loadProjectFile(e.getFileName()));
         upload.setMaxFileSize((int) maxBodySize.asLongValue());
@@ -226,6 +221,28 @@ public class BatchPrintView extends VerticalLayout implements NotificationHelper
         upload.addFileRejectedListener(l -> {
             showError(l.getErrorMessage());
         });
+    }
+
+    private void configureThumbnail() {
+        thumbnail.addClassName(IMAGE_CLASS);
+        thumbnail.addClickListener(l -> {
+            if (thumbnail.hasClassName(IMAGE_CLASS)) {
+                thumbnail.removeClassName(IMAGE_CLASS);
+            } else {
+                thumbnail.addClassName(IMAGE_CLASS);
+            }
+        });
+    }
+
+    @Override
+    protected void onAttach(final AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        addClassName("batchprint-view");
+        setSizeFull();
+        configurePlateLookup();
+        configureGrid();
+        configureUpload();
+        configureThumbnail();
         headerVisible(false);
         add(newDiv("header", thumbnail, actions, newDiv("upload", upload)), grid);
     }
