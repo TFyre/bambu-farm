@@ -212,7 +212,9 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
         final Print print = message.get().message().getPrint();
         if (print.hasAms() && !print.getAms().getAmsList().isEmpty()) {
             return print.getAms().getAmsList().stream()
-                    .flatMap(single -> single.getTrayList().stream().map(tray -> mapTray(printer.getName(), single, tray)))
+                    .flatMap(single -> single.getTrayList().stream()
+                            .filter(Tray::hasTrayInfoIdx)
+                            .map(tray -> mapTray(printer.getName(), single, tray)))
                     .toList();
         }
         if (print.hasVtTray()) {
