@@ -29,19 +29,13 @@
     align-items: center;
     flex-grow: 1;
     justify-content: center;
-
-    /*LumoUtility.Gap.MEDIUM*/
     gap: var(--lumo-space-m);
 }
 
 .dashboard-view {
     display: grid;
     grid-template-columns: repeat(var(--bambu-columns), minmax(0, 1fr));
-
-    /*LumoUtility.Gap.MEDIUM*/
     gap: var(--lumo-space-m);
-
-    /*LumoUtility.Padding.SMALL*/
     padding: var(--lumo-space-s);
 }
 
@@ -65,14 +59,8 @@
     min-height: 371px;
     justify-content: center;
     align-items: center;
-
-    /*LumoUtility.Background.BASE*/
     background-color: var(--lumo-base-color);
-
-    /*LumoUtility.BoxShadow.SMALL*/
     box-shadow: var(--lumo-box-shadow-s);
-
-    /*LumoUtility.BorderRadius.LARGE*/
     border-radius: var(--lumo-border-radius-l);
 }
 
@@ -113,24 +101,12 @@
     font-weight: bolder;
     align-items: center;
     min-width: 50px;
-
-    /*LumoUtility.Padding.SMALL*/
     padding: var(--lumo-space-s);
-
-    /*LumoUtility.Margin.SMALL*/
     margin: var(--lumo-space-s);
-
-    /*LumoUtility.Flex.GROW*/
     flex-grow: 1;
     flex-basis: 0;
-
-    /*LumoUtility.Background.BASE*/
     background-color: var(--lumo-base-color);
-
-    /*LumoUtility.BoxShadow.SMALL*/
     box-shadow: var(--lumo-box-shadow-s);
-
-    /*LumoUtility.BorderRadius.LARGE*/
     border-radius: var(--lumo-border-radius-l);
 }
 
@@ -173,23 +149,11 @@
     flex-direction: column;
     font-weight: bolder;
     align-items: center;
-
-    /*LumoUtility.Padding.SMALL*/
     padding: var(--lumo-space-s);
-
-    /*LumoUtility.Margin.SMALL*/
     margin: var(--lumo-space-s);
-
-    /*LumoUtility.Flex.GROW*/
     flex-grow: 1;
-
-    /*LumoUtility.Background.BASE*/
     background-color: var(--lumo-base-color);
-
-    /*LumoUtility.BoxShadow.SMALL*/
     box-shadow: var(--lumo-box-shadow-s);
-
-    /*LumoUtility.BorderRadius.LARGE*/
     border-radius: var(--lumo-border-radius-l);
 }
 
@@ -202,11 +166,7 @@
     width: 50px;
     min-height: 50px;
     border: 1px solid;
-
-    /*LumoUtility.BoxShadow.SMALL*/
     box-shadow: var(--lumo-box-shadow-s);
-
-    /*LumoUtility.BorderRadius.LARGE*/
     border-radius: var(--lumo-border-radius-l);
 }
 
@@ -221,11 +181,7 @@
 
 .printer-view {
     flex-wrap: wrap;
-
-    /*LumoUtility.Gap.MEDIUM*/
     gap: var(--lumo-space-m);
-
-    /*LumoUtility.Padding.SMALL*/
     padding: var(--lumo-space-s);
 }
 
@@ -238,7 +194,6 @@
     width: 100%;
     justify-content: center;
     align-items: center;
-    /*LumoUtility.Gap.MEDIUM*/
     gap: var(--lumo-space-m);
 }
 
@@ -306,17 +261,9 @@
 .filament-view .presets .preset {
     width: 30px;
     height: 30px;
-
-    /*LumoUtility.Padding.SMALL*/
     padding: var(--lumo-space-s);
-
-    /*LumoUtility.Margin.SMALL*/
     margin: var(--lumo-space-s);
-
-    /*LumoUtility.BoxShadow.SMALL*/
     box-shadow: var(--lumo-box-shadow-s);
-
-    /*LumoUtility.BorderRadius.LARGE*/
     border-radius: var(--lumo-border-radius-l);
 }
 
@@ -338,9 +285,9 @@
     display: none;
 }
 
-.batchprint-view .contrast,
-.batchprint-view-menu .contrast{
-    color: white;    
+.batchprint-view .filaments .filament.contrast,
+.batchprint-view-menu .filaments .filament.contrast{
+    color: white;
 }
 
 .batchprint-view .filaments .filament,
@@ -351,35 +298,20 @@
     flex-basis: 0;
     align-items: center;
     justify-content: space-between;
-
-    /*LumoUtility.Padding.SMALL*/
     padding: var(--lumo-space-s);
-
-    /*LumoUtility.Margin.SMALL*/
     margin: var(--lumo-space-s);
-
-    /*LumoUtility.BoxShadow.SMALL*/
     box-shadow: var(--lumo-box-shadow-s);
-
-    /*LumoUtility.BorderRadius.LARGE*/
     border-radius: var(--lumo-border-radius-l);
+    color: black;
 }
 
 .batchprint-view .mapping .filament {
     display: flex;
     flex-direction: row;
     align-items: center;
-
-    /*LumoUtility.Padding.SMALL*/
     padding: var(--lumo-space-s);
-
-    /*LumoUtility.Margin.SMALL*/
     margin: var(--lumo-space-s);
-
-    /*LumoUtility.BoxShadow.SMALL*/
     box-shadow: var(--lumo-box-shadow-s);
-
-    /*LumoUtility.BorderRadius.LARGE*/
     border-radius: var(--lumo-border-radius-l);
 }
 
