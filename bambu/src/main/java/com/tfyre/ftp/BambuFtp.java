@@ -77,7 +77,8 @@ public class BambuFtp extends org.apache.commons.net.ftp.FTPSClient {
         return URI.create(config.ftp().url().orElseGet(() -> "ftps://%s:%d".formatted(config.ip(), config.ftp().port())));
     }
 
-    public BambuFtp setup(final BambuPrinters.PrinterDetail printer) {
+    public BambuFtp setup(final BambuPrinters.PrinterDetail printer, final FTPEventListener listener) {
+        setCopyStreamListener(listener);
         config = printer.config();
         if (config.ftp().logCommands()) {
             addProtocolCommandListener(getListener(printer.name()));

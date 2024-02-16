@@ -1,5 +1,6 @@
 package com.tfyre.bambu.view.dashboard;
 
+import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.MainLayout;
 import com.tfyre.bambu.SystemRoles;
@@ -22,7 +23,6 @@ import com.tfyre.bambu.printer.BambuPrinters;
 import com.vaadin.flow.component.html.Div;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.inject.Instance;
-import java.time.Duration;
 
 /**
  *
@@ -33,8 +33,6 @@ import java.time.Duration;
 @RolesAllowed({ SystemRoles.ROLE_ADMIN, SystemRoles.ROLE_NORMAL })
 public class Dashboard extends Div {
 
-    private static final Duration INTERVAL = Duration.ofSeconds(1);
-
     @Inject
     Logger log;
 
@@ -44,6 +42,8 @@ public class Dashboard extends Div {
     ScheduledExecutorService ses;
     @Inject
     Instance<DashboardPrinter> cardInstance;
+    @Inject
+    BambuConfig config;
 
     private ScheduledFuture<?> future;
 
@@ -58,7 +58,8 @@ public class Dashboard extends Div {
                 .stream().sorted(Comparator.comparing(BambuPrinter::getName))
                 .map(printer -> handlePrinter(printer, runnables::add))
                 .forEach(this::add);
-        future = ses.scheduleAtFixedRate(() -> ui.access(() -> runnables.forEach(Runnable::run)), 0, INTERVAL.getSeconds(), TimeUnit.SECONDS);
+        future = ses.scheduleAtFixedRate(() -> ui.access(() -> runnables.forEach(Runnable::run)), 0,
+                config.refreshInterval().getSeconds(), TimeUnit.SECONDS);
     }
 
     private Component handlePrinter(final BambuPrinter printer, final Consumer<Runnable> consumer) {

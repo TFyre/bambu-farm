@@ -1,6 +1,5 @@
 package com.tfyre.bambu.view.batchprint;
 
-import com.tfyre.bambu.printer.Filament;
 import com.tfyre.bambu.printer.FilamentType;
 import com.tfyre.schema.Config;
 import com.tfyre.schema.Metadata;
@@ -96,6 +95,10 @@ public class ProjectFile implements FilamentHelper {
 
     public String getFilename() {
         return filename;
+    }
+
+    public long getFileSize() {
+        return file.length();
     }
 
     public ProjectFile setup(final String filename, final File file) throws ProjectException {

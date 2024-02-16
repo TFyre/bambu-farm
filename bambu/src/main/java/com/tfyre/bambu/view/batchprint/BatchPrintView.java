@@ -1,5 +1,6 @@
 package com.tfyre.bambu.view.batchprint;
 
+import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.MainLayout;
 import com.tfyre.bambu.SystemRoles;
 import com.tfyre.bambu.printer.BambuConst;
@@ -41,6 +42,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -69,8 +72,12 @@ public class BatchPrintView extends VerticalLayout implements NotificationHelper
     Instance<ProjectFile> projectFileInstance;
     @Inject
     ManagedExecutor executor;
+    @Inject
+    ScheduledExecutorService ses;
     @ConfigProperty(name = "quarkus.http.limits.max-body-size")
     MemorySize maxBodySize;
+    @Inject
+    BambuConfig config;
 
     private final ComboBox<Plate> plateLookup = new ComboBox<>("Plate Id");
     private final Grid<PrinterMapping> grid = new Grid<>();
@@ -234,6 +241,10 @@ public class BatchPrintView extends VerticalLayout implements NotificationHelper
         });
     }
 
+    private Runnable updateBulkStatus(final UI ui) {
+        return () -> ui.access(() -> printerMappings.forEach(PrinterMapping::updateBulkStatus));
+    }
+
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
         super.onAttach(attachEvent);
@@ -245,6 +256,7 @@ public class BatchPrintView extends VerticalLayout implements NotificationHelper
         configureThumbnail();
         headerVisible(false);
         add(newDiv("header", thumbnail, actions, newDiv("upload", upload)), grid);
+        ses.scheduleAtFixedRate(updateBulkStatus(attachEvent.getUI()), 0, config.refreshInterval().getSeconds(), TimeUnit.SECONDS);
     }
 
     @Override

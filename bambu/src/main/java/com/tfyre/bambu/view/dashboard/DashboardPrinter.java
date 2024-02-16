@@ -123,6 +123,8 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
 
     public DashboardPrinter() {
         progressBar = newProgressBar();
+        progressBar.setIndeterminate(true);
+
         statusBox = newStatusBox();
         isAdmin = SecurityUtils.userHasAccess(SystemRoles.ROLE_ADMIN);
     }
@@ -134,13 +136,6 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
 
     private Span newSpan() {
         return new Span("---");
-    }
-
-    private ProgressBar newProgressBar() {
-        final ProgressBar result = new ProgressBar(0.0, 100.0);
-        result.addClassName("progress");
-        result.setIndeterminate(true);
-        return result;
     }
 
     private TextArea newStatusBox() {

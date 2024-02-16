@@ -1,11 +1,13 @@
 package com.tfyre.bambu.view;
 
+import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.MainLayout;
 import com.tfyre.bambu.SystemRoles;
 import com.tfyre.bambu.YesNoCancelDialog;
 import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.ftp.BambuFtp;
+import com.tfyre.ftp.FTPEventListener;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
@@ -22,6 +24,7 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.SucceededEvent;
@@ -50,10 +53,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
-import org.apache.commons.net.ftp.FTPSClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
@@ -65,8 +69,9 @@ import org.jboss.logging.Logger;
 @Route(value = "sdcard", layout = MainLayout.class)
 @PageTitle("SD Card")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class SdCardView extends VerticalLayout implements HasUrlParameter<String>, NotificationHelper, GridHelper<FTPFile> {
+public class SdCardView extends VerticalLayout implements HasUrlParameter<String>, NotificationHelper, GridHelper<FTPFile>, ViewHelper {
 
+    private final String UIERROR = "UI not present";
     private static final DateTimeFormatter DTF = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .append(DateTimeFormatter.ISO_LOCAL_DATE)
@@ -86,7 +91,11 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     @Inject
     ManagedExecutor executor;
     @Inject
+    ScheduledExecutorService ses;
+    @Inject
     Instance<BambuFtp> clientInstance;
+    @Inject
+    BambuConfig config;
 
     @ConfigProperty(name = "quarkus.http.limits.max-body-size")
     MemorySize maxBodySize;
@@ -95,14 +104,29 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
 
     private final ComboBox<BambuPrinters.PrinterDetail> comboBox = new ComboBox<>();
     private final Grid<FTPFile> grid = new Grid<>();
-    private final TextField path = new TextField("", BambuConst.PATHSEP, l -> doPath(l.getValue()));
+    private final TextField path = new TextField("", BambuConst.PATHSEP, l -> runCallable(this::doPath));
     private final Button connect = new Button("Connect", new Icon(VaadinIcon.CONNECT), l -> doConnect());
     private final Button disconnect = new Button("Disconnect", new Icon(VaadinIcon.CLOSE), l -> doDisconnect());
     private final Button cdup = new Button("", new Icon(VaadinIcon.ARROW_BACKWARD), l -> doCDUP());
-    private final Button refresh = new Button("Refresh", new Icon(VaadinIcon.REFRESH), l -> doRefresh());
+    private final Button refresh = new Button("Refresh", new Icon(VaadinIcon.REFRESH), l -> runCallable(this::doRefresh));
+    private final ProgressBar progressBar = newProgressBar();
     private final MemoryBuffer buffer = new MemoryBuffer();
     private final Upload upload = new Upload(buffer);
     private BambuFtp client;
+    private double percentageComplete;
+    private long fileSize;
+    private Optional<UI> ui = Optional.empty();
+
+    private void showProgressBar(final boolean visible) {
+        percentageComplete = 0;
+        progressBar.setValue(percentageComplete);
+        progressBar.setVisible(visible);
+    }
+
+    @Override
+    public Logger getLogger() {
+        return log;
+    }
 
     @Override
     public Grid<FTPFile> getGrid() {
@@ -114,14 +138,21 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         _printer = printers.getPrinterDetail(printerName);
     }
 
+    private void runInUI(final Runnable runnable) {
+        if (ui.isEmpty()) {
+            log.error(UIERROR, new Exception(UIERROR));
+            return;
+        }
+        ui.get().access(runnable::run);
+    }
+
     private void runCallable(final Callable<Boolean> callable) {
-        final Optional<UI> ui = getUI();
         executor.submit(() -> {
             try {
                 callable.call();
             } catch (Exception ex) {
                 log.error(ex.getMessage(), ex);
-                ui.get().access(() -> {
+                runInUI(() -> {
                     showError(ex.getMessage());
                 });
             }
@@ -155,22 +186,20 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
 
     private void buildList(final BambuPrinters.PrinterDetail printer) {
         disconnect();
-        client = clientInstance.get().setup(printer);
+        client = clientInstance.get().setup(printer, this::bytesTransferred);
         setConnectDisconnect(true);
     }
 
     private void doConnect() {
         connect.setEnabled(false);
-        final Optional<UI> ui = getUI();
         runCallable(() -> {
             client.doConnect();
-            client.doLogin();
             if (!client.doLogin()) {
-                ui.get().access(() -> showError("Login Failed"));
+                runInUI(() -> showError("Login Failed"));
                 return true;
             }
-            ui.get().access(() -> setConnectDisconnect(false));
-            doPath(path.getValue());
+            runInUI(() -> setConnectDisconnect(false));
+            doPath();
             return true;
         });
     }
@@ -178,37 +207,34 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     private void doDisconnect() {
         disconnect.setEnabled(false);
         grid.setItems(List.of());
-        final Optional<UI> ui = getUI();
+        setConnectDisconnect(true);
         runCallable(() -> {
             client.doClose();
-            ui.get().access(() -> setConnectDisconnect(true));
             return true;
         });
     }
 
-    private void doPath(final String value) {
+    private boolean doPath() throws IOException {
+        final String value = path.getValue();
         if (value == null || value.isEmpty()) {
-            path.setValue(BambuConst.PATHSEP);
-            return;
+            runInUI(() -> path.setValue(BambuConst.PATHSEP));
+            return false;
         }
         if (!client.isConnected()) {
-            return;
+            return false;
         }
-        final Optional<UI> ui = getUI();
-        runCallable(() -> {
-            if (!client.changeWorkingDirectory(value)) {
-                ui.get().access(() -> showError("Change Directory Failed"));
-                return false;
+        if (!client.changeWorkingDirectory(value)) {
+            runInUI(() -> showError("Change Directory Failed"));
+            return false;
+        }
+        final List<FTPFile> files = Arrays.asList(client.listFiles());
+        runInUI(() -> {
+            grid.setItems(files);
+            if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
+                showError(client.getReplyString());
             }
-            final List<FTPFile> files = Arrays.asList(client.listFiles());
-            ui.get().access(() -> {
-                grid.setItems(files);
-                if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
-                    showError(client.getReplyString());
-                }
-            });
-            return true;
         });
+        return true;
     }
 
     private void doCDUP() {
@@ -243,14 +269,25 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         return result;
     }
 
+    private void updateProgressBar() {
+        if (!progressBar.isVisible()) {
+            return;
+        }
+
+        runInUI(() -> progressBar.setValue(percentageComplete));
+    }
+
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
         super.onAttach(attachEvent);
+        ui = Optional.of(attachEvent.getUI());
         addClassName("sdcard-view");
         setSizeFull();
         configureGrid();
-        add(buildToolbar(), grid);
+        showProgressBar(false);
+        add(buildToolbar(), progressBar, grid);
         _printer.ifPresent(comboBox::setValue);
+        ses.scheduleAtFixedRate(this::updateProgressBar, 0, config.refreshInterval().getSeconds(), TimeUnit.SECONDS);
     }
 
     @Override
@@ -279,6 +316,9 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         final String fileName = file.getName();
         final StreamResource stream = new StreamResource(fileName, () -> {
             try {
+                fileSize = file.getSize();
+                runInUI(() -> showProgressBar(true));
+
                 client.setFileType(FTP.BINARY_FILE_TYPE);
                 try (final InputStream s = client.retrieveFileStream(file.getName())) {
                     return new ByteArrayInputStream(s.readAllBytes());
@@ -287,6 +327,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
                     if (!client.completePendingCommand()) {
                         log.error("could not complete pending command");
                     }
+                    runInUI(() -> showProgressBar(false));
                 }
             } catch (IOException ex) {
                 log.errorf(ex, "Cannot find file: %s - %s", file.getName(), ex.getMessage());
@@ -347,17 +388,22 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         path.setValue(buildFileName(item.getName()));
     }
 
-    private void doRefresh() {
-        doPath(path.getValue());
+    private boolean doRefresh() throws IOException {
+        return doPath();
     }
 
     private void doUpload(final SucceededEvent event) {
-        final Optional<UI> ui = getUI();
+        fileSize = event.getContentLength();
+        showProgressBar(true);
+
         final InputStream inputStream = buffer.getInputStream();
         showNotification("Uploading to Printer");
         runCallable(() -> {
             client.doUpload(event.getFileName(), inputStream);
-            ui.get().access(() -> showNotification("Uploaded: %s".formatted(event.getFileName())));
+            runInUI(() -> {
+                showProgressBar(false);
+                showNotification("Uploaded: %s".formatted(event.getFileName()));
+            });
             doRefresh();
             return true;
         });
@@ -368,7 +414,6 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
             if (!ync.isConfirmed()) {
                 return;
             }
-            final Optional<UI> ui = getUI();
             runCallable(() -> {
                 final boolean ok;
                 if (file.isDirectory()) {
@@ -380,7 +425,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
                 }
 
                 if (!ok) {
-                    ui.get().access(() -> showError("Delete Failed"));
+                    runInUI(() -> showError("Delete Failed"));
                 }
                 doRefresh();
                 return true;
@@ -423,6 +468,10 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
                 showError("Unknown File: %s".formatted(fileName));
             }
         });
+    }
+
+    private void bytesTransferred(long totalBytesTransferred, int bytesTransferred, long streamSize) {
+        percentageComplete = 100.0 * totalBytesTransferred / fileSize;
     }
 
 }

@@ -12,6 +12,7 @@ import com.tfyre.bambu.printer.Filament;
 import com.tfyre.bambu.printer.FilamentType;
 import com.tfyre.bambu.view.NotificationHelper;
 import com.tfyre.ftp.BambuFtp;
+import com.tfyre.ftp.FTPEventListener;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
@@ -52,6 +53,8 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
     private Optional<UI> ui = Optional.empty();
     private PrinterState printerState = PrinterState.READY;
     private final Span bulkStatus = new Span();
+    private long fileSize;
+    private double percentageComplete = 0;
 
     public PrinterMapping setup(final Optional<UI> ui, final BambuPrinters.PrinterDetail printerDetail) {
         this.ui = ui;
@@ -65,6 +68,15 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
             return;
         }
         ui.get().access(runnable::run);
+    }
+
+    public void updateBulkStatus() {
+        if (printerState == PrinterState.FTP_UPLOADING) {
+            bulkStatus.setText("%s: %.2f%%".formatted(printerState.getDescription(), percentageComplete));
+        } else {
+            bulkStatus.setText(printerState.getDescription());
+
+        }
     }
 
     private void setPrinterState(final PrinterState printerState) {
@@ -98,7 +110,7 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
 
     private void doFtp(final ProjectFile projectFile) throws IOException {
         log.debugf("%s: doFtp", printerDetail.name());
-        final BambuFtp client = clientInstance.get().setup(printerDetail);
+        final BambuFtp client = clientInstance.get().setup(printerDetail, this::bytesTransferred);
         try {
             log.debugf("%s: connecting", printerDetail.name());
             setPrinterState(PrinterState.FTP_CONNECT);
@@ -122,6 +134,8 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
     public void sendPrint(final ProjectFile projectFile, final boolean useAms, final boolean timelapse, final boolean bedLevelling) {
         log.debugf("%s: sendPrint", printerDetail.name());
         doBlock(true);
+        fileSize = projectFile.getFileSize();
+        percentageComplete = 0;
         try {
             doFtp(projectFile);
             printerDetail.printer().commandPrintProjectFile(projectFile.getFilename(), plate.plateId(), useAms, timelapse, bedLevelling, generateAmsMapping());
@@ -278,6 +292,10 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
 
     public Component getFilamentMapping() {
         return filamentMapping;
+    }
+
+    private void bytesTransferred(long totalBytesTransferred, int bytesTransferred, long streamSize) {
+        percentageComplete = 100.0 * totalBytesTransferred / fileSize;
     }
 
     private record PrinterFilament(String name, int amsId, int trayId, FilamentType type, long color) {

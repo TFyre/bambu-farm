@@ -34,6 +34,9 @@ public interface BambuConfig {
     @WithDefault("3000")
     int moveZ();
 
+    @WithDefault("1s")
+    Duration refreshInterval();
+
     Optional<String> liveViewUrl();
 
     Map<String, Printer> printers();

@@ -4,6 +4,7 @@ import com.tfyre.bambu.YesNoCancelDialog;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.progressbar.ProgressBar;
 import java.time.Duration;
 import org.jboss.logging.Logger;
 
@@ -87,6 +88,12 @@ public interface ViewHelper {
     default Span newSpan(final String className) {
         final Span result = new Span();
         result.addClassName(className);
+        return result;
+    }
+
+    default ProgressBar newProgressBar() {
+        final ProgressBar result = new ProgressBar(0.0, 100.0);
+        result.addClassName("progress");
         return result;
     }
 
