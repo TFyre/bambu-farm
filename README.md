@@ -16,6 +16,7 @@ Technologies used:
 |**Upload to SD card**|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] <sup>2</sup></li></ul>|
 |**Print .3mf from SD card**<sup>1</sup>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] <sup>2</sup></li></ul>|
 |**Print .gcode from SD card**|?|?|?|?|?|
+|**Batch Printing**<sup>4</sup>|?|?|?|<ul><li>[x] </li></ul>|?|
 |**AMS**|?|?|?|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|
 |**Send Custom GCode**|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|
 
@@ -24,10 +25,14 @@ Technologies used:
 2. **FTPS Connections needs SSL Session Reuse via [Bouncy Castle](#bouncy-castle)**
 > Without enabling bouncy castle, you will see `552 SSL connection failed: session resuse required`
 3. Getting the **LiveView** to work requires additional software. For more details check the [docker/bambu-liveview](docker/bambu-liveview) README.
+4. **Batch Priting** allows you to upload a single/multi sliced .3mf and select which plate to send to multiple printers, each with their own filament mapping.
 
 # Screenshots
 
+* Dashboard
 ![Desktop browser](/docs/bambufarm1.jpg)
+* Batch printing
+![Batch Printing](/docs/batchprint1.png)
 
 *More screenshots in [docs](/docs)*
 
