@@ -166,20 +166,22 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     }
 
     private void processAms(final com.tfyre.bambu.model.Ams ams) {
-        final String trayId;
+        final int amsTrayId;
         if (isPrinterIdle() || !ams.hasTrayNow()) {
-            trayId = "-1";
+            amsTrayId = -1;
         } else {
-            trayId = ams.getTrayNow();
+            amsTrayId = parseInt(printer.getName(), ams.getTrayNow(), -1);
         }
         ams.getAmsList().forEach(single -> {
-            Optional.ofNullable(amsHeaders.get(getAmsHeaderId(single.getId()))).ifPresent(header -> {
+            final int amsId = getAmsId(single);
+            Optional.ofNullable(amsHeaders.get(getAmsHeaderId(amsId))).ifPresent(header -> {
                 setTemperature(header.temperature(), parseDouble(printer.getName(), single.getTemp(), 0));
                 header.humidity().setSrc(getHumidityImage(single.getHumidity()).getImage());
             });
 
             single.getTrayList().forEach(tray -> {
-                Optional.ofNullable(amsFilaments.get(getFilamentTrayKey(single, tray))).ifPresent(filament -> {
+                final int trayId = getTrayId(tray);
+                Optional.ofNullable(amsFilaments.get(getFilamentTrayKey(amsId, trayId))).ifPresent(filament -> {
                     if (!tray.hasTrayInfoIdx()) {
                         filament.type().setText("Empty");
                         return;
@@ -187,7 +189,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
                     filament.type().setText(Filament.getFilamentDescription(tray.getTrayInfoIdx()));
                     filament.color().getStyle().setBackgroundColor("#%s".formatted(tray.getTrayColor()));
                     filament.div().removeClassName("active");
-                    if (trayId.equals(tray.getId())) {
+                    if (amsTrayId == filament.amsTrayId()) {
                         filament.div().addClassName("active");
                     }
                 });
@@ -196,10 +198,11 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     }
 
     private void processVtTray(final com.tfyre.bambu.model.VtTray tray) {
-        Optional.ofNullable(amsHeaders.get(getTrayKey(tray.getId()))).ifPresent(header -> {
+        final int trayId = getTrayId(tray);
+        Optional.ofNullable(amsHeaders.get(getTrayKey(trayId))).ifPresent(header -> {
             setTemperature(header.temperature(), parseDouble(printer.getName(), tray.getTrayTemp(), 0));
         });
-        Optional.ofNullable(amsFilaments.get(getTrayKey(tray.getId()))).ifPresent(filament -> {
+        Optional.ofNullable(amsFilaments.get(getTrayKey(trayId))).ifPresent(filament -> {
             filament.type().setText(Filament.getFilamentDescription(tray.getTrayInfoIdx()));
             filament.color().getStyle().setBackgroundColor("#%s".formatted(tray.getTrayColor()));
         });
@@ -672,9 +675,21 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         return wrapAmsFilament(filament);
     }
 
+    private int getAmsId(final AmsSingle single) {
+        return parseInt(printer.getName(), single.getId(), BambuConst.AMS_TRAY_UNLOAD);
+    }
+
+    private int getTrayId(final Tray tray) {
+        return parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
+    }
+
+    private int getTrayId(final com.tfyre.bambu.model.VtTray tray) {
+        return parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
+    }
+
     private Div buildAmsFilament(final AmsSingle single, final Tray tray) {
-        final int amsId = parseInt(printer.getName(), single.getId(), BambuConst.AMS_TRAY_UNLOAD);
-        final int trayId = parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
+        final int amsId = getAmsId(single);
+        final int trayId = getTrayId(tray);
         return buildAmsFilament(getFilamentTrayKey(amsId, trayId), amsId, trayId);
     }
 
@@ -682,19 +697,12 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         return "single[%d]tray[%d]".formatted(amsId, trayId);
     }
 
-    private String getFilamentTrayKey(final AmsSingle single, final Tray tray) {
-        return getFilamentTrayKey(
-                parseInt(printer.getName(), single.getId(), BambuConst.AMS_TRAY_UNLOAD),
-                parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD)
-        );
+    private String getAmsHeaderId(final int id) {
+        return "AMS#%d".formatted(id);
     }
 
-    private String getAmsHeaderId(final String id) {
-        return "AMS#%s".formatted(id);
-    }
-
-    private String getTrayKey(final String id) {
-        return "Tray#%s".formatted(id);
+    private String getTrayKey(final int id) {
+        return "Tray#%d".formatted(id);
     }
 
     private Div buildTray(final String amsHeaderId, final boolean hasHumidity, final List<Div> filaments) {
@@ -712,7 +720,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     private void buildAms(final Div parent, final com.tfyre.bambu.model.Ams ams) {
         ams.getAmsList().forEach(single -> {
             parent.add(buildTray(
-                    getAmsHeaderId(single.getId()),
+                    getAmsHeaderId(getAmsId(single)),
                     true,
                     single.getTrayList().stream()
                             .map(tray -> buildAmsFilament(single, tray))
@@ -722,11 +730,11 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     }
 
     private void buildVtTray(final Div parent, final com.tfyre.bambu.model.VtTray tray) {
-        final int trayId = parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
+        final int trayId = getTrayId(tray);
         parent.add(buildTray(
-                getTrayKey(tray.getId()),
+                getTrayKey(trayId),
                 false,
-                List.of(buildAmsFilament(getTrayKey(tray.getId()), BambuConst.AMS_TRAY_UNLOAD, trayId))
+                List.of(buildAmsFilament(getTrayKey(trayId), BambuConst.AMS_TRAY_UNLOAD, trayId))
         ));
     }
 

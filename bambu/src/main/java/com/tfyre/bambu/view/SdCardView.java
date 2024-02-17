@@ -152,9 +152,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
                 callable.call();
             } catch (Exception ex) {
                 log.error(ex.getMessage(), ex);
-                runInUI(() -> {
-                    showError(ex.getMessage());
-                });
+                runInUI(() -> showError(ex.getMessage()));
             }
         });
     }
