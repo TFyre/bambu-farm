@@ -32,7 +32,7 @@ Technologies used:
 * Dashboard
 ![Desktop browser](/docs/bambufarm1.jpg)
 * Batch printing
-![Batch Printing](/docs/batchprint1.png)
+![Batch Printing](/docs/batchprint.png)
 
 *More screenshots in [docs](/docs)*
 
