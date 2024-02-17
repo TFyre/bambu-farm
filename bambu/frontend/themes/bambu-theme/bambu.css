@@ -287,7 +287,7 @@
 
 .batchprint-view .filaments .filament.contrast,
 .batchprint-view .mapping .filament.contrast,
-.batchprint-view-menu .filaments .filament.contrast {
+.batchprint-view-menu .filament.contrast {
     color: white;
 }
 
@@ -295,8 +295,6 @@
 .batchprint-view-menu .filament {
     display: flex;
     flex-direction: row;
-    flex-grow: 1;
-    flex-basis: 0;
     align-items: center;
     justify-content: space-between;
     padding: var(--lumo-space-s);
@@ -306,7 +304,8 @@
 }
 
 .batchprint-view .filament .filament,
-.batchprint-view .mapping .filament {
+.batchprint-view .mapping .filament,
+.batchprint-view-menu .filament {
     color: black;
 }
 
@@ -373,7 +372,6 @@
     flex-grow: 1;
     flex-basis: 0;
 }
-
 
 .batchprint-view .header img {
     background-color: var(--lumo-base-color);
