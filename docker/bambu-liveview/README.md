@@ -43,6 +43,21 @@ If you have a full custom url for the printer:
 bambu.printers.PRINTER_ID.stream.url=https://my_stream_domain.com/mystream
 ```
 
+## Uploading bigger files
+
+Add to `.env`:
+```properties
+quarkus.http.limits.max-body-size=30M
+```
+
+also remember to update `reverse-proxy.conf`:
+```conf
+    location / {
+        client_max_body_size 30m;
+        proxy_pass http://bambuweb;
+```
+
+
 # Adding your printers
 
 **Copy `example - compose.yaml` to `compose.yml`**
