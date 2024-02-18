@@ -267,6 +267,17 @@
     border-radius: var(--lumo-border-radius-l);
 }
 
+.batchprint-view,
+.sdcard-view {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-m);
+    padding: var(--lumo-space-m);
+    align-items: flex-start;
+    box-sizing: border-box;
+    height: 100%;
+}
+
 .batchprint-view .filaments {
     display: flex;
     flex-wrap: wrap;

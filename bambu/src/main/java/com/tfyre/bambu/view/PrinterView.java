@@ -8,7 +8,6 @@ import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.bambu.view.dashboard.DashboardPrinter;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -24,9 +23,6 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.util.Comparator;
 import java.util.Optional;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import org.jboss.logging.Logger;
 
 /**
@@ -36,20 +32,17 @@ import org.jboss.logging.Logger;
 @Route(value = "printer", layout = MainLayout.class)
 @PageTitle("Printer")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class PrinterView extends Div implements HasUrlParameter<String>, NotificationHelper, UpdateHeader {
+public class PrinterView extends PushDiv implements HasUrlParameter<String>, NotificationHelper, UpdateHeader {
 
     @Inject
     Logger log;
     @Inject
     BambuPrinters printers;
     @Inject
-    ScheduledExecutorService ses;
-    @Inject
     Instance<DashboardPrinter> cardInstance;
     @Inject
     BambuConfig config;
 
-    private ScheduledFuture<?> future;
     private Optional<BambuPrinter> _printer = Optional.empty();
     private final ComboBox<BambuPrinter> comboBox = new ComboBox<>();
     private final Div content = new Div();
@@ -60,12 +53,11 @@ public class PrinterView extends Div implements HasUrlParameter<String>, Notific
     }
 
     private void buildPrinter(final BambuPrinter printer) {
-        cancelFuture();
         content.removeAll();
         final DashboardPrinter card = cardInstance.get();
         content.add(card.build(printer, false));
         final UI ui = getUI().get();
-        future = ses.scheduleAtFixedRate(() -> ui.access(() -> card.update()), 0, config.refreshInterval().getSeconds(), TimeUnit.SECONDS);
+        createFuture(() -> ui.access(card::update), config.refreshInterval());
     }
 
     private Component buildContent() {
@@ -84,25 +76,9 @@ public class PrinterView extends Div implements HasUrlParameter<String>, Notific
         _printer.ifPresent(comboBox::setValue);
     }
 
-    private void cancelFuture() {
-        if (future == null) {
-            return;
-        }
-
-        future.cancel(true);
-        future = null;
-    }
-
-    @Override
-    protected void onDetach(final DetachEvent detachEvent) {
-        super.onDetach(detachEvent);
-        cancelFuture();
-    }
-
     @Override
     public void updateHeader(final HasComponents component) {
         component.add(new Span("Printers"), comboBox);
-
     }
 
 }

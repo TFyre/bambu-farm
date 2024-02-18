@@ -7,7 +7,6 @@ import com.tfyre.bambu.YesNoCancelDialog;
 import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.ftp.BambuFtp;
-import com.tfyre.ftp.FTPEventListener;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
@@ -23,7 +22,6 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -36,6 +34,7 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.Command;
 import com.vaadin.flow.server.StreamResource;
 import io.quarkus.runtime.configuration.MemorySize;
 import jakarta.annotation.security.RolesAllowed;
@@ -53,8 +52,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
@@ -69,9 +66,8 @@ import org.jboss.logging.Logger;
 @Route(value = "sdcard", layout = MainLayout.class)
 @PageTitle("SD Card")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class SdCardView extends VerticalLayout implements HasUrlParameter<String>, NotificationHelper, GridHelper<FTPFile>, ViewHelper {
+public class SdCardView extends PushDiv implements HasUrlParameter<String>, NotificationHelper, GridHelper<FTPFile>, ViewHelper {
 
-    private final String UIERROR = "UI not present";
     private static final DateTimeFormatter DTF = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .append(DateTimeFormatter.ISO_LOCAL_DATE)
@@ -90,8 +86,6 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     BambuPrinters printers;
     @Inject
     ManagedExecutor executor;
-    @Inject
-    ScheduledExecutorService ses;
     @Inject
     Instance<BambuFtp> clientInstance;
     @Inject
@@ -115,7 +109,7 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     private BambuFtp client;
     private double percentageComplete;
     private long fileSize;
-    private Optional<UI> ui = Optional.empty();
+    private UI ui;
 
     private void showProgressBar(final boolean visible) {
         percentageComplete = 0;
@@ -138,12 +132,8 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
         _printer = printers.getPrinterDetail(printerName);
     }
 
-    private void runInUI(final Runnable runnable) {
-        if (ui.isEmpty()) {
-            log.error(UIERROR, new Exception(UIERROR));
-            return;
-        }
-        ui.get().access(runnable::run);
+    private void runInUI(final Command command) {
+        ui.access(command);
     }
 
     private void runCallable(final Callable<Boolean> callable) {
@@ -278,14 +268,13 @@ public class SdCardView extends VerticalLayout implements HasUrlParameter<String
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        ui = Optional.of(attachEvent.getUI());
+        ui = attachEvent.getUI();
         addClassName("sdcard-view");
-        setSizeFull();
         configureGrid();
         showProgressBar(false);
         add(buildToolbar(), progressBar, grid);
         _printer.ifPresent(comboBox::setValue);
-        ses.scheduleAtFixedRate(this::updateProgressBar, 0, config.refreshInterval().getSeconds(), TimeUnit.SECONDS);
+        createFuture(this::updateProgressBar, config.refreshInterval());
     }
 
     @Override

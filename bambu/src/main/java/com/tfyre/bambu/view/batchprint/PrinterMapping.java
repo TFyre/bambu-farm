@@ -12,12 +12,12 @@ import com.tfyre.bambu.printer.Filament;
 import com.tfyre.bambu.printer.FilamentType;
 import com.tfyre.bambu.view.NotificationHelper;
 import com.tfyre.ftp.BambuFtp;
-import com.tfyre.ftp.FTPEventListener;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.server.Command;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -36,8 +36,6 @@ import org.jboss.logging.Logger;
 @Dependent
 public class PrinterMapping implements FilamentHelper, NotificationHelper {
 
-    private final String UIERROR = "UI not present";
-
     @Inject
     Logger log;
     @Inject
@@ -50,38 +48,38 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
 
     private BambuPrinters.PrinterDetail printerDetail;
     private Plate plate;
-    private Optional<UI> ui = Optional.empty();
     private PrinterState printerState = PrinterState.READY;
     private final Span bulkStatus = new Span();
     private long fileSize;
     private double percentageComplete = 0;
+    private UI ui;
 
-    public PrinterMapping setup(final Optional<UI> ui, final BambuPrinters.PrinterDetail printerDetail) {
+    public PrinterMapping setup(final UI ui, final BambuPrinters.PrinterDetail printerDetail) {
         this.ui = ui;
         this.printerDetail = printerDetail;
         return this;
     }
 
-    private void runInUI(final Runnable runnable) {
-        if (ui.isEmpty()) {
-            log.error(UIERROR, new Exception(UIERROR));
+    public void updateBulkStatus() {
+        final String newText;
+        if (printerState == PrinterState.FTP_UPLOADING) {
+            newText = "%s: %.2f%%".formatted(printerState.getDescription(), percentageComplete);
+        } else {
+            newText = printerState.getDescription();
+        }
+        if (newText.equals(bulkStatus.getText())) {
             return;
         }
-        ui.get().access(runnable::run);
+        bulkStatus.setText(newText);
     }
 
-    public void updateBulkStatus() {
-        if (printerState == PrinterState.FTP_UPLOADING) {
-            bulkStatus.setText("%s: %.2f%%".formatted(printerState.getDescription(), percentageComplete));
-        } else {
-            bulkStatus.setText(printerState.getDescription());
-
-        }
+    protected void runInUI(final Command command) {
+        ui.access(command);
     }
 
     private void setPrinterState(final PrinterState printerState) {
         this.printerState = printerState;
-        runInUI(() -> bulkStatus.setText(printerState.getDescription()));
+        runInUI(this::updateBulkStatus);
     }
 
     public PrinterState getPrinterState() {

@@ -8,6 +8,7 @@ import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.bambu.security.SecurityUtils;
 import com.tfyre.bambu.view.GridHelper;
 import com.tfyre.bambu.view.NotificationHelper;
+import com.tfyre.bambu.view.PushDiv;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
@@ -24,7 +25,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.FileBuffer;
@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -57,7 +56,7 @@ import org.jboss.logging.Logger;
 @Route(value = "batchprint", layout = MainLayout.class)
 @PageTitle("Batch Print")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class BatchPrintView extends VerticalLayout implements NotificationHelper, FilamentHelper, GridHelper<PrinterMapping> {
+public class BatchPrintView extends PushDiv implements NotificationHelper, FilamentHelper, GridHelper<PrinterMapping> {
 
     private static final String IMAGE_CLASS = "small";
     private static final SerializablePredicate<PrinterMapping> PREDICATE = pm -> true;
@@ -182,7 +181,7 @@ public class BatchPrintView extends VerticalLayout implements NotificationHelper
 
         grid.sort(GridSortOrder.asc(colName).build());
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
-        final Optional<UI> ui = getUI();
+        final UI ui = getUI().get();
         printerMappings = printers.getPrintersDetail().stream()
                 .filter(pd -> pd.isRunning())
                 .map(pd -> printerMappingInstance.get().setup(ui, pd))
@@ -241,22 +240,22 @@ public class BatchPrintView extends VerticalLayout implements NotificationHelper
         });
     }
 
-    private Runnable updateBulkStatus(final UI ui) {
-        return () -> ui.access(() -> printerMappings.forEach(PrinterMapping::updateBulkStatus));
+    private void updateBulkStatus() {
+        printerMappings.forEach(PrinterMapping::updateBulkStatus);
     }
 
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
         super.onAttach(attachEvent);
         addClassName("batchprint-view");
-        setSizeFull();
         configurePlateLookup();
         configureGrid();
         configureUpload();
         configureThumbnail();
         headerVisible(false);
         add(newDiv("header", thumbnail, actions, newDiv("upload", upload)), grid);
-        ses.scheduleAtFixedRate(updateBulkStatus(attachEvent.getUI()), 0, config.refreshInterval().getSeconds(), TimeUnit.SECONDS);
+        final UI ui = attachEvent.getUI();
+        createFuture(() -> ui.access(this::updateBulkStatus), config.refreshInterval());
     }
 
     @Override
