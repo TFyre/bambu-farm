@@ -21,7 +21,6 @@ public class BambuConst {
     //FIXME GCODE not printing public static final Set<String> EXT = Set.of(FILE_GCODE, FILE_3MF);
     public static final Set<String> EXT = Set.of(FILE_3MF);
     public static final String PATHSEP = "/";
-    public static final String PRINT_TYPE_IDLE = "idle";
     public static final int TEMPERATURE_MAX_BED = 100;
     public static final int TEMPERATURE_MAX_NOZZLE = 300;
     public static final int AMS_TRAY_VIRTUAL = 254;
@@ -301,6 +300,44 @@ public class BambuConst {
 
         public static Optional<PrinterModel> fromModel(final String model) {
             return Optional.ofNullable(MAP.get(model));
+        }
+
+    }
+
+    public enum GCodeState {
+        UNKNOWN("", "unknown", false),
+        IDLE("IDLE", "idle", true),
+        RUNNING("RUNNING", "running", false),
+        PAUSE("PAUSE", "pause", false),
+        FINISH("FINISH", "finish", true),
+        FAILED("FAILED", "failed", false),
+        SLICING("SLICING", "slicing", false);
+
+        private static final Map<String, GCodeState> MAP = EnumSet.allOf(GCodeState.class).stream().collect(Collectors.toMap(GCodeState::getValue, Function.identity()));
+        private final String value;
+        private final String description;
+        private final boolean idle;
+
+        private GCodeState(final String value, final String description, final boolean idle) {
+            this.value = value;
+            this.description = description;
+            this.idle = idle;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public boolean isIdle() {
+            return idle;
+        }
+
+        public static GCodeState fromValue(final String value) {
+            return MAP.getOrDefault(value, UNKNOWN);
         }
 
     }

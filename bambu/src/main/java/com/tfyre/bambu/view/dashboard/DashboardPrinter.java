@@ -110,7 +110,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
 
     private final Map<String, AmsHeader> amsHeaders = new HashMap<>();
     private final Map<String, AmsFilament> amsFilaments = new HashMap<>();
-    private String printType = BambuConst.PRINT_TYPE_IDLE;
+    private BambuConst.GCodeState gcodeState = BambuConst.GCodeState.IDLE;
 
     private Component thumbnailOrIframe;
     private BambuPrinter printer;
@@ -167,7 +167,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
 
     private void processAms(final com.tfyre.bambu.model.Ams ams) {
         final int amsTrayId;
-        if (isPrinterIdle() || !ams.hasTrayNow()) {
+        if (gcodeState.isIdle() || !ams.hasTrayNow()) {
             amsTrayId = -1;
         } else {
             amsTrayId = parseInt(printer.getName(), ams.getTrayNow(), -1);
@@ -329,23 +329,23 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         }
     }
 
-    private boolean isPrinterIdle() {
-        return BambuConst.PRINT_TYPE_IDLE.equals(printType);
-    }
-
-    private void processPrintType() {
-        final String _printType = printer.getPrintType();
-        if (printType.equals(_printType)) {
+    private void processGCodeState() {
+        final boolean wasIdle = gcodeState.isIdle();
+        final BambuConst.GCodeState _gcodeState = printer.getGCodeState();
+        if (gcodeState == _gcodeState) {
             return;
         }
-        printType = _printType;
-        if (isPrinterIdle()) {
+        gcodeState = _gcodeState;
+        if (wasIdle) {
+            return;
+        }
+        if (gcodeState.isIdle()) {
             showNotification("%s: Printer Idle".formatted(printer.getName()), config.notificationDuration());
         }
     }
 
     private void processMessage(final BambuPrinter.Message message) {
-        processPrintType();
+        processGCodeState();
         process(message.message().hasPrint(), message, message.message().getPrint(), this::processPrint);
         processError(message);
     }

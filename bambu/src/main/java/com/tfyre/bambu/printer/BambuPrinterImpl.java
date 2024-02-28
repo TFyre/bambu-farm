@@ -64,7 +64,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     private ProducerTemplate producerTemplate;
     private int printerError;
     private int totalLayerNum;
-    private String printType = BambuConst.PRINT_TYPE_IDLE;
+    private BambuConst.GCodeState gcodeState = BambuConst.GCodeState.IDLE;
     private PrinterModel model = BambuConst.PrinterModel.UNKNOWN;
     private boolean blocked;
 
@@ -74,11 +74,6 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     @Override
     public boolean isBlocked() {
         return blocked;
-    }
-
-    @Override
-    public boolean isIdle() {
-        return BambuConst.PRINT_TYPE_IDLE.equals(printType);
     }
 
     @Override
@@ -93,8 +88,8 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
         if (print.hasTotalLayerNum()) {
             totalLayerNum = print.getTotalLayerNum();
         }
-        if (print.hasPrintType()) {
-            printType = print.getPrintType();
+        if (print.hasGcodeState()) {
+            gcodeState = BambuConst.GCodeState.fromValue(print.getGcodeState());
         }
     }
 
@@ -168,8 +163,8 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     }
 
     @Override
-    public String getPrintType() {
-        return printType;
+    public BambuConst.GCodeState getGCodeState() {
+        return gcodeState;
     }
 
     @Override

@@ -22,7 +22,7 @@ public interface BambuPrinter {
 
     int getTotalLayerNum();
 
-    String getPrintType();
+    BambuConst.GCodeState getGCodeState();
 
     Optional<Message> getStatus();
 
@@ -35,8 +35,6 @@ public interface BambuPrinter {
     Collection<Message> getLastMessages();
 
     boolean isBlocked();
-
-    boolean isIdle();
 
     void setBlocked(final boolean blocked);
 

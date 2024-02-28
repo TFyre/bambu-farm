@@ -148,7 +148,7 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
     }
 
     public boolean canPrint() {
-        return printerDetail.printer().isIdle() && !printerDetail.printer().isBlocked() && isMapped();
+        return printerDetail.printer().getGCodeState().isIdle() && !printerDetail.printer().isBlocked() && isMapped();
     }
 
     public boolean isMapped() {
