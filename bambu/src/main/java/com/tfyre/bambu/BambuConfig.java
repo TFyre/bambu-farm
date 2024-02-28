@@ -16,9 +16,6 @@ import java.util.Optional;
 @ConfigMapping(prefix = "bambu")
 public interface BambuConfig {
 
-    @WithDefault("5m")
-    Duration notificationDuration();
-
     @WithDefault("false")
     boolean useBouncyCastle();
 
@@ -37,13 +34,28 @@ public interface BambuConfig {
     @WithDefault("1s")
     Duration refreshInterval();
 
+    @WithDefault("true")
+    boolean remoteView();
+
     Optional<String> liveViewUrl();
+
+    Dashboard dashboard();
 
     Map<String, Printer> printers();
 
     Map<String, User> users();
 
     Optional<List<Temperature>> preheat();
+
+    public interface Dashboard {
+
+        @WithDefault("true")
+        boolean remoteView();
+
+        @WithDefault("5m")
+        Duration notificationDuration();
+
+    }
 
     public interface Printer {
 
@@ -109,6 +121,9 @@ public interface BambuConfig {
         }
 
         public interface Stream {
+
+            @WithDefault("true")
+            boolean enabled();
 
             @WithDefault("6000")
             int port();

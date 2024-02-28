@@ -36,7 +36,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.enterprise.context.Dependent;
@@ -58,6 +57,7 @@ import java.util.function.Supplier;
 import org.jboss.logging.Logger;
 import com.tfyre.bambu.view.NotificationHelper;
 import com.tfyre.bambu.view.ViewHelper;
+import java.util.ArrayList;
 
 /**
  *
@@ -83,7 +83,6 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     private final Span progressFile = newSpan();
     private final Span progressTime = newSpan();
     private final Span progressLayer = newSpan();
-    private final TextArea statusBox;
     private final Image monitorLamp = new Image(Images.MONITOR_LAMP_OFF.getImage(), "Monitor Lamp");
     private final Span monitorLampText = newSpan();
     private final Image bedImage = new Image(Images.MONITOR_BED_TEMP.getImage(), "Bed");
@@ -124,8 +123,6 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     public DashboardPrinter() {
         progressBar = newProgressBar();
         progressBar.setIndeterminate(true);
-
-        statusBox = newStatusBox();
         isAdmin = SecurityUtils.userHasAccess(SystemRoles.ROLE_ADMIN);
     }
 
@@ -136,13 +133,6 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
 
     private Span newSpan() {
         return new Span("---");
-    }
-
-    private TextArea newStatusBox() {
-        final TextArea result = new TextArea("status");
-        result.setValue("unknown");
-        result.setSizeFull();
-        return result;
     }
 
     private void setTemperature(final Span span, final double value) {
@@ -273,22 +263,6 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
                     monitorLampText.setText(lr.getMode());
                     monitorLamp.setSrc(BambuConst.LightMode.ON.getValue().equals(lr.getMode()) ? Images.MONITOR_LAMP_ON.getImage() : Images.MONITOR_LAMP_OFF.getImage());
                 });
-
-        statusBox.setValue(
-                """
-                Command: %s
-                Sequence: %s
-                Nozzle: %.2fºC
-                Bed: %.2fºC
-                Updated: %s
-                """
-                        .formatted(
-                                print.getCommand(),
-                                print.getSequenceId(),
-                                print.getNozzleTemper(),
-                                1.0 * print.getBedTemper(),
-                                DTF.format(message.lastUpdated())
-                        ));
     }
 
     private <T> void process(final boolean hasValue, final BambuPrinter.Message message, final T data, final BiConsumer<BambuPrinter.Message, T> consumer) {
@@ -316,7 +290,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
             if (lastError != 0) {
                 showError("%s error[%d / %s]: %s".formatted(
                         printer.getName(), lastError, Integer.toHexString(lastError), errorString),
-                        config.notificationDuration());
+                        config.dashboard().notificationDuration());
             }
         }
 
@@ -340,7 +314,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
             return;
         }
         if (gcodeState.isIdle()) {
-            showNotification("%s: Printer Idle".formatted(printer.getName()), config.notificationDuration());
+            showNotification("%s: Printer Idle".formatted(printer.getName()), config.dashboard().notificationDuration());
         }
     }
 
@@ -765,26 +739,31 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         this.fromDashboard = fromDashboard;
         thumbnailOrIframe = getThumbnailOrIframe();
         try {
-            return createContent(
-                    buildName(),
-                    buildImage(),
-                    buildStatus(),
-                    buildAms(),
-                    buildProgressBar(),
-                    progressBar
-            //,statusBox
-            );
+            final List<Component> list = new ArrayList<>();
+            list.add(buildName());
+            if (!config.remoteView()) {
+                // Dont buildImage
+            } else if (fromDashboard && !config.dashboard().remoteView()) {
+                // Dont buildImage
+            } else {
+                list.add(buildImage());
+            }
+            list.add(buildStatus());
+            list.add(buildAms());
+            list.add(buildProgressBar());
+            list.add(progressBar);
+            return createContent(list);
         } finally {
             built = true;
         }
     }
 
-    private Component createContent(final Component... components) {
+    private Component createContent(final List<Component> list) {
         final VerticalLayout content = new VerticalLayout();
         content.addClassName("dashboard-printer");
         content.setPadding(false);
         content.setSpacing(false);
-        content.add(components);
+        list.forEach(content::add);
         content.setSizeUndefined();
         return content;
     }

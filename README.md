@@ -204,15 +204,33 @@ bambu.preheat[2].bed=90
 bambu.preheat[2].nozzle=270
 ```
 
-### Notification Duration
+### Dashboard Notification Duration
 
 Default display duration for notifications is 5 minutes
 
 ```properties
-bambu.notification-duration=5m
+bambu.dashboard.notification-duration=5m
 ```
 
+### Remote View
+
+Remote View is the ability to remotely view or stream the printer's camera.
+
+```properties
+# defaults to true, when false, disables remote view globally
+bambu.remote-view=true
+
+# defaults to true, when false, disables remote view for dashboard, but will still be available in detail view
+bambu.dashboard.remote-view=true
+
+# defaults to true, when false, disables per printer
+bambu.printers.myprinter1.stream.enable=true
+```
+
+
 ### Live View
+
+Live View is the ability to remotely stream the X1C camera (or any other webcam) and requires Remote View to be enabled.
 
 > [!NOTE]
 > Getting the **LiveView** to work requires additional software. For more details check the [docker/bambu-liveview](docker/bambu-liveview) README.

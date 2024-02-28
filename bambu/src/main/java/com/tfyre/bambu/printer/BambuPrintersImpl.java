@@ -38,6 +38,8 @@ public class BambuPrintersImpl implements BambuPrinters {
     CamelContext camelContext;
     @Inject
     Scheduler scheduler;
+    @Inject
+    BambuConfig bambuConfig;
 
     private final Map<String, PrinterDetail> map = new HashMap<>();
 
@@ -77,7 +79,8 @@ public class BambuPrintersImpl implements BambuPrinters {
         }
 
         final BambuPrinterStream stream = _bambuPrinterStream.get();
-        stream.setup(scheduler, name, config, consumer);
+        final boolean enabled = bambuConfig.remoteView() && config.stream().enabled() && !config.stream().liveView();
+        stream.setup(enabled, scheduler, name, config, consumer);
 
         final PrinterDetail result = new PrinterDetail(id, name, new AtomicBoolean(), config, printer, Processor.class.cast(printer), stream);
         map.put(name, result);

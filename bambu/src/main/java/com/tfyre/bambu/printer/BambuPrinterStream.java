@@ -42,6 +42,7 @@ public class BambuPrinterStream {
     Logger log;
 
     private BambuConfig.Printer config;
+    private boolean enabled;
     private String name;
     private Consumer<BambuPrinter.Thumbnail> consumer;
 
@@ -55,16 +56,13 @@ public class BambuPrinterStream {
         client = vertx.createNetClient(options);
     }
 
-    private boolean liveView() {
-        return config.stream().liveView();
-    }
-
-    public void setup(final Scheduler scheduler, final String name, final BambuConfig.Printer config, final Consumer<BambuPrinter.Thumbnail> consumer) {
+    public void setup(final boolean enabled, final Scheduler scheduler, final String name, final BambuConfig.Printer config, final Consumer<BambuPrinter.Thumbnail> consumer) {
+        this.enabled = enabled;
         this.name = name;
         this.config = config;
         this.consumer = consumer;
 
-        if (liveView()) {
+        if (!enabled) {
             return;
         }
 
@@ -148,7 +146,7 @@ public class BambuPrinterStream {
     }
 
     public void start() {
-        if (liveView()) {
+        if (!enabled) {
             return;
         }
         nextImage = OffsetDateTime.now();
@@ -157,7 +155,7 @@ public class BambuPrinterStream {
     }
 
     public void stop() {
-        if (liveView()) {
+        if (!enabled) {
             return;
         }
         running.set(false);
