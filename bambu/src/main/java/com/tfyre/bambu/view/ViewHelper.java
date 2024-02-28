@@ -17,19 +17,19 @@ public interface ViewHelper {
     Logger getLogger();
 
     default double parseDouble(final String printerName, final String value, final double defaultValue) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return 0;
         }
         try {
             return Double.parseDouble(value);
         } catch (NumberFormatException ex) {
-            getLogger().errorf("%s: Cannot parseInt [%s]", printerName, value);
+            getLogger().errorf("%s: Cannot parseDouble [%s]", printerName, value);
             return defaultValue;
         }
     }
 
     default double parseDouble(final String value, final double defaultValue) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return 0;
         }
         try {
@@ -41,7 +41,7 @@ public interface ViewHelper {
     }
 
     default int parseInt(final String printerName, final String value, final int defaultValue) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return 0;
         }
         try {
@@ -53,7 +53,7 @@ public interface ViewHelper {
     }
 
     default int parseInt(final String value, final int defaultValue) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return 0;
         }
         try {
