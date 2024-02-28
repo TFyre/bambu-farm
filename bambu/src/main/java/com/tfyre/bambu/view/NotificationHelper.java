@@ -52,7 +52,7 @@ public interface NotificationHelper {
     }
 
     default void showNotification(final String message) {
-        showNotification(message, -1);
+        showNotification(message, Duration.ofSeconds(3));
     }
 
     default void showNotification(final String message, final Duration duration) {
