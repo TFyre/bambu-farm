@@ -4,7 +4,6 @@ import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.model.AmsSingle;
 import com.tfyre.bambu.model.Print;
 import com.tfyre.bambu.model.Tray;
-import com.tfyre.bambu.model.VtTray;
 import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.printer.BambuPrinters;
@@ -193,13 +192,17 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
         return Filament.getFilament(filamentId).orElse(Filament.UNKNOWN).getType();
     }
 
-    private PrinterFilament mapTray(final String printerName, final AmsSingle single, final Tray tray) {
-        final int amsId = parseInt(printerName, single.getId(), -1);
-        final int trayId = parseInt(printerName, tray.getId(), -1);
-        return new PrinterFilament("%s%d".formatted((char) ('A' + amsId), trayId + 1), amsId, trayId,
+    private PrinterFilament newPrinterFilament(final Tray tray, final String name, final int amsId, final int trayId) {
+        return new PrinterFilament(name, amsId, trayId,
                 mapFilament(tray.getTrayInfoIdx()),
                 mapFilamentColor(tray.getTrayColor())
         );
+    }
+
+    private PrinterFilament mapTray(final AmsSingle single, final Tray tray, final String printerName) {
+        final int amsId = parseInt(printerName, single.getId(), -1);
+        final int trayId = parseInt(printerName, tray.getId(), -1);
+        return newPrinterFilament(tray, "%s%d".formatted((char) ('A' + amsId), trayId + 1), amsId, trayId);
     }
 
     private List<PrinterFilament> getPrinterFilaments(final BambuPrinter printer) {
@@ -212,16 +215,11 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
             return print.getAms().getAmsList().stream()
                     .flatMap(single -> single.getTrayList().stream()
                             .filter(Tray::hasTrayInfoIdx)
-                            .map(tray -> mapTray(printer.getName(), single, tray)))
+                            .map(tray -> mapTray(single, tray, printer.getName())))
                     .toList();
         }
         if (print.hasVtTray()) {
-            final VtTray tray = print.getVtTray();
-            return List.of(
-                    new PrinterFilament("Tray", 0, BambuConst.AMS_TRAY_VIRTUAL,
-                            mapFilament(tray.getTrayInfoIdx()),
-                            mapFilamentColor(tray.getTrayColor()))
-            );
+            return List.of(newPrinterFilament(print.getVtTray(), "Tray", 0, BambuConst.AMS_TRAY_VIRTUAL));
         }
         return List.of();
     }

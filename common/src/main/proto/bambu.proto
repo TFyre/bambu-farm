@@ -18,12 +18,20 @@ message Upload {
   optional string status = 1;
   optional int32 progress = 2;
   optional string message = 3;
+  optional int32 file_size = 4;
+  optional int32 finish_size = 5;
+  optional string oss_url = 6;
+  optional int32 speed = 7;
+  optional string task_id = 8;
+  optional int32 time_remaining = 9;
+  optional string trouble_id = 10;
 }
 
 message Online {
   optional bool ahb = 1;
   optional bool rfid = 2;
   optional int32 version = 3;
+  optional bool ext = 4;
 }
 
 message Tray {
@@ -47,6 +55,11 @@ message Tray {
   optional string nozzle_temp_min = 18;
   optional string xcam_info = 19;
   optional string tray_uuid = 20;
+  optional int32 cali_idx = 21;
+  repeated string cols = 22;
+  optional string ctype = 23;
+  optional string drying_temp = 24;
+  optional string drying_time = 25;
 }
 
 message AmsSingle {
@@ -71,29 +84,6 @@ message Ams {
   optional bool power_on_flag = 12;
 }
 
-message VtTray {
-  optional string id = 1;
-  optional string tag_uid = 2;
-  optional string tray_id_name = 3;
-  optional string tray_info_idx = 4;
-  optional string tray_type = 5;
-  optional string tray_sub_brands = 6;
-  optional string tray_color = 7;
-  optional string tray_weight = 8;
-  optional string tray_diameter = 9;
-  optional string tray_temp = 10;
-  optional string tray_time = 11;
-  optional string bed_temp_type = 12;
-  optional string bed_temp = 13;
-  optional string nozzle_temp_max = 14;
-  optional string nozzle_temp_min = 15;
-  optional string xcam_info = 16;
-  optional string tray_uuid = 17;
-  optional int32 remain = 18;
-  optional double k = 19;
-  optional double n = 20;
-}
-
 message LightsReport {
   optional string node = 1;
   optional string mode = 2;
@@ -105,6 +95,8 @@ message Ipcam {
   optional string timelapse = 3;
   optional string resolution = 4;
   optional int32 mode_bits = 5;
+  optional string rtsp_url = 6;
+  optional string tutk_server = 7;
 }
 
 message UpgradeState {
@@ -120,10 +112,38 @@ message UpgradeState {
   optional int32 new_version_state = 10;
   optional int32 cur_state_code = 11;
   repeated Empty new_ver_list = 12;
+  optional string ahb_new_version_number = 13;
+  optional string ams_new_version_number = 14;
+  optional string ext_new_version_number = 15;
+  optional int32 idx = 16;
+  optional string ota_new_version_number = 17;
+  optional string sn = 18;
 }
 
 message Hms {
-  
+}
+
+message Filam {
+}
+
+message NetInfo {
+  optional int64 ip = 1;
+  optional int64 mask = 2;
+}
+
+message Net {
+  optional int32 conf = 1;
+  repeated NetInfo info = 2;
+}
+
+message Xcam {
+  optional bool allow_skip_parts = 1;
+  optional bool buildplate_marker_detector = 2;
+  optional bool first_layer_inspector = 3;
+  optional string halt_print_sensitivity = 4;
+  optional bool print_halt = 5;
+  optional bool printing_monitor = 6;
+  optional bool spaghetti_detector = 7;
 }
 
 message Print {
@@ -181,7 +201,7 @@ message Print {
   optional Online online = 52;
   optional Ams ams = 53;
   optional Ipcam ipcam = 54;
-  optional VtTray vt_tray = 55;
+  optional Tray vt_tray = 55;
   repeated LightsReport lights_report = 56;
   optional string command = 57;
   optional int32 msg = 58;
@@ -212,6 +232,21 @@ message Print {
   optional int32 nozzle_temp_min = 81;
   optional int32 nozzle_temp_max = 82;
   optional string tray_type = 83;
+
+  optional bool aux_part_fan = 84; 
+  optional int32 cali_version = 85;
+  optional int32 ctt = 86;
+  optional string fail_reason = 87;
+  /*looks like timestamp*/
+  optional string gcode_start_time = 88;
+  optional string job_id = 89;
+  optional int32 maintain = 90;
+  optional string mc_print_error_code = 91;
+  optional Net net = 92;
+  optional int32 print_gcode_action = 93;
+  optional int32 print_real_action = 94;
+  optional Xcam xcam = 95;
+  optional string xcam_status = 96;
 }
 
 message System {

@@ -197,7 +197,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         });
     }
 
-    private void processVtTray(final com.tfyre.bambu.model.VtTray tray) {
+    private void processVtTray(final Tray tray) {
         final int trayId = getTrayId(tray);
         Optional.ofNullable(amsHeaders.get(getTrayKey(trayId))).ifPresent(header -> {
             setTemperature(header.temperature(), parseDouble(printer.getName(), tray.getTrayTemp(), 0));
@@ -683,10 +683,6 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         return parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
     }
 
-    private int getTrayId(final com.tfyre.bambu.model.VtTray tray) {
-        return parseInt(printer.getName(), tray.getId(), BambuConst.AMS_TRAY_UNLOAD);
-    }
-
     private Div buildAmsFilament(final AmsSingle single, final Tray tray) {
         final int amsId = getAmsId(single);
         final int trayId = getTrayId(tray);
@@ -729,7 +725,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         });
     }
 
-    private void buildVtTray(final Div parent, final com.tfyre.bambu.model.VtTray tray) {
+    private void buildVtTray(final Div parent, final com.tfyre.bambu.model.Tray tray) {
         final int trayId = getTrayId(tray);
         parent.add(buildTray(
                 getTrayKey(trayId),
