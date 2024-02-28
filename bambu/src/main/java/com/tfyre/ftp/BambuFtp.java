@@ -102,7 +102,6 @@ public class BambuFtp extends org.apache.commons.net.ftp.FTPSClient {
         execPROT("P");
         enterLocalPassiveMode();
         return true;
-
     }
 
     public boolean doUpload(final String fileName, final InputStream inputStream) throws IOException {

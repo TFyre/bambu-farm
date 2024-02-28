@@ -51,7 +51,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
@@ -66,7 +65,7 @@ import org.jboss.logging.Logger;
 @Route(value = "sdcard", layout = MainLayout.class)
 @PageTitle("SD Card")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class SdCardView extends PushDiv implements HasUrlParameter<String>, NotificationHelper, GridHelper<FTPFile>, ViewHelper {
+public class SdCardView extends PushDiv implements HasUrlParameter<String>, GridHelper<FTPFile>, ViewHelper {
 
     private static final DateTimeFormatter DTF = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
@@ -97,7 +96,7 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Noti
     private Optional<BambuPrinters.PrinterDetail> _printer = Optional.empty();
 
     private final ComboBox<BambuPrinters.PrinterDetail> comboBox = new ComboBox<>();
-    private final Grid<FTPFile> grid = new Grid<>();
+    private final Grid<FTPFile> grid = new MyGrid<>();
     private final TextField path = new TextField("", BambuConst.PATHSEP, l -> runCallable(this::doPath));
     private final Button connect = new Button("Connect", new Icon(VaadinIcon.CONNECT), l -> doConnect());
     private final Button disconnect = new Button("Disconnect", new Icon(VaadinIcon.CLOSE), l -> doDisconnect());
@@ -110,6 +109,9 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Noti
     private double percentageComplete;
     private long fileSize;
     private UI ui;
+
+    private final NotificationHelper nh = new NotificationHelper() {
+    };
 
     private void showProgressBar(final boolean visible) {
         percentageComplete = 0;
@@ -136,13 +138,16 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Noti
         ui.access(command);
     }
 
-    private void runCallable(final Callable<Boolean> callable) {
+    private void runCallable(final Callable callable) {
         executor.submit(() -> {
             try {
-                callable.call();
+                callable.run();
             } catch (Exception ex) {
                 log.error(ex.getMessage(), ex);
-                runInUI(() -> showError(ex.getMessage()));
+                if (ex.getCause() != null) {
+                    log.error(ex.getCause().getMessage(), ex.getCause());
+                }
+                runInUI(() -> nh.showError(ex.getMessage()));
             }
         });
     }
@@ -157,10 +162,7 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Noti
             return;
         }
         grid.setItems(List.of());
-        runCallable(() -> {
-            _client.doClose();
-            return true;
-        });
+        runCallable(_client::doClose);
     }
 
     private void setConnectDisconnect(final boolean canConnect) {
@@ -183,12 +185,10 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Noti
         runCallable(() -> {
             client.doConnect();
             if (!client.doLogin()) {
-                runInUI(() -> showError("Login Failed"));
-                return true;
+                runInUI(() -> nh.showError("Login Failed"));
             }
             runInUI(() -> setConnectDisconnect(false));
             doPath();
-            return true;
         });
     }
 
@@ -196,33 +196,29 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Noti
         disconnect.setEnabled(false);
         grid.setItems(List.of());
         setConnectDisconnect(true);
-        runCallable(() -> {
-            client.doClose();
-            return true;
-        });
+        runCallable(client::doClose);
     }
 
-    private boolean doPath() throws IOException {
+    private void doPath() throws IOException {
         final String value = path.getValue();
         if (value == null || value.isEmpty()) {
             runInUI(() -> path.setValue(BambuConst.PATHSEP));
-            return false;
+            return;
         }
         if (!client.isConnected()) {
-            return false;
+            return;
         }
         if (!client.changeWorkingDirectory(value)) {
-            runInUI(() -> showError("Change Directory Failed"));
-            return false;
+            runInUI(() -> nh.showError("Change Directory Failed"));
+            return;
         }
         final List<FTPFile> files = Arrays.asList(client.listFiles());
         runInUI(() -> {
             grid.setItems(files);
             if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
-                showError(client.getReplyString());
+                nh.showError(client.getReplyString());
             }
         });
-        return true;
     }
 
     private void doCDUP() {
@@ -246,7 +242,7 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Noti
         upload.setMaxFileSize((int) maxBodySize.asLongValue());
         upload.setDropLabel(new Span("Drop file here (max size: %dM)".formatted(maxBodySize.asLongValue() / 1_000_000)));
         upload.addFileRejectedListener(l -> {
-            showError(l.getErrorMessage());
+            nh.showError(l.getErrorMessage());
         });
         final HorizontalLayout result = new HorizontalLayout(new Span("Printers"), comboBox, connect, disconnect, new Span("Path"),
                 path, cdup, refresh, upload
@@ -375,8 +371,8 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Noti
         path.setValue(buildFileName(item.getName()));
     }
 
-    private boolean doRefresh() throws IOException {
-        return doPath();
+    private void doRefresh() throws IOException {
+        doPath();
     }
 
     private void doUpload(final SucceededEvent event) {
@@ -384,15 +380,14 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Noti
         showProgressBar(true);
 
         final InputStream inputStream = buffer.getInputStream();
-        showNotification("Uploading to Printer");
+        nh.showNotification("Uploading to Printer");
         runCallable(() -> {
             client.doUpload(event.getFileName(), inputStream);
             runInUI(() -> {
                 showProgressBar(false);
-                showNotification("Uploaded: %s".formatted(event.getFileName()));
+                nh.showNotification("Uploaded: %s".formatted(event.getFileName()));
             });
             doRefresh();
-            return true;
         });
     }
 
@@ -412,10 +407,9 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Noti
                 }
 
                 if (!ok) {
-                    runInUI(() -> showError("Delete Failed"));
+                    runInUI(() -> nh.showError("Delete Failed"));
                 }
                 doRefresh();
-                return true;
             });
         });
     }
@@ -452,13 +446,39 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Noti
                         useAMS.getValue(), timelapse.getValue(), bedLevelling.getValue(),
                         List.of());
             } else {
-                showError("Unknown File: %s".formatted(fileName));
+                nh.showError("Unknown File: %s".formatted(fileName));
             }
         });
     }
 
     private void bytesTransferred(long totalBytesTransferred, int bytesTransferred, long streamSize) {
         percentageComplete = 100.0 * totalBytesTransferred / fileSize;
+    }
+
+    @FunctionalInterface
+    private interface Callable {
+
+        /**
+         * Runs this operation.
+         */
+        void run() throws Exception;
+    }
+
+    private class MyGrid<T> extends Grid<T> {
+
+        private Optional<UI> ui = Optional.empty();
+
+        @Override
+        public Optional<UI> getUI() {
+            return ui.or(super::getUI);
+        }
+
+        @Override
+        protected void onAttach(final AttachEvent attachEvent) {
+            super.onAttach(attachEvent);
+            ui = Optional.of(attachEvent.getUI());
+        }
+
     }
 
 }
