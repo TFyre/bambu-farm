@@ -305,25 +305,24 @@ public class BambuConst {
     }
 
     public enum GCodeState {
-        UNKNOWN("", "unknown", false, false),
-        IDLE("IDLE", "idle", true, true),
-        RUNNING("RUNNING", "running", false, false),
-        PAUSE("PAUSE", "pause", false, false),
-        FINISH("FINISH", "finish", true, true),
-        FAILED("FAILED", "failed", false, true),
-        SLICING("SLICING", "slicing", false, false);
+        UNKNOWN("", "Inknown"),
+        IDLE("IDLE", "Idle"),
+        RUNNING("RUNNING", "Running"),
+        PAUSE("PAUSE", "Pause"),
+        FINISH("FINISH", "Finish"),
+        FAILED("FAILED", "Failed"),
+        SLICING("SLICING", "Slicing");
 
         private static final Map<String, GCodeState> MAP = EnumSet.allOf(GCodeState.class).stream().collect(Collectors.toMap(GCodeState::getValue, Function.identity()));
+        private static final Set<GCodeState> IS_IDLE = Set.of(IDLE, FINISH);
+        private static final Set<GCodeState> IS_READY = Set.of(IDLE, FINISH, FAILED);
+        private static final Set<GCodeState> IS_ERROR = Set.of(UNKNOWN, FAILED);
         private final String value;
         private final String description;
-        private final boolean idle;
-        private final boolean ready;
 
-        private GCodeState(final String value, final String description, final boolean idle, final boolean ready) {
+        private GCodeState(final String value, final String description) {
             this.value = value;
             this.description = description;
-            this.idle = idle;
-            this.ready = ready;
         }
 
         public String getValue() {
@@ -335,11 +334,15 @@ public class BambuConst {
         }
 
         public boolean isIdle() {
-            return idle;
+            return IS_IDLE.contains(this);
         }
 
         public boolean isReady() {
-            return ready;
+            return IS_READY.contains(this);
+        }
+
+        public boolean isError() {
+            return IS_ERROR.contains(this);
         }
 
         public static GCodeState fromValue(final String value) {
