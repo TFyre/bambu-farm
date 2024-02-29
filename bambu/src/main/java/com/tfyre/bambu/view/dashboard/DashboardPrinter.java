@@ -368,17 +368,21 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         updatePrinterStatus();
     }
 
-    private void doConfirm(final BambuConst.CommandControl command) {
-        YesNoCancelDialog.show("%s: Are you sure?".formatted(command.getValue()), ync -> {
+    private void doConfirm(final String description, final Runnable runnable) {
+        YesNoCancelDialog.show("%s - %s\n\nAre you sure?".formatted(printer.getName(), description), ync -> {
             if (!ync.isConfirmed()) {
                 return;
             }
-            printer.commandControl(command);
+            runnable.run();
         });
     }
 
-    private void doConfirm(final String command) {
-        doConfirm(() -> printer.commandPrintGCodeLine(command));
+    private void doConfirm(final BambuConst.CommandControl command) {
+        doConfirm(command.getValue(), () -> printer.commandControl(command));
+    }
+
+    private void doConfirm(final String description, final String gcode) {
+        doConfirm(description, () -> printer.commandPrintGCodeLine(gcode));
     }
 
     private Button newButton(final String toolTip, final VaadinIcon icon, final ComponentEventListener<ClickEvent<Button>> clickListener) {
@@ -394,7 +398,8 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         EnumSet.allOf(BambuConst.Fan.class).forEach(fan -> {
             final SubMenu fanMenu = menu.addItem(fan.getName()).getSubMenu();
             EnumSet.allOf(BambuConst.FanSpeed.class).forEach(fanSpeed -> {
-                fanMenu.addItem(fanSpeed.getName(), l -> doConfirm(BambuConst.gcodeFanSpeed(fan, fanSpeed)));
+                fanMenu.addItem(fanSpeed.getName(), l -> doConfirm("Fan [%s] Speed[%s]".formatted(fan.getName(), fanSpeed.getName()),
+                        BambuConst.gcodeFanSpeed(fan, fanSpeed)));
             });
         });
         return result;
@@ -418,7 +423,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
                 result.add(newButton("Show Detail Printer", VaadinIcon.SEARCH_PLUS, l -> UI.getCurrent().navigate(PrinterView.class, printer.getName())));
             } else {
                 result.add(
-                        newButton("Disable Stepper Motors", VaadinIcon.COGS, l -> doConfirm(BambuConst.gcodeDisableSteppers())),
+                        newButton("Disable Stepper Motors", VaadinIcon.COGS, l -> doConfirm("Disable Stepper Motors", BambuConst.gcodeDisableSteppers())),
                         fanControl("Fan Control", VaadinIcon.ASTERISK),
                         newButton("Send GCode", VaadinIcon.COG, l -> GCodeDialog.show(printer)),
                         newButton("Back to Dashboard", VaadinIcon.ARROW_BACKWARD, l -> UI.getCurrent().navigate(Dashboard.class))
@@ -536,26 +541,13 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
                     if (s == BambuConst.Speed.UNKNOWN) {
                         return;
                     }
-                    menu.addItem(s.getDescription(), l ->
-                            YesNoCancelDialog.show("%s: Are you sure?".formatted(s.getDescription()), ync -> {
-                                if (!ync.isConfirmed()) {
-                                    return;
-                                }
-                                printer.commandSpeed(s);
-                            }
-                            )
-                    );
+                    menu.addItem(s.getDescription(), l -> doConfirm(s.getDescription(), () -> printer.commandSpeed(s)));
                 });
         return result;
     }
 
-    private void confirmTemperature(final List<String> list) {
-        YesNoCancelDialog.show("Are you sure?", ync -> {
-            if (!ync.isConfirmed()) {
-                return;
-            }
-            printer.commandPrintGCodeLine(list);
-        });
+    private void confirmTemperature(final String description, final List<String> list) {
+        doConfirm(description, () -> printer.commandPrintGCodeLine(list));
     }
 
     private void confirmTemperature(final Supplier<Integer> current, final int maxTemp, final Function<Integer, String> function) {
@@ -564,7 +556,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         temp.setMax(maxTemp);
         temp.setStepButtonsVisible(true);
         temp.setValue(current.get());
-        YesNoCancelDialog.show(List.of(temp), "Are you sure?", ync -> {
+        YesNoCancelDialog.show(List.of(temp), "%s\n\nAre you sure?".formatted(printer.getName()), ync -> {
             if (!ync.isConfirmed()) {
                 return;
             }
@@ -600,7 +592,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
                 return;
             }
 
-            preheat.addItem(t.name(), l -> confirmTemperature(List.of(
+            preheat.addItem(t.name(), l -> confirmTemperature(t.name(), List.of(
                     BambuConst.gcodeTargetTemperatureBed(t.bed()),
                     BambuConst.gcodeTargetTemperatureNozzle(t.nozzle()))));
 
