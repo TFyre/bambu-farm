@@ -305,23 +305,25 @@ public class BambuConst {
     }
 
     public enum GCodeState {
-        UNKNOWN("", "unknown", false),
-        IDLE("IDLE", "idle", true),
-        RUNNING("RUNNING", "running", false),
-        PAUSE("PAUSE", "pause", false),
-        FINISH("FINISH", "finish", true),
-        FAILED("FAILED", "failed", false),
-        SLICING("SLICING", "slicing", false);
+        UNKNOWN("", "unknown", false, false),
+        IDLE("IDLE", "idle", true, true),
+        RUNNING("RUNNING", "running", false, false),
+        PAUSE("PAUSE", "pause", false, false),
+        FINISH("FINISH", "finish", true, true),
+        FAILED("FAILED", "failed", false, true),
+        SLICING("SLICING", "slicing", false, false);
 
         private static final Map<String, GCodeState> MAP = EnumSet.allOf(GCodeState.class).stream().collect(Collectors.toMap(GCodeState::getValue, Function.identity()));
         private final String value;
         private final String description;
         private final boolean idle;
+        private final boolean ready;
 
-        private GCodeState(final String value, final String description, final boolean idle) {
+        private GCodeState(final String value, final String description, final boolean idle, final boolean ready) {
             this.value = value;
             this.description = description;
             this.idle = idle;
+            this.ready = ready;
         }
 
         public String getValue() {
@@ -334,6 +336,10 @@ public class BambuConst {
 
         public boolean isIdle() {
             return idle;
+        }
+
+        public boolean isReady() {
+            return ready;
         }
 
         public static GCodeState fromValue(final String value) {

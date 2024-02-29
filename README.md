@@ -16,7 +16,7 @@ Technologies used:
 |**Upload to SD card**|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] <sup>2</sup></li></ul>|
 |**Print .3mf from SD card**<sup>1</sup>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] <sup>2</sup></li></ul>|
 |**Print .gcode from SD card**|?|?|?|?|?|
-|**Batch Printing**<sup>4</sup>|?|?|?|<ul><li>[x] </li></ul>|?|
+|**Batch Printing**<sup>4</sup>|?|?|?|<ul><li>[x] </li></ul>|<ul><li>[x] <sup>2</sup></li></ul>|
 |**AMS**|?|?|?|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|
 |**Send Custom GCode**|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|<ul><li>[x] </li></ul>|
 
@@ -261,8 +261,15 @@ Add to `.env`:
 bambu.use-bouncy-castle=true
 ```
 Add JVM startup flag:
+
+bash / cmd:
 ```bash
 java -Djdk.tls.useExtendedMasterSecret=false -jar bambu-web-x.x.x-runner.jar
+```
+
+powershell:
+```powershell
+java "-Djdk.tls.useExtendedMasterSecret=false" -jar bambu-web-x.x.x-runner.jar
 ```
 
 ### Uploading bigger files

@@ -160,9 +160,9 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
 
     }
 
-    private Component newCheckbox(final boolean isIdle) {
+    private Component newCheckbox(final boolean checked) {
         final Checkbox result = new Checkbox();
-        result.setValue(isIdle);
+        result.setValue(checked);
         result.setReadOnly(true);
         return result;
     }
@@ -172,7 +172,7 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
                 = setupColumnFilter("Name", pm -> pm.getPrinterDetail().printer().getName()).setFlexGrow(2);
         setupColumn("Plate Id", pm -> Optional.ofNullable(plateLookup.getValue()).map(Plate::name).orElse("")).setFlexGrow(1);
         setupColumnFilter("Printer Status", pm -> pm.getPrinterDetail().printer().getGCodeState().getDescription()).setFlexGrow(2);
-        grid.addComponentColumn(pm -> newCheckbox(pm.getPrinterDetail().printer().getGCodeState().isIdle())).setHeader("Printer Idle").setFlexGrow(1);
+        grid.addComponentColumn(pm -> newCheckbox(pm.getPrinterDetail().printer().getGCodeState().isReady())).setHeader("Printer Ready").setFlexGrow(1);
         grid.addComponentColumn(PrinterMapping::getBulkStatus).setHeader("Bulk Status").setFlexGrow(2);
         grid.addComponentColumn(PrinterMapping::getFilamentMapping).setHeader("Filament Mapping").setFlexGrow(3);
 
