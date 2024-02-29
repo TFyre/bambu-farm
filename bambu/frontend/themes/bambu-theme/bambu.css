@@ -85,6 +85,15 @@
     border: 0px;
 }
 
+.dashboard-printer .imagestatus {
+    display: flex;
+    width: 90%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-evenly;
+    margin-bottom: 10px;
+}
+
 .controlsbox iframe {
     height: 60vh;
 }

@@ -98,6 +98,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     private final Image thumbnail = new Image();
     private final IFrame iframe = new IFrame();
     private final Span thumbnailUpdated = newSpan();
+    private final Span printerStatus = newSpan();
     private final Div printerName = new Div();
     private String thumbnailId;
     private boolean built;
@@ -122,7 +123,6 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
 
     public DashboardPrinter() {
         progressBar = newProgressBar();
-        progressBar.setIndeterminate(true);
         isAdmin = SecurityUtils.userHasAccess(SystemRoles.ROLE_ADMIN);
     }
 
@@ -199,25 +199,34 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     }
 
     private void processPrint(final BambuPrinter.Message message, final Print print) {
-        //Percetage
-        if (print.hasMcPercent()) {
+        if (gcodeState.isIdle()) {
             progressBar.setIndeterminate(false);
-            progressBar.setValue(Math.min(print.getMcPercent(), 100));
-        }
+            progressBar.setValue(0);
+            progressFile.setText(thumbnailId);
+            progressFile.setText("");
+            progressTime.setText("--");
+            progressLayer.setText("");
+        } else {
+            //Percetage
+            if (print.hasMcPercent()) {
+                progressBar.setIndeterminate(false);
+                progressBar.setValue(Math.min(print.getMcPercent(), 100));
+            }
 
-        //FileName
-        if (print.hasSubtaskName()) {
-            progressFile.setText(print.getSubtaskName());
-        }
+            //FileName
+            if (print.hasSubtaskName()) {
+                progressFile.setText(print.getSubtaskName());
+            }
 
-        //Time
-        if (print.hasMcRemainingTime()) {
-            progressTime.setText("%s remaining".formatted(formatTime(Duration.ofMinutes(print.getMcRemainingTime()))));
-        }
+            //Time
+            if (print.hasMcRemainingTime()) {
+                progressTime.setText("%s remaining".formatted(formatTime(Duration.ofMinutes(print.getMcRemainingTime()))));
+            }
 
-        //Layers
-        if (print.hasLayerNum()) {
-            progressLayer.setText("Layer %d / %d".formatted(print.getLayerNum(), printer.getTotalLayerNum()));
+            //Layers
+            if (print.hasLayerNum()) {
+                progressLayer.setText("Layer %d / %d".formatted(print.getLayerNum(), printer.getTotalLayerNum()));
+            }
         }
 
         //Bed & Target Temperature
@@ -324,6 +333,19 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         processError(message);
     }
 
+    private void updatePrinterStatus() {
+        final String value = "Status: %s".formatted(gcodeState.getDescription());
+        if (value.equals(printerStatus.getText())) {
+            return;
+        }
+        printerStatus.setText(value);
+        if (gcodeState.isError()) {
+            printerStatus.addClassName(LumoUtility.TextColor.ERROR);
+        } else {
+            printerStatus.removeClassName(LumoUtility.TextColor.ERROR);
+        }
+    }
+
     public void update() {
         if (!built) {
             return;
@@ -343,6 +365,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
             thumbnail.setSrc(data.thumbnail());
             thumbnailUpdated.setText(DTF.format(data.lastUpdated()));
         });
+        updatePrinterStatus();
     }
 
     private void doConfirm(final BambuConst.CommandControl command) {
@@ -472,7 +495,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     private Component buildImage() {
         return newDiv("image",
                 fromDashboard ? thumbnailOrIframe : buildControls(),
-                thumbnailUpdated
+                newDiv("imagestatus", thumbnailUpdated, printerStatus)
         );
     }
 
@@ -739,6 +762,8 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         this.fromDashboard = fromDashboard;
         thumbnailOrIframe = getThumbnailOrIframe();
         try {
+            progressBar.setIndeterminate(true);
+            printerStatus.getStyle().setFontWeight(Style.FontWeight.BOLD);
             final List<Component> list = new ArrayList<>();
             list.add(buildName());
             if (!config.remoteView()) {
