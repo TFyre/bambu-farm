@@ -305,10 +305,11 @@ public class BambuConst {
     }
 
     public enum GCodeState {
-        UNKNOWN("", "Inknown"),
+        UNKNOWN("", "Unknown"),
         IDLE("IDLE", "Idle"),
         RUNNING("RUNNING", "Running"),
         PAUSE("PAUSE", "Pause"),
+        PREPARE("PREPARE", "Prepare"),
         FINISH("FINISH", "Finish"),
         FAILED("FAILED", "Failed"),
         SLICING("SLICING", "Slicing");
