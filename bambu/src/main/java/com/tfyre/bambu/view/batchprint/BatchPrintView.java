@@ -85,14 +85,13 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
     private final Span printTime = new Span();
     private final Span printWeight = new Span();
     private final Div printFilaments = newDiv("filaments");
-    private final Checkbox useAMS = new Checkbox("Use AMS", true);
     private final Checkbox timelapse = new Checkbox("Timelapse", true);
     private final Checkbox bedLevelling = new Checkbox("Bed Levelling", true);
     private GridListDataView<PrinterMapping> dataView;
     private final Div actions = newDiv("actions", plateLookup,
             newDiv("detail", printTime, printWeight),
             printFilaments,
-            newDiv("options", useAMS, timelapse, bedLevelling),
+            newDiv("options", timelapse, bedLevelling),
             newDiv("buttons",
                     new Button("Print", VaadinIcon.PRINT.create(), l -> printAll()),
                     new Button("Refresh", VaadinIcon.REFRESH.create(), l -> dataView.refreshAll())
@@ -196,7 +195,7 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
         final String ip = Optional.ofNullable(VaadinSession.getCurrent()).map(vs -> vs.getBrowser().getAddress()).orElse("null");
         log.infof("printAll: user[%s] ip[%s] file[%s] printers[%s]", user, ip, projectFile.getFilename(),
                 selected.stream().map(pm -> pm.getPrinterDetail().name()).toList());
-        selected.forEach(pm -> executor.submit(() -> pm.sendPrint(projectFile, useAMS.getValue(), timelapse.getValue(), bedLevelling.getValue())));
+        selected.forEach(pm -> executor.submit(() -> pm.sendPrint(projectFile, timelapse.getValue(), bedLevelling.getValue())));
         showNotification("Queued: %d".formatted(selected.size()));
     }
 

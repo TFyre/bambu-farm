@@ -128,14 +128,16 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
         }
     }
 
-    public void sendPrint(final ProjectFile projectFile, final boolean useAms, final boolean timelapse, final boolean bedLevelling) {
+    public void sendPrint(final ProjectFile projectFile, final boolean timelapse, final boolean bedLevelling) {
         log.debugf("%s: sendPrint", printerDetail.name());
         doBlock(true);
         fileSize = projectFile.getFileSize();
         percentageComplete = 0;
         try {
             doFtp(projectFile);
-            printerDetail.printer().commandPrintProjectFile(projectFile.getFilename(), plate.plateId(), useAms, timelapse, bedLevelling, generateAmsMapping());
+            final List<Integer> mapping = generateAmsMapping();
+            final boolean useAms = mapping.stream().noneMatch(i -> i == BambuConst.AMS_TRAY_VIRTUAL);
+            printerDetail.printer().commandPrintProjectFile(projectFile.getFilename(), plate.plateId(), useAms, timelapse, bedLevelling, mapping);
             setPrinterState(PrinterState.SENT);
         } catch (Throwable ex) {
             final String error = "%s: %s".formatted(printerDetail.name(), ex.getMessage());
