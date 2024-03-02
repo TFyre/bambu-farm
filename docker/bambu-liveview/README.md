@@ -19,10 +19,12 @@ Disable Docker Instance IPs
 webrtcIPsFromInterfaces: no
 ```
 
-Enable Proper IP
+Enable Proper IP (docker host OR public ip / dns)
 ```yaml
 webrtcAdditionalHosts: [10.0.0.456, my.dynamic.dns.com]
 ```
+To enable access from internet, add your public ip or DNS **OR** to enable access from local lan, add the ip of the docker host.
+
 
 # Bambu Web
 
