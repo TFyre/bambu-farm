@@ -51,6 +51,7 @@ public class BambuPrinterStream {
     @Inject
     public BambuPrinterStream(final Vertx vertx) {
         final NetClientOptions options = new NetClientOptions()
+                .setHostnameVerificationAlgorithm("")
                 .setSsl(true)
                 .setTrustAll(true);
         client = vertx.createNetClient(options);
