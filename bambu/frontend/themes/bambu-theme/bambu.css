@@ -40,11 +40,17 @@
 }
 
 .dashboard-printer .name {
-    font-weight: bold;
     width: 100%;
     font-size: 2em;
     text-align: center;
     padding-bottom: 10px;
+}
+
+.dashboard-printer .name div {
+    font-weight: bold;
+    display: flex;
+    width: 100%;
+    justify-content: center;
 }
 
 .dashboard-printer .name vaadin-button {

@@ -52,9 +52,6 @@ public interface BambuConfig {
         @WithDefault("true")
         boolean remoteView();
 
-        @WithDefault("5m")
-        Duration notificationDuration();
-
     }
 
     public interface Printer {

@@ -204,14 +204,6 @@ bambu.preheat[2].bed=90
 bambu.preheat[2].nozzle=270
 ```
 
-### Dashboard Notification Duration
-
-Default display duration for notifications is 5 minutes
-
-```properties
-bambu.dashboard.notification-duration=5m
-```
-
 ### Remote View
 
 Remote View is the ability to remotely view or stream the printer's camera.

@@ -57,6 +57,10 @@ import java.util.function.Supplier;
 import org.jboss.logging.Logger;
 import com.tfyre.bambu.view.NotificationHelper;
 import com.tfyre.bambu.view.ViewHelper;
+import com.vaadin.flow.component.Unit;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.textfield.TextArea;
 import java.util.ArrayList;
 
 /**
@@ -100,6 +104,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     private final Span thumbnailUpdated = newSpan();
     private final Span printerStatus = newSpan();
     private final Div printerName = new Div();
+    private String printerInfo = "";
     private String thumbnailId;
     private boolean built;
     private boolean processFull = true;
@@ -282,29 +287,20 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     }
 
     private void processError(final BambuPrinter.Message message) {
-        final int error = printer.getPrintError();
+        lastError = printer.getPrintError();
         final String errorString;
         final boolean hasError;
-        if (error == 0) {
+        if (lastError == 0) {
             hasError = false;
             errorString = "";
         } else {
             hasError = true;
-            errorString = BambuErrors.getPrinterError(error)
-                    .orElseGet(() -> "Unknown error %s".formatted(Integer.toHexString(error)));
+            errorString = "\n\nPrint Error [%d / %s]: %s".formatted(
+                    lastError, Integer.toHexString(lastError),
+                    BambuErrors.getPrinterError(lastError).orElseGet(() -> "No Translation"));
         }
 
-        if (error != lastError) {
-            lastError = error;
-            if (lastError != 0) {
-                showError("%s error[%d / %s]: %s".formatted(
-                        printer.getName(), lastError, Integer.toHexString(lastError), errorString),
-                        config.dashboard().notificationDuration());
-            }
-        }
-
-        final String extra = hasError ? " / Print Error %s".formatted(errorString) : "";
-        printerName.setTitle("Last Updated: %s%s".formatted(DTF.format(message.lastUpdated()), extra));
+        printerInfo = "Last Updated: %s%s".formatted(DTF.format(message.lastUpdated()), errorString);
         if (hasError) {
             printerName.addClassName(LumoUtility.Background.ERROR_50);
         } else {
@@ -312,28 +308,13 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         }
     }
 
-    private void processGCodeState() {
-        final boolean wasIdle = gcodeState.isIdle();
-        final BambuConst.GCodeState _gcodeState = printer.getGCodeState();
-        if (gcodeState == _gcodeState) {
-            return;
-        }
-        gcodeState = _gcodeState;
-        if (wasIdle) {
-            return;
-        }
-        if (gcodeState.isIdle()) {
-            showNotification("%s: Printer Idle".formatted(printer.getName()), config.dashboard().notificationDuration());
-        }
-    }
-
     private void processMessage(final BambuPrinter.Message message) {
-        processGCodeState();
         process(message.message().hasPrint(), message, message.message().getPrint(), this::processPrint);
         processError(message);
     }
 
     private void updatePrinterStatus() {
+        gcodeState = printer.getGCodeState();
         final String value = "Status: %s".formatted(gcodeState.getDescription());
         if (value.equals(printerStatus.getText())) {
             return;
@@ -405,10 +386,26 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         return result;
     }
 
+    private void showStatus() {
+        final Dialog d = new Dialog();
+        d.setHeaderTitle("%s: Status".formatted(printer.getName()));
+        final Div div = new Div(printerInfo);
+        d.add(div);
+        if (lastError != 0) {
+            div.getStyle()
+                    .setPadding("10px")
+                    .setWhiteSpace(Style.WhiteSpace.PRE_WRAP);
+            div.addClassName(LumoUtility.Background.ERROR_50);
+        }
+        final Button ok = new Button("OK", e -> d.close());
+        ok.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        d.getFooter().add(ok);
+        d.open();
+    }
+
     private Div buildName() {
         final Div result = newDiv("name", printerName);
-        printerName.setTitle("--");
-        printerName.setText(printer.getName());
+        printerName.add(new Div(printer.getName()), newButton("", VaadinIcon.INFO, l -> showStatus()));
         if (isAdmin) {
             result.add(
                     newButton("Show Logs", VaadinIcon.CLIPBOARD_TEXT, l -> UI.getCurrent().navigate(LogsView.class, printer.getName())),
