@@ -314,7 +314,6 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     }
 
     private void updatePrinterStatus() {
-        gcodeState = printer.getGCodeState();
         final String value = "Status: %s".formatted(gcodeState.getDescription());
         if (value.equals(printerStatus.getText())) {
             return;
@@ -331,6 +330,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         if (!built) {
             return;
         }
+        gcodeState = printer.getGCodeState();
         if (processFull) {
             printer.getFullStatus().ifPresent(message -> {
                 processFull = false;
