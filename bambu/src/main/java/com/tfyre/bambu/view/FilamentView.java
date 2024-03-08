@@ -72,6 +72,7 @@ public class FilamentView extends FormLayout implements NotificationHelper, View
 
             printer.commandFilamentSetting(amsId, trayId, filament, color.get(),
                     view.minTemp.getValue(), view.maxTemp.getValue());
+            printer.commandFullStatus(true);
         });
 
     }
