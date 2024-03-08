@@ -105,6 +105,10 @@ java -jar bambu-web-1.0.0-runner.jar
 
 You can now access it via http://127.0.0.1:8080 (username: admin / password: admin)
 
+# Running as a service
+
+Refer to [README.service.md](/docs/README.service.md)
+
 # Example Config
 
 ## Minimal config
