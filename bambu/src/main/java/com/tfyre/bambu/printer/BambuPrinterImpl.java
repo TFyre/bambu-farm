@@ -13,6 +13,7 @@ import io.quarkus.scheduler.Scheduler;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,6 +41,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     private static final JsonFormat.Parser PARSER = JsonFormat.parser().ignoringUnknownFields();
 
     private static final int MAX_ITEMS = 1_000;
+    private static final Duration LASTUPDATED = Duration.ofMinutes(2);
 
     private String name;
     private BambuConfig.Printer config;
@@ -162,9 +164,16 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
         return totalLayerNum;
     }
 
+    private boolean printerIsLive(final OffsetDateTime lastUpdated) {
+        return lastUpdated.isAfter(OffsetDateTime.now().minus(LASTUPDATED));
+    }
+
     @Override
     public BambuConst.GCodeState getGCodeState() {
-        return gcodeState;
+        return status
+                .filter(m -> printerIsLive(m.lastUpdated()))
+                .map(m -> gcodeState)
+                .orElse(BambuConst.GCodeState.OFFLINE);
     }
 
     @Override

@@ -306,6 +306,7 @@ public class BambuConst {
 
     public enum GCodeState {
         UNKNOWN("", "Unknown"),
+        OFFLINE("OFFLINE", "Offline"),
         IDLE("IDLE", "Idle"),
         RUNNING("RUNNING", "Running"),
         PAUSE("PAUSE", "Pause"),
@@ -317,7 +318,7 @@ public class BambuConst {
         private static final Map<String, GCodeState> MAP = EnumSet.allOf(GCodeState.class).stream().collect(Collectors.toMap(GCodeState::getValue, Function.identity()));
         private static final Set<GCodeState> IS_IDLE = Set.of(IDLE, FINISH);
         private static final Set<GCodeState> IS_READY = Set.of(IDLE, FINISH, FAILED);
-        private static final Set<GCodeState> IS_ERROR = Set.of(UNKNOWN, FAILED);
+        private static final Set<GCodeState> IS_ERROR = Set.of(UNKNOWN, OFFLINE, FAILED);
         private final String value;
         private final String description;
 
