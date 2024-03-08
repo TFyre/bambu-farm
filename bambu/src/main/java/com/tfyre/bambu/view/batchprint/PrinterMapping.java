@@ -43,6 +43,7 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
     Instance<BambuFtp> clientInstance;
 
     private final Map<Integer, Integer> amsMapping = new HashMap<>();
+    private final Map<Integer, Integer> amsMappingCache = new HashMap<>();
     private final Div filamentMapping = newDiv("filamentmapping");
 
     private BambuPrinters.PrinterDetail printerDetail;
@@ -229,6 +230,12 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
     private void setupFilamentMapping(final Div mapped, final PlateFilament plateFilament) {
         final ContextMenu menu = newContextMenu(mapped);
         final List<PrinterFilament> list = getPrinterFilaments(printerDetail.printer());
+        Optional.ofNullable(amsMappingCache.get(plateFilament.filamentId()))
+                .ifPresent(amsTrayId -> {
+                    list.stream().filter(pf -> plateFilament.type() == pf.type() && pf.amsTrayId() == amsTrayId)
+                            .findFirst()
+                            .ifPresent(pf -> addFilamentMapping(mapped, plateFilament, pf));
+                });
         list.stream().filter(pf -> plateFilament.type() == pf.type() && similarColor(plateFilament.color(), pf.color()))
                 .findFirst()
                 .ifPresent(pf -> addFilamentMapping(mapped, plateFilament, pf));
@@ -274,6 +281,14 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
 
     public void setPlate(final Plate plate) {
         this.plate = plate;
+        amsMappingCache.clear();
+        setupPlate();
+        isMapped();
+    }
+
+    public void refresh() {
+        amsMappingCache.clear();
+        amsMappingCache.putAll(amsMapping);
         setupPlate();
         isMapped();
     }

@@ -94,7 +94,7 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
             newDiv("options", timelapse, bedLevelling),
             newDiv("buttons",
                     new Button("Print", VaadinIcon.PRINT.create(), l -> printAll()),
-                    new Button("Refresh", VaadinIcon.REFRESH.create(), l -> dataView.refreshAll())
+                    new Button("Refresh", VaadinIcon.REFRESH.create(), l -> refresh())
             ));
     private final FileBuffer buffer = new FileBuffer();
     private final Upload upload = new Upload(buffer);
@@ -124,7 +124,7 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
             printFilaments.add(newDiv("filament", newFilament(pf), new Span("%.2fg".formatted(pf.weight()))));
         });
         printerMappings.forEach(pm -> pm.setPlate(plate));
-        grid.getDataProvider().refreshAll();
+        dataView.refreshAll();
     }
 
     private void configurePlateLookup() {
@@ -197,6 +197,11 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
                 selected.stream().map(pm -> pm.getPrinterDetail().name()).toList());
         selected.forEach(pm -> executor.submit(() -> pm.sendPrint(projectFile, timelapse.getValue(), bedLevelling.getValue())));
         showNotification("Queued: %d".formatted(selected.size()));
+    }
+
+    private void refresh() {
+        printerMappings.forEach(PrinterMapping::refresh);
+        dataView.refreshAll();
     }
 
     private void printAll() {
