@@ -192,7 +192,7 @@ message Print {
   optional string mess_production_state = 43;
   optional int32 layer_num = 44;
   optional int32 total_layer_num = 45;
-  repeated Empty s_obj = 46;
+  repeated int32 s_obj = 46;
   repeated int32 filam_bak = 47;
   optional int32 fan_gear = 48;
   optional string nozzle_diameter = 49;
