@@ -295,23 +295,21 @@ bambu.menu-left-click=false
 
 If you want to modify the CSS, create a file next to the `.jar` file called `styles.css`
 
-* Setting 1 display columns
+* Changing the display columns
+
+*Display columns is a ratio and scale based on screen width*
+
+Refer to [bambu.css](/bambu/frontend/themes/bambu-theme/bambu.css#L1-L25)
+
+| Example | value for XXX |
+| -- | -- |
+| always 1 column | 1 |
+| 2 columns with 1080p | 3 |
+| 4 columns with 1080p | 5 |
 
 ```css
-/* Add your custom CSS here */
-
 :root {
-  --bambu-default-columns: 1;
-}
-```
-
-* Setting 5 display columns
-
-```css
-/* Add your custom CSS here */
-
-:root {
-  --bambu-default-columns: 5;
+  --bambu-default-columns: XXX;
 }
 ```
 
