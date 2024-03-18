@@ -24,7 +24,7 @@
         <compiler-plugin.version>3.12.1</compiler-plugin.version>
         <jna.version>5.14.0</jna.version>
         <commons-net.version>3.10.0</commons-net.version>
-        <jandex-maven-plugin.version>3.1.6</jandex-maven-plugin.version>
+        <jandex-maven-plugin.version>3.1.7</jandex-maven-plugin.version>
 
         <jaxb2-maven-plugin.version>3.1.0</jaxb2-maven-plugin.version>
         <jaxb-xjc.version>4.0.5</jaxb-xjc.version>
