@@ -57,10 +57,8 @@ import java.util.function.Supplier;
 import org.jboss.logging.Logger;
 import com.tfyre.bambu.view.NotificationHelper;
 import com.tfyre.bambu.view.ViewHelper;
-import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.textfield.TextArea;
 import java.util.ArrayList;
 
 /**
@@ -423,6 +421,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
                         newButton("Disable Stepper Motors", VaadinIcon.COGS, l -> doConfirm("Disable Stepper Motors", BambuConst.gcodeDisableSteppers())),
                         fanControl("Fan Control", VaadinIcon.ASTERISK),
                         newButton("Send GCode", VaadinIcon.COG, l -> GCodeDialog.show(printer)),
+                        newButton("Reboot", VaadinIcon.POWER_OFF, l -> doConfirm("Reboot", printer::commandSystemReboot)),
                         newButton("Back to Dashboard", VaadinIcon.ARROW_BACKWARD, l -> UI.getCurrent().navigate(Dashboard.class))
                 );
             }

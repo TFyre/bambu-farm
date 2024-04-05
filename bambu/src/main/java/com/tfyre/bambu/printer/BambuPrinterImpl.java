@@ -358,6 +358,19 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     }
 
     @Override
+    public void commandSystemReboot() {
+        logUser("%s: commandSystemReboot".formatted(name));
+        final BambuMessage message = BambuMessage.newBuilder()
+                .setSystem(
+                        com.tfyre.bambu.model.System.newBuilder()
+                                .setSequenceId("%d".formatted(counter.incrementAndGet()))
+                                .setCommand("reboot")
+                )
+                .build();
+        toJson(message).ifPresent(this::sendData);
+    }
+
+    @Override
     public void commandFilamentUnload() {
         logUser("%s: commandFilamentUnload".formatted(name));
         final BambuMessage message = BambuMessage.newBuilder()

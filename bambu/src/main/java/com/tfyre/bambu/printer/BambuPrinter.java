@@ -63,6 +63,8 @@ public interface BambuPrinter {
 
     void commandFilamentSetting(final int amsId, final int trayId, final Filament filament, final String color, final int minTemp, final int maxTemp);
 
+    void commandSystemReboot();
+
     record Message(OffsetDateTime lastUpdated, BambuMessage message, String raw) {
 
     }
