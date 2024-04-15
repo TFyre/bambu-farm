@@ -26,7 +26,7 @@
         <commons-net.version>3.10.0</commons-net.version>
         <jandex-maven-plugin.version>3.1.7</jandex-maven-plugin.version>
 
-        <jaxb2-maven-plugin.version>3.1.0</jaxb2-maven-plugin.version>
+        <jaxb2-maven-plugin.version>3.2.0</jaxb2-maven-plugin.version>
         <jaxb-xjc.version>4.0.5</jaxb-xjc.version>
         <jaxb2-fluent-api.version>3.0</jaxb2-fluent-api.version>
         <jaxb2-default-value.version>1.1</jaxb2-default-value.version>
