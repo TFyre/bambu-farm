@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.tfyre.bambu</groupId>
     <artifactId>bambu-parent</artifactId>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
     <packaging>pom</packaging>
     <modules>
         <module>common</module>
@@ -152,13 +152,11 @@
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
                     <showDeprecation>true</showDeprecation>
-                    <compilerArguments>
-                        <Xmaxerrs>1000</Xmaxerrs>
-                        <Xlint:all/>
-                        <Xlint:-path/>
-                        <Xlint:-serial/>
-                        <!--<Averbose>true</Averbose>-->
-                    </compilerArguments>
+                    <compilerArgs>
+                        <arg>-Xmaxerrs</arg>
+                        <arg>1000</arg>
+                        <arg>-Xlint:all,-path,-serial</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
         </plugins>
