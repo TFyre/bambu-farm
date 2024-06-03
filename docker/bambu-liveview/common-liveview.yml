@@ -5,10 +5,10 @@ services:
         image: linuxserver/ffmpeg
         restart: always
         environment:
-            PRINTER_HOST: FIXME
+            PRINTER_HOST: DONT_TOUCH
             PRINTER_USER: bblp
-            PRINTER_ID: FIXME
-            PRINTER_ACCESS_CODE: FIXME
+            PRINTER_ID: DONT_TOUCH
+            PRINTER_ACCESS_CODE: DONT_TOUCH
             PRINTER_PORT: 322
             PRINTER_URL: /streaming/live/1
             RTSP_SERVER: mediamtx:8554
@@ -17,6 +17,7 @@ services:
             - "-c"
             - >
               /usr/local/bin/ffmpeg
+              -timeout 30000000
               -re -stream_loop -1
               -i rtsps://$${PRINTER_USER}:$${PRINTER_ACCESS_CODE}@$${PRINTER_HOST}:$${PRINTER_PORT}$${PRINTER_URL}
               -c:v copy -f rtsp -rtsp_transport tcp
