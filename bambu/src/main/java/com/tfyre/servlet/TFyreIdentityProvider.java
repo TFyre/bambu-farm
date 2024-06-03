@@ -1,6 +1,7 @@
 package com.tfyre.servlet;
 
 import com.tfyre.bambu.BambuConfig;
+import com.tfyre.bambu.SystemRoles;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.identity.AuthenticationRequestContext;
@@ -38,6 +39,11 @@ public class TFyreIdentityProvider implements IdentityProvider<UsernamePasswordA
     @PostConstruct
     public void postConstruct() {
         map.clear();
+        if (config.autoLogin()) {
+            final String userPass = SystemRoles.USER_ADMIN.toLowerCase();
+            map.put(userPass, new User(BcryptUtil.bcryptHash(userPass), SystemRoles.ROLE_ADMIN));
+            return;
+        }
         map.putAll(config.users().entrySet()
                 .stream()
                 .collect(Collectors.toMap(e -> e.getKey().toLowerCase(), e -> {

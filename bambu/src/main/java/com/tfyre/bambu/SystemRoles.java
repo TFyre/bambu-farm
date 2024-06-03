@@ -6,6 +6,7 @@ package com.tfyre.bambu;
  */
 public class SystemRoles {
 
+    public static final String USER_ADMIN = "admin";
     public static final String ROLE_ADMIN = "admin";
     public static final String ROLE_NORMAL = "normal";
 
