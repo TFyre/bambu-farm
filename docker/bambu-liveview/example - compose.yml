@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
     mediamtx:
-        image: bluenviron/mediamtx
+        image: bluenviron/mediamtx:1.8.2
         restart: always
         volumes:
             - ./mediamtx.yml:/mediamtx.yml
@@ -27,7 +27,7 @@ services:
         entrypoint: /usr/bin/java -Djdk.tls.useExtendedMasterSecret=false -jar bambu-web-runner.jar
 
     nginx:
-        image: nginx:stable-alpine
+        image: nginx:1.26-alpine
         restart: always
         volumes:
             - ./reverse-proxy.conf:/etc/nginx/conf.d/default.conf
