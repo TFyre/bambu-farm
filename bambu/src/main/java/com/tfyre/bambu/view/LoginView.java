@@ -2,6 +2,7 @@ package com.tfyre.bambu.view;
 
 import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.MainLayout;
+import com.tfyre.bambu.SystemRoles;
 import com.tfyre.bambu.security.SecurityUtils;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.UI;
@@ -45,7 +46,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver, No
         setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
         setAlignItems(FlexComponent.Alignment.CENTER);
 
-        login.addLoginListener(this::onLogin);
+        login.addLoginListener(e -> doLogin(e.getUsername(), e.getPassword()));
         login.addForgotPasswordListener(this::onForgotPassword);
 
         add(new H1("Bambu Web Farm"), login);
@@ -60,11 +61,15 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver, No
             login.setError(true);
         } else if (SecurityUtils.isLoggedIn()) {
             UI.getCurrent().getPage().setLocation(getLoggedInUrl());
+        } else {
+            if (config.autoLogin()) {
+                doLogin(SystemRoles.ROLE_ADMIN, SystemRoles.ROLE_ADMIN);
+            }
         }
     }
 
-    private void onLogin(AbstractLogin.LoginEvent event) {
-        boolean authenticated = SecurityUtils.login(event.getUsername(), event.getPassword());
+    private void doLogin(final String username, final String password) {
+        final boolean authenticated = SecurityUtils.login(username, password);
         if (authenticated) {
             UI.getCurrent().getPage().setLocation(getLoggedInUrl());
         } else {

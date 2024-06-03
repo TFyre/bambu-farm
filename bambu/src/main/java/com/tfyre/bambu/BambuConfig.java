@@ -43,6 +43,9 @@ public interface BambuConfig {
 
     Map<String, Printer> printers();
 
+    @WithDefault("false")
+    boolean autoLogin();
+
     Map<String, User> users();
 
     Optional<List<Temperature>> preheat();

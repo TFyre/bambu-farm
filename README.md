@@ -178,12 +178,12 @@ Current roles supported:
 * `normal` - only dashboard with readonly access
 
 ```properties
-#https://bcrypt-generator.com/
+# https://bcrypt-generator.com/
 #bambu.users.REPLACE_WITH_USERNAME.password=REPLACE_WITH_PASSWORD
 
-#Insecure version:
+# Insecure version:
 #bambu.users.myUserName.password=myPassword
-#Secure version:
+# Secure version:
 bambu.users.myUserName.password=$2a$12$GtP15HEGIhqNdeKh2tFguOAg92B3cPdCh91rj7hklM7aSOuTMh1DC 
 bambu.users.myUserName.role=admin
 bambu.users.myUserName.dark-mode=false
@@ -191,6 +191,9 @@ bambu.users.myUserName.dark-mode=false
 #Guest account with readonly role
 bambu.users.guest.password=guest
 bambu.users.guest.role=normal
+
+# Skip users and automatically login as admin (default: false)
+bambu.auto-login=true
 ```
 
 ### Preheat
