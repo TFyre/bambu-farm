@@ -469,9 +469,10 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     }
 
     @Override
-    public void commandPrintProjectFile(final String filename, final int plateId, final boolean useAms, final boolean timelapse, final boolean bedLevelling, final List<Integer> amsMapping) {
-        final String _filename = stripSlash(filename);
-        logUser("%s: commandPrintProject: %s ams[%s] timelapse[%s] bedlevelling[%s] amsMapping[%s]".formatted(name, _filename, useAms, timelapse, bedLevelling, amsMapping));
+    public void commandPrintProjectFile(final CommandPPF command) {
+        final String _filename = stripSlash(command.filename());
+        logUser("%s: commandPrintProject: %s ams[%s] timelapse[%s] bedlevelling[%s] flowCalibration[%s] amsMapping[%s]"
+                .formatted(name, _filename, command.useAms(), command.timelapse(), command.bedLevelling(), command.flowCalibration(), command.amsMapping()));
         final int pos = _filename.lastIndexOf(".");
         final String taskName = pos == -1 ? _filename : _filename.substring(0, pos);
         final BambuMessage message = BambuMessage.newBuilder()
@@ -479,7 +480,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
                         Print.newBuilder()
                                 .setSequenceId("%d".formatted(counter.incrementAndGet()))
                                 .setCommand("project_file")
-                                .setParam("Metadata/plate_%d.gcode".formatted(plateId))
+                                .setParam("Metadata/plate_%d.gcode".formatted(command.plateId()))
                                 .setProjectId("0")
                                 .setProfileId("0")
                                 .setTaskId("0")
@@ -488,14 +489,14 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
                                 .setFile("")
                                 .setUrl("file:///sdcard/%s".formatted(_filename))
                                 .setMd5("")
-                                .setTimelapse(timelapse)
+                                .setTimelapse(command.timelapse())
                                 .setBedType("auto")
-                                .setBedLevelling(bedLevelling)
-                                .setFlowCali(true)
-                                .setVibrationCali(true)
+                                .setBedLevelling(command.bedLevelling())
+                                .setFlowCali(command.flowCalibration())
+                                .setVibrationCali(command.vibrationCalibration())
                                 .setLayerInspect(true)
-                                .addAllAmsMapping(amsMapping)
-                                .setUseAms(useAms)
+                                .addAllAmsMapping(command.amsMapping())
+                                .setUseAms(command.useAms())
                 )
                 .build();
         toJson(message).ifPresent(this::sendData);

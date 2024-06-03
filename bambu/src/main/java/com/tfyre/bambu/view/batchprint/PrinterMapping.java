@@ -129,7 +129,7 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
         }
     }
 
-    public void sendPrint(final ProjectFile projectFile, final boolean timelapse, final boolean bedLevelling) {
+    public void sendPrint(final ProjectFile projectFile, final BambuPrinter.CommandPPF command) {
         log.debugf("%s: sendPrint", printerDetail.name());
         doBlock(true);
         fileSize = projectFile.getFileSize();
@@ -138,7 +138,17 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
             doFtp(projectFile);
             final List<Integer> mapping = generateAmsMapping();
             final boolean useAms = mapping.stream().noneMatch(i -> i == BambuConst.AMS_TRAY_VIRTUAL);
-            printerDetail.printer().commandPrintProjectFile(projectFile.getFilename(), plate.plateId(), useAms, timelapse, bedLevelling, mapping);
+            final BambuPrinter.CommandPPF _command = new BambuPrinter.CommandPPF(
+                    projectFile.getFilename(),
+                    plate.plateId(),
+                    useAms,
+                    command.timelapse(),
+                    command.bedLevelling(),
+                    command.flowCalibration(),
+                    command.vibrationCalibration(),
+                    mapping
+            );
+            printerDetail.printer().commandPrintProjectFile(_command);
             setPrinterState(PrinterState.SENT);
         } catch (Throwable ex) {
             final String error = "%s: %s".formatted(printerDetail.name(), ex.getMessage());

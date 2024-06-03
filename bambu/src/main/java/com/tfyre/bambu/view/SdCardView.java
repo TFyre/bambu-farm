@@ -5,6 +5,7 @@ import com.tfyre.bambu.MainLayout;
 import com.tfyre.bambu.SystemRoles;
 import com.tfyre.bambu.YesNoCancelDialog;
 import com.tfyre.bambu.printer.BambuConst;
+import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.ftp.BambuFtp;
 import com.vaadin.flow.component.AttachEvent;
@@ -423,16 +424,17 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Grid
         final Checkbox useAMS = new Checkbox("Use AMS", comboBox.getValue().config().useAms());
         final Checkbox timelapse = new Checkbox("Timelapse", comboBox.getValue().config().timelapse());
         final Checkbox bedLevelling = new Checkbox("Bed Levelling", comboBox.getValue().config().bedLevelling());
+        final Checkbox flowCalibration = new Checkbox("Flow Calibration", comboBox.getValue().config().flowCalibration());
+        final Checkbox vibrationCalibration = new Checkbox("Vibration Calibration", comboBox.getValue().config().vibrationCalibration());
 
         final String fileName = buildFileName(file.getName());
         final boolean is3mf = fileName.endsWith(BambuConst.FILE_3MF);
 
         final List<Component> list;
         if (is3mf) {
-            list = List.of(plateId, useAMS, timelapse, bedLevelling);
-
+            list = List.of(plateId, useAMS, timelapse, bedLevelling, flowCalibration, vibrationCalibration);
         } else {
-            list = List.of(useAMS, timelapse, bedLevelling);
+            list = List.of(useAMS, timelapse, bedLevelling, flowCalibration, vibrationCalibration);
         }
 
         YesNoCancelDialog.show(list, "Confirm to print: %s".formatted(file.getName()), ync -> {
@@ -442,9 +444,12 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Grid
             if (fileName.endsWith(BambuConst.FILE_GCODE)) {
                 comboBox.getValue().printer().commandPrintGCodeFile(fileName);
             } else if (is3mf) {
-                comboBox.getValue().printer().commandPrintProjectFile(fileName, plateId.getValue(),
-                        useAMS.getValue(), timelapse.getValue(), bedLevelling.getValue(),
-                        List.of());
+                comboBox.getValue().printer().commandPrintProjectFile(
+                        new BambuPrinter.CommandPPF(
+                                fileName, plateId.getValue(),
+                                useAMS.getValue(), timelapse.getValue(), bedLevelling.getValue(),
+                                flowCalibration.getValue(), vibrationCalibration.getValue(),
+                                List.of()));
             } else {
                 nh.showError("Unknown File: %s".formatted(fileName));
             }

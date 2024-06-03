@@ -130,7 +130,7 @@ bambu.users.admin.role=admin
 
 ## Full Config Options
 
-**All default options are displayed**
+**All default options are displayed (only add to the config if you want to change)**
 
 ### Dark Mode
 ```properties
@@ -151,6 +151,8 @@ bambu.printers.myprinter1.ip=REPLACE_WITH_DEVICE_IP
 bambu.printers.myprinter1.use-ams=true
 bambu.printers.myprinter1.timelapse=true
 bambu.printers.myprinter1.bed-levelling=true
+bambu.printers.myprinter1.flow-calibration=true
+bambu.printers.myprinter1.vibration-calibration=true
 bambu.printers.myprinter1.model=unknown / a1 / a1mini / p1p / p1s / x1c
 bambu.printers.myprinter1.mqtt.port=8883
 bambu.printers.myprinter1.mqtt.url=ssl://${bambu.printers.myprinter1.ip}:${bambu.printers.myprinter1.mqtt.port}
