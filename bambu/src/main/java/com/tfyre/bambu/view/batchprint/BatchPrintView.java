@@ -4,6 +4,7 @@ import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.MainLayout;
 import com.tfyre.bambu.SystemRoles;
 import com.tfyre.bambu.printer.BambuConst;
+import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.bambu.security.SecurityUtils;
 import com.tfyre.bambu.view.GridHelper;
@@ -87,11 +88,13 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
     private final Div printFilaments = newDiv("filaments");
     private final Checkbox timelapse = new Checkbox("Timelapse", true);
     private final Checkbox bedLevelling = new Checkbox("Bed Levelling", true);
+    private final Checkbox flowCalibration = new Checkbox("Flow Calibration", true);
+    private final Checkbox vibrationCalibration = new Checkbox("Vibration Calibration", true);
     private GridListDataView<PrinterMapping> dataView;
     private final Div actions = newDiv("actions", plateLookup,
             newDiv("detail", printTime, printWeight),
             printFilaments,
-            newDiv("options", timelapse, bedLevelling),
+            newDiv("options", timelapse, bedLevelling, flowCalibration, vibrationCalibration),
             newDiv("buttons",
                     new Button("Print", VaadinIcon.PRINT.create(), l -> printAll()),
                     new Button("Refresh", VaadinIcon.REFRESH.create(), l -> refresh())
@@ -195,7 +198,8 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
         final String ip = Optional.ofNullable(VaadinSession.getCurrent()).map(vs -> vs.getBrowser().getAddress()).orElse("null");
         log.infof("printAll: user[%s] ip[%s] file[%s] printers[%s]", user, ip, projectFile.getFilename(),
                 selected.stream().map(pm -> pm.getPrinterDetail().name()).toList());
-        selected.forEach(pm -> executor.submit(() -> pm.sendPrint(projectFile, timelapse.getValue(), bedLevelling.getValue())));
+        final BambuPrinter.CommandPPF command = new BambuPrinter.CommandPPF("", 0, true, timelapse.getValue(), bedLevelling.getValue(), flowCalibration.getValue(), vibrationCalibration.getValue(), List.of());
+        selected.forEach(pm -> executor.submit(() -> pm.sendPrint(projectFile, command)));
         showNotification("Queued: %d".formatted(selected.size()));
     }
 

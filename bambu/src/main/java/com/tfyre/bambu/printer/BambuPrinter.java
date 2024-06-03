@@ -54,8 +54,7 @@ public interface BambuPrinter {
 
     void commandPrintGCodeFile(final String filename);
 
-    void commandPrintProjectFile(final String filename, final int plateId, final boolean useAms, final boolean timelapse, final boolean bedLevelling,
-            final List<Integer> amsMapping);
+    void commandPrintProjectFile(final CommandPPF command);
 
     void commandFilamentLoad(final int amsTrayId);
 
@@ -70,6 +69,18 @@ public interface BambuPrinter {
     }
 
     record Thumbnail(OffsetDateTime lastUpdated, StreamResource thumbnail) {
+
+    }
+
+    record CommandPPF(
+            String filename,
+            int plateId,
+            boolean useAms,
+            boolean timelapse,
+            boolean bedLevelling,
+            boolean flowCalibration,
+            boolean vibrationCalibration,
+            List<Integer> amsMapping) {
 
     }
 }

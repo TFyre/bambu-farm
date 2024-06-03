@@ -82,6 +82,12 @@ public interface BambuConfig {
         @WithDefault("true")
         boolean bedLevelling();
 
+        @WithDefault("true")
+        boolean flowCalibration();
+
+        @WithDefault("true")
+        boolean vibrationCalibration();
+
         Mqtt mqtt();
 
         Ftp ftp();
