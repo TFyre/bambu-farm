@@ -321,7 +321,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
             printerStatus.addClassName(LumoUtility.TextColor.ERROR);
         } else if(gcodeState.isReady()){
             printerStatus.addClassName(LumoUtility.TextColor.SUCCESS);
-        } else if(gcodeState.isRunning()) {
+        } else if(gcodeState.isPrinting()) {
             printerStatus.addClassName(LumoUtility.TextColor.PRIMARY);
         } else {
             printerStatus.removeClassName(LumoUtility.TextColor.ERROR);

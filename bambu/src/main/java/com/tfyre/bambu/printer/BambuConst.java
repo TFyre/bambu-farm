@@ -319,7 +319,7 @@ public class BambuConst {
         private static final Set<GCodeState> IS_IDLE = Set.of(IDLE, FINISH);
         private static final Set<GCodeState> IS_READY = Set.of(IDLE, FINISH, FAILED);
         private static final Set<GCodeState> IS_ERROR = Set.of(UNKNOWN, OFFLINE, FAILED);
-        private static final Set<GCodeState> IS_RUNNING = Set.of(PREPARE, SLICING, RUNNING);
+        private static final Set<GCodeState> IS_PRINTING = Set.of(PREPARE, SLICING, RUNNING);
         private final String value;
         private final String description;
 
@@ -348,8 +348,8 @@ public class BambuConst {
             return IS_ERROR.contains(this);
         }
 
-        public boolean isRunning() {
-            return IS_RUNNING.contains(this);
+        public boolean isPrinting() {
+            return IS_PRINTING.contains(this);
         }
 
         public static GCodeState fromValue(final String value) {
