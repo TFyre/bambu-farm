@@ -327,7 +327,6 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         } else if(gcodeState.isPrinting()) {
             printerStatus.addClassName(LumoUtility.TextColor.PRIMARY);
         }
-        }
     }
 
     public void update() {
