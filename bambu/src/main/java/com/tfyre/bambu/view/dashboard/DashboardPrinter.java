@@ -317,10 +317,16 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
             return;
         }
         printerStatus.setText(value);
+        printerStatus.removeClassName(LumoUtility.TextColor.ERROR);
+        printerStatus.removeClassName(LumoUtility.TextColor.PRIMARY);
+        printerStatus.removeClassName(LumoUtility.TextColor.SUCCESS);
         if (gcodeState.isError()) {
             printerStatus.addClassName(LumoUtility.TextColor.ERROR);
-        } else {
-            printerStatus.removeClassName(LumoUtility.TextColor.ERROR);
+        } else if(gcodeState.isReady()){
+            printerStatus.addClassName(LumoUtility.TextColor.SUCCESS);
+        } else if(gcodeState.isPrinting()) {
+            printerStatus.addClassName(LumoUtility.TextColor.PRIMARY);
+        }
         }
     }
 
