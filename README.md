@@ -1,5 +1,15 @@
+# Cannot print with latest firmware
+> [!IMPORTANT]  
+> https://wiki.bambulab.com/en/p1/manual/p1p-firmware-release-history
+>
+> Bambulab decided to block printing via MQTT unless you enable lanmode only.
+>
+> Consider downgrading firmware Reference [!142](https://github.com/TFyre/bambu-farm/issues/142)
+
+
 # Bambu Farm
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/tfyre)
+
 
 Web based application to monitor multiple bambu printers using mqtt / ftp / rtsp (**no custom firmware required**)
 
