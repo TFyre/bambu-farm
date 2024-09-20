@@ -759,6 +759,10 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
             printerStatus.getStyle().setFontWeight(Style.FontWeight.BOLD);
             final List<Component> list = new ArrayList<>();
             list.add(buildName());
+            if (config.moveProgressBarToTop().equals("above-image")) {
+                list.add(buildProgressBar());
+                list.add(progressBar);
+            }
             if (!config.remoteView()) {
                 // Dont buildImage
             } else if (fromDashboard && !config.dashboard().remoteView()) {
@@ -766,10 +770,16 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
             } else {
                 list.add(buildImage());
             }
+            if (config.moveProgressBarToTop().equals("below-image")) {
+                list.add(buildProgressBar());
+                list.add(progressBar);
+            }
             list.add(buildStatus());
             list.add(buildAms());
-            list.add(buildProgressBar());
-            list.add(progressBar);
+            if (config.moveProgressBarToTop().equals("bottom")) {
+                list.add(buildProgressBar());
+                list.add(progressBar);
+            }
             return createContent(list);
         } finally {
             built = true;
