@@ -142,12 +142,17 @@ bambu.users.admin.role=admin
 
 **All default options are displayed (only add to the config if you want to change)**
 
-### Dark Mode
+### Dark Mode/UI
 ```properties
-# Gobal
+# Dark Mode - Global
 bambu.dark-mode=false
-# Per user (will default to global if omitted)
+# Dark Mode - Per user (will default to global if omitted)
 bambu.users.myUserName.dark-mode=false
+
+# Set position of progress bar on dashboard views
+# Default: bottom
+# Options: above-image, below-image, bottom
+bambu.move-progress-bar-to-top=above-image
 ```
 
 ### Printer section
