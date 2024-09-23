@@ -8,6 +8,7 @@ import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.ftp.BambuFtp;
+import com.tfyre.ftp.FileUploadValidator;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
@@ -42,8 +43,13 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.File;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -376,21 +382,72 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Grid
         doPath();
     }
 
+    // private void doUpload(final SucceededEvent event) {
+    //     fileSize = event.getContentLength();
+    //     showProgressBar(true);
+
+    //     final InputStream inputStream = buffer.getInputStream();
+    //     nh.showNotification("Uploading to Printer");
+    //     runCallable(() -> {
+    //         client.doUpload(event.getFileName(), inputStream);
+    //         runInUI(() -> {
+    //             showProgressBar(false);
+    //             nh.showNotification("Uploaded: %s".formatted(event.getFileName()));
+    //         });
+    //         doRefresh();
+    //     });
+    // }
+
     private void doUpload(final SucceededEvent event) {
         fileSize = event.getContentLength();
         showProgressBar(true);
 
         final InputStream inputStream = buffer.getInputStream();
-        nh.showNotification("Uploading to Printer");
-        runCallable(() -> {
-            client.doUpload(event.getFileName(), inputStream);
+        String fileName = event.getFileName();
+
+        // Create a temporary file to validate it
+        File tempFile = new File(System.getProperty("java.io.tmpdir"), fileName);
+        
+        try (FileOutputStream outputStream = new FileOutputStream(tempFile)) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            
+            // Validate the file before uploading
+            if (FileUploadValidator.isValid3mf(tempFile)) {
+                nh.showNotification("Uploading to Printer");
+
+                runCallable(() -> {
+                    client.doUpload(fileName, new FileInputStream(tempFile));  // Reopen input stream from the temp file
+                    runInUI(() -> {
+                        showProgressBar(false);
+                        nh.showNotification("Uploaded: %s".formatted(fileName));
+                    });
+                    doRefresh();
+                });
+            } else {
+                // Invalid file, show error notification
+                runInUI(() -> {
+                    showProgressBar(false);
+                    nh.showNotification("Upload failed: Invalid 3mf file.");
+                });
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
             runInUI(() -> {
                 showProgressBar(false);
-                nh.showNotification("Uploaded: %s".formatted(event.getFileName()));
+                nh.showNotification("Upload failed due to an error.");
             });
-            doRefresh();
-        });
+        } finally {
+            // Clean up temporary file
+            if (tempFile.exists()) {
+                tempFile.delete();
+            }
+        }
     }
+
 
     private void doRemoveFile(final FTPFile file) {
         YesNoCancelDialog.show("Confirm to delete: %s".formatted(file.getName()), ync -> {
