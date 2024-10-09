@@ -5,6 +5,10 @@
 > Bambulab decided to block printing via MQTT unless you enable lanmode only.
 >
 > Consider downgrading firmware Reference [!142](https://github.com/TFyre/bambu-farm/issues/142)
+>
+> **OR**
+>
+> Check the [Cloud Section](#cloud-section) about enabling cloud mode
 
 
 # Bambu Farm
@@ -178,6 +182,34 @@ bambu.printers.myprinter1.stream.live-view=false
 bambu.printers.myprinter1.stream.url=ssl://${bambu.printers.myprinter1.ip}:${bambu.printers.myprinter1.stream.port}
 #Restart stream if no images received interval
 bambu.printers.myprinter1.stream.watch-dog=5m
+```
+
+### Cloud Section
+
+Enable MQTT connection via cloud instead of directly to printer. You can either provide the username/password or a access token.
+
+* Option 1 - username/password
+
+Provide the username and password for https://bambulab.com/ in the format below
+
+* Option 2 - access token
+
+The access token can be fetched from your browser cookies or a 1 liner curl
+```bash
+curl -v -X POST -H 'Content-Type: application/json' -d '{"account":"YOUR_USER_NAME","password":"YOUR_PASSWORD"}' https://bambulab.com/api/sign-in/form 2>&1 | grep token= | awk '{print$3}'
+```
+
+Configuration:
+
+```properties
+bambu.cloud.enabled=true
+
+# Option1: Let bambufarm login and fetch token
+bambu.cloud.login.username=YOUR_LOGIN_USER
+bambu.cloud.login.password=YOUR_LOGIN_PASSWORD
+
+# Option2: fetch token via curl and paste here
+bambu.cloud.token=FULL_JWT_TOKEN_FROM_COOKIES
 ```
 
 ### User Section
