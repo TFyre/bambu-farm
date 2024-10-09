@@ -17,8 +17,10 @@ import jakarta.inject.Singleton;
 import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.wildfly.security.credential.PasswordCredential;
 import org.wildfly.security.evidence.PasswordGuessEvidence;
@@ -44,8 +46,10 @@ public class TFyreIdentityProvider implements IdentityProvider<UsernamePasswordA
             map.put(userPass, new User(BcryptUtil.bcryptHash(userPass), SystemRoles.ROLE_ADMIN));
             return;
         }
+        final  Set<String> seen = new HashSet<>();
         map.putAll(config.users().entrySet()
                 .stream()
+                .filter(e -> seen.add(e.getKey().toLowerCase()))
                 .collect(Collectors.toMap(e -> e.getKey().toLowerCase(), e -> {
                     String password = e.getValue().password();
                     if (ModularCrypt.identifyAlgorithm(password.toCharArray()) == null) {
