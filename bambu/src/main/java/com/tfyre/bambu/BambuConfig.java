@@ -50,6 +50,29 @@ public interface BambuConfig {
 
     Optional<List<Temperature>> preheat();
 
+    Cloud cloud();
+
+    public interface Cloud {
+
+        @WithDefault("false")
+        boolean enabled();
+
+        @WithDefault("ssl://us.mqtt.bambulab.com:8883")
+        String url();
+
+        Optional<CloudLogin> login();
+
+        Optional<String> token();
+
+    }
+
+    public interface CloudLogin {
+
+        String username();
+
+        String password();
+    }
+
     public interface Dashboard {
 
         @WithDefault("true")
