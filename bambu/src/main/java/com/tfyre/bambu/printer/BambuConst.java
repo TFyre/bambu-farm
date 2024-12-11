@@ -279,23 +279,30 @@ public class BambuConst {
     }
 
     public enum PrinterModel {
-        UNKNOWN("unknown"),
-        A1("a1"),
-        A1MINI("a1mini"),
-        P1P("p1p"),
-        P1S("p1s"),
-        X1C("x1c");
+        UNKNOWN("unknown", false),
+        A1("a1", false),
+        A1MINI("a1mini", false),
+        P1P("p1p", false),
+        P1S("p1s", false),
+        X1C("x1c", true),
+        X1E("x1e", true);
 
         private static final Map<String, PrinterModel> MAP = EnumSet.allOf(PrinterModel.class).stream().collect(Collectors.toMap(PrinterModel::getModel, Function.identity()));
 
         private final String model;
+        private final boolean temperature;
 
-        private PrinterModel(final String model) {
+        private PrinterModel(final String model, final boolean temperature) {
             this.model = model;
+            this.temperature = temperature;
         }
 
         public String getModel() {
             return model;
+        }
+
+        public boolean isTemperature() {
+            return temperature;
         }
 
         public static Optional<PrinterModel> fromModel(final String model) {

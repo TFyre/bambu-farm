@@ -609,7 +609,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
                 wrapTemperature(getBadge("Bed", bedImage, bed, bedTarget), () -> (int) temperatureBed, BambuConst.TEMPERATURE_MAX_BED, BambuConst::gcodeTargetTemperatureBed)
         );
 
-        if (printer.getModel() == BambuConst.PrinterModel.X1C) {
+        if (printer.getModel().isTemperature()) {
             result.add(getBadge("Frame", frameImage, frame));
         }
 
@@ -632,7 +632,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
                 new Span(header.id()),
                 newSpan("filler")
         );
-        if (printer.getModel() == BambuConst.PrinterModel.X1C) {
+        if (printer.getModel().isTemperature()) {
             result.add(header.temperature());
         }
         result.add(header.humidity());
