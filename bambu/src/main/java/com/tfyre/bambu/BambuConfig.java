@@ -37,6 +37,9 @@ public interface BambuConfig {
     @WithDefault("true")
     boolean remoteView();
 
+    @WithDefault("bottom")
+    String moveProgressBarToTop();
+
     Optional<String> liveViewUrl();
 
     Dashboard dashboard();
