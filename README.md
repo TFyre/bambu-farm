@@ -338,11 +338,19 @@ Add to `.env`:
 bambu.menu-left-click=false
 ```
 
+### Display Filament Type instead of Name
+Add to `.env`:
+```properties
+bambu.dashboard.filament-full-name=false
+```
+
+
+
 ### Custom CSS
 
 If you want to modify the CSS, create a file next to the `.jar` file called `styles.css`
 
-* Changing the display columns
+#### Changing the display columns
 
 *Display columns is a ratio and scale based on screen width*
 
@@ -357,6 +365,23 @@ Refer to [bambu.css](/bambu/frontend/themes/bambu-theme/bambu.css#L1-L25)
 ```css
 :root {
   --bambu-default-columns: XXX;
+}
+```
+
+
+#### Ordering items inside printer box
+
+* Move display order of `image` / `status` / `filaments` **"down"** so that `progress` is after `name`
+
+```css
+.dashboard-printer .image {
+    order: 3;
+}
+.dashboard-printer .status {
+    order: 4;
+}
+.dashboard-printer .filaments {
+    order: 1;
 }
 ```
 

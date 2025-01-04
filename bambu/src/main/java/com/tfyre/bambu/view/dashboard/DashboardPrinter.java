@@ -179,7 +179,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
                         filament.type().setText("Empty");
                         return;
                     }
-                    filament.type().setText(Filament.getFilamentDescription(tray.getTrayInfoIdx()));
+                    filament.type().setText(Filament.getFilamentDescription(tray.getTrayInfoIdx(), config.dashboard().filamentFullName()));
                     filament.color().getStyle().setBackgroundColor("#%s".formatted(tray.getTrayColor()));
                     filament.div().removeClassName("active");
                     if (amsTrayId == filament.amsTrayId()) {
@@ -196,7 +196,7 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
             setTemperature(header.temperature(), parseDouble(printer.getName(), tray.getTrayTemp(), 0));
         });
         Optional.ofNullable(amsFilaments.get(getTrayKey(trayId))).ifPresent(filament -> {
-            filament.type().setText(Filament.getFilamentDescription(tray.getTrayInfoIdx()));
+            filament.type().setText(Filament.getFilamentDescription(tray.getTrayInfoIdx(), config.dashboard().filamentFullName()));
             filament.color().getStyle().setBackgroundColor("#%s".formatted(tray.getTrayColor()));
         });
     }
@@ -322,9 +322,9 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         printerStatus.removeClassName(LumoUtility.TextColor.SUCCESS);
         if (gcodeState.isError()) {
             printerStatus.addClassName(LumoUtility.TextColor.ERROR);
-        } else if(gcodeState.isReady()){
+        } else if (gcodeState.isReady()) {
             printerStatus.addClassName(LumoUtility.TextColor.SUCCESS);
-        } else if(gcodeState.isPrinting()) {
+        } else if (gcodeState.isPrinting()) {
             printerStatus.addClassName(LumoUtility.TextColor.PRIMARY);
         }
     }

@@ -78,6 +78,9 @@ public interface BambuConfig {
         @WithDefault("true")
         boolean remoteView();
 
+        @WithDefault("true")
+        boolean filamentFullName();
+
     }
 
     public interface Printer {
