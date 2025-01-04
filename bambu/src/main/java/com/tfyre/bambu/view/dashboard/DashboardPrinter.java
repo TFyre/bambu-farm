@@ -54,11 +54,11 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import org.jboss.logging.Logger;
 import com.tfyre.bambu.view.NotificationHelper;
 import com.tfyre.bambu.view.ViewHelper;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import io.quarkus.logging.Log;
 import java.util.ArrayList;
 
 /**
@@ -120,18 +120,11 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
     private boolean fromDashboard;
 
     @Inject
-    Logger log;
-    @Inject
     BambuConfig config;
 
     public DashboardPrinter() {
         progressBar = newProgressBar();
         isAdmin = SecurityUtils.userHasAccess(SystemRoles.ROLE_ADMIN);
-    }
-
-    @Override
-    public Logger getLogger() {
-        return log;
     }
 
     private Span newSpan() {
@@ -585,11 +578,11 @@ public class DashboardPrinter implements NotificationHelper, ViewHelper {
         final SubMenu preheat = menu.addItem("Preheat").getSubMenu();
         list.forEach(t -> {
             if (t.bed() < 0 || t.bed() > BambuConst.TEMPERATURE_MAX_BED) {
-                log.errorf("Skipping invalid bed preheat: %d", t.bed());
+                Log.errorf("Skipping invalid bed preheat: %d", t.bed());
                 return;
             }
             if (t.nozzle() < 0 || t.nozzle() > BambuConst.TEMPERATURE_MAX_NOZZLE) {
-                log.errorf("Skipping invalid nozzle preheat: %d", t.nozzle());
+                Log.errorf("Skipping invalid nozzle preheat: %d", t.nozzle());
                 return;
             }
 

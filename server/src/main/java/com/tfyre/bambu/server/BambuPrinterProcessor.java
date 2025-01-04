@@ -3,6 +3,7 @@ package com.tfyre.bambu.server;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import com.tfyre.bambu.model.BambuMessage;
+import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduler;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,7 +31,6 @@ import org.jboss.logging.Logger;
  */
 public class BambuPrinterProcessor implements Processor {
 
-    private static final Logger log = Logger.getLogger(BambuPrinterProcessor.class.getName());
     private static final JsonFormat.Printer PRINTER = JsonFormat.printer().preservingProtoFieldNames();
     private static final JsonFormat.Parser PARSER = JsonFormat.parser().ignoringUnknownFields();
     private static final Map<String, String> MAP = new ConcurrentHashMap<>();
@@ -53,8 +53,8 @@ public class BambuPrinterProcessor implements Processor {
     public void process(final Exchange exchange) throws Exception {
         final Message message = exchange.getMessage();
         final String body = message.getBody(String.class);
-        log.debugf("%s: Received - [%d]", name, body.length());
-        log.tracef("%s: Received RAW: %s", name, body);
+        Log.debugf("%s: Received - [%d]", name, body.length());
+        Log.tracef("%s: Received RAW: %s", name, body);
         if (body.contains("pushall")) {
             sendFullStatus();
         }
@@ -65,7 +65,7 @@ public class BambuPrinterProcessor implements Processor {
         try {
             PARSER.merge(data, builder);
         } catch (InvalidProtocolBufferException ex) {
-            log.errorf(ex, "Cannot build message: %s", ex.getMessage());
+            Log.errorf(ex, "Cannot build message: %s", ex.getMessage());
         }
         return builder;
     }
@@ -101,7 +101,7 @@ public class BambuPrinterProcessor implements Processor {
         try {
             return Optional.of(PRINTER.print(builder));
         } catch (InvalidProtocolBufferException ex) {
-            log.errorf(ex, "Cannot build message: %s", ex.getMessage());
+            Log.errorf(ex, "Cannot build message: %s", ex.getMessage());
             return Optional.empty();
         }
     }
@@ -110,8 +110,8 @@ public class BambuPrinterProcessor implements Processor {
         if (producerTemplate == null) {
             return;
         }
-        log.debugf("%s: Sending - [%d]", name, data.length());
-        log.tracef("%s: Sending RAW: %s", name, data);
+        Log.debugf("%s: Sending - [%d]", name, data.length());
+        Log.tracef("%s: Sending RAW: %s", name, data);
         producerTemplate.sendBody(endpoint, data);
     }
 
@@ -131,7 +131,7 @@ public class BambuPrinterProcessor implements Processor {
     }
 
     public void start(final CamelContext context, final Scheduler scheduler) {
-        log.debug("start");
+        Log.debug("start");
         producerTemplate = context.createProducerTemplate();
         scheduler.newJob("%s#%s".formatted(getClass().getSimpleName(), this.name))
                 .setInterval("1s")

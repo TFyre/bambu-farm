@@ -5,9 +5,9 @@ import com.tfyre.schema.Config;
 import com.tfyre.schema.Metadata;
 import com.vaadin.flow.server.AbstractStreamResource;
 import com.vaadin.flow.server.StreamResource;
+import io.quarkus.logging.Log;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
-import jakarta.inject.Inject;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
@@ -38,9 +38,6 @@ public class ProjectFile implements FilamentHelper {
     private static final String PLATE_PNG = "Metadata/plate_%d.png";
     private static final String SLICE_INFO = "Metadata/slice_info.config";
 
-    @Inject
-    Logger log;
-
     private final Map<Integer, StreamResource> thumbnails = new HashMap<>();
     private final JAXBContext context;
     private final Unmarshaller unmarshaller;
@@ -56,11 +53,6 @@ public class ProjectFile implements FilamentHelper {
         } catch (JAXBException ex) {
             throw new RuntimeException("Cannot create JAXB: %s".formatted(ex.getMessage()), ex);
         }
-    }
-
-    @Override
-    public Logger getLogger() {
-        return log;
     }
 
     private Config getSliceInfo() throws ProjectException {
@@ -124,7 +116,7 @@ public class ProjectFile implements FilamentHelper {
                 return zipFile.getInputStream(pngEntry);
             } catch (IOException ex) {
                 final String message = "Cannot read [%s]: %s".formatted(platePng, ex.getMessage());
-                log.error(message, ex);
+                Log.error(message, ex);
                 throw new RuntimeException(message);
             }
         });
@@ -140,7 +132,7 @@ public class ProjectFile implements FilamentHelper {
         try {
             zipFile.close();
         } catch (IOException ex) {
-            log.errorf(ex, "Error closing 3mf: %s", ex.getMessage());
+            Log.errorf(ex, "Error closing 3mf: %s", ex.getMessage());
         }
     }
 

@@ -17,6 +17,7 @@ import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.server.Command;
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -26,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -35,8 +35,6 @@ import org.jboss.logging.Logger;
 @Dependent
 public class PrinterMapping implements FilamentHelper, NotificationHelper {
 
-    @Inject
-    Logger log;
     @Inject
     BambuConfig config;
     @Inject
@@ -86,11 +84,6 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
         return printerState;
     }
 
-    @Override
-    public Logger getLogger() {
-        return log;
-    }
-
     public String getId() {
         return printerDetail.id();
     }
@@ -107,30 +100,30 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
     }
 
     private void doFtp(final ProjectFile projectFile) throws IOException {
-        log.debugf("%s: doFtp", printerDetail.name());
+        Log.debugf("%s: doFtp", printerDetail.name());
         final BambuFtp client = clientInstance.get().setup(printerDetail, this::bytesTransferred);
         try {
-            log.debugf("%s: connecting", printerDetail.name());
+            Log.debugf("%s: connecting", printerDetail.name());
             setPrinterState(PrinterState.FTP_CONNECT);
             client.doConnect();
-            log.debugf("%s: loggingin", printerDetail.name());
+            Log.debugf("%s: loggingin", printerDetail.name());
             setPrinterState(PrinterState.FTP_LOGIN);
             client.doLogin();
-            log.debugf("%s: uploading", printerDetail.name());
+            Log.debugf("%s: uploading", printerDetail.name());
             setPrinterState(PrinterState.FTP_UPLOADING);
             client.doUpload(projectFile.getFilename(), projectFile.getStream());
-            log.debugf("%s: uploaded", printerDetail.name());
+            Log.debugf("%s: uploaded", printerDetail.name());
         } finally {
             try {
                 client.doClose();
             } catch (IOException ex) {
-                log.error(ex.getMessage(), ex);
+                Log.error(ex.getMessage(), ex);
             }
         }
     }
 
     public void sendPrint(final ProjectFile projectFile, final BambuPrinter.CommandPPF command) {
-        log.debugf("%s: sendPrint", printerDetail.name());
+        Log.debugf("%s: sendPrint", printerDetail.name());
         doBlock(true);
         fileSize = projectFile.getFileSize();
         percentageComplete = 0;
@@ -152,7 +145,7 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
             setPrinterState(PrinterState.SENT);
         } catch (Throwable ex) {
             final String error = "%s: %s".formatted(printerDetail.name(), ex.getMessage());
-            log.error(error, ex);
+            Log.error(error, ex);
             setPrinterState(PrinterState.ERROR);
             runInUI(() -> showError(error));
         } finally {
@@ -183,7 +176,7 @@ public class PrinterMapping implements FilamentHelper, NotificationHelper {
         final long g = Math.abs(g1 - g2);
         final long b = Math.abs(b1 - b2);
         final double result = Math.sqrt((((512 + rmean) * r * r) >> 8) + 4 * g * g + (((767 - rmean) * b * b) >> 8));
-        //log.infof("#%06X - #%06X = %.2f", col1, col2, result);
+        //Log.infof("#%06X - #%06X = %.2f", col1, col2, result);
         return result < 100.0;
     }
 

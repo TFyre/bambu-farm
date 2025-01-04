@@ -5,16 +5,14 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.progressbar.ProgressBar;
+import io.quarkus.logging.Log;
 import java.time.Duration;
-import org.jboss.logging.Logger;
 
 /**
  *
  * @author Francois Steyn - (fsteyn@tfyre.co.za)
  */
 public interface ViewHelper {
-
-    Logger getLogger();
 
     default double parseDouble(final String printerName, final String value, final double defaultValue) {
         if (value == null || value.isBlank()) {
@@ -23,7 +21,7 @@ public interface ViewHelper {
         try {
             return Double.parseDouble(value);
         } catch (NumberFormatException ex) {
-            getLogger().errorf("%s: Cannot parseDouble [%s]", printerName, value);
+            Log.errorf("%s: Cannot parseDouble [%s]", printerName, value);
             return defaultValue;
         }
     }
@@ -35,7 +33,7 @@ public interface ViewHelper {
         try {
             return Double.parseDouble(value);
         } catch (NumberFormatException ex) {
-            getLogger().errorf("Cannot parseDouble [%s]", value);
+            Log.errorf("Cannot parseDouble [%s]", value);
             return defaultValue;
         }
     }
@@ -47,7 +45,7 @@ public interface ViewHelper {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException ex) {
-            getLogger().errorf("s: Cannot parseInt [%s]", printerName, value);
+            Log.errorf("s: Cannot parseInt [%s]", printerName, value);
             return defaultValue;
         }
     }
@@ -59,7 +57,7 @@ public interface ViewHelper {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException ex) {
-            getLogger().errorf("Cannot parseInt [%s]", value);
+            Log.errorf("Cannot parseInt [%s]", value);
             return defaultValue;
         }
     }

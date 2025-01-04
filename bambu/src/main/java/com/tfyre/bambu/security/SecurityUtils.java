@@ -3,11 +3,11 @@ package com.tfyre.bambu.security;
 import com.tfyre.bambu.SystemRoles;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.server.VaadinServletRequest;
+import io.quarkus.logging.Log;
 import java.security.Principal;
 import java.util.Optional;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpSession;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -15,7 +15,6 @@ import org.jboss.logging.Logger;
  */
 public class SecurityUtils {
 
-    private static final Logger LOG = Logger.getLogger(SecurityUtils.class);
 
     public static Optional<Principal> getPrincipal() {
         return Optional.ofNullable(VaadinServletRequest.getCurrent()).map(VaadinServletRequest::getUserPrincipal);
@@ -47,7 +46,7 @@ public class SecurityUtils {
                         vsr.login(username, password);
                         return true;
                     } catch (ServletException ex) {
-                        LOG.error(String.format("Login failed for [%s] - %s", username, ex.getMessage()));
+                        Log.error(String.format("Login failed for [%s] - %s", username, ex.getMessage()));
                         return false;
                     }
                 })).orElseGet(() -> {

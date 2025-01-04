@@ -1,6 +1,7 @@
 package com.tfyre.servlet;
 
 import io.quarkus.arc.Unremovable;
+import io.quarkus.logging.Log;
 import io.quarkus.security.credential.PasswordCredential;
 import io.quarkus.security.identity.IdentityProviderManager;
 import io.quarkus.security.identity.request.AuthenticationRequest;
@@ -14,7 +15,6 @@ import jakarta.enterprise.inject.Alternative;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.transaction.Transactional;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -27,14 +27,11 @@ import org.jboss.logging.Logger;
 public class TFyreIdentityManager implements IdentityManager {
 
     @Inject
-    Logger log;
-
-    @Inject
     IdentityProviderManager ipm;
 
     @Override
     public Account verify(final Account account) {
-        log.debugf("verify1: %s", account.getPrincipal().getName());
+        Log.debugf("verify1: %s", account.getPrincipal().getName());
         return account;
     }
 
@@ -45,7 +42,7 @@ public class TFyreIdentityManager implements IdentityManager {
 
     @Override
     public Account verify(final String id, final Credential credential) {
-        log.debugf("verify2: %s - %s", id, credential.getClass());
+        Log.debugf("verify2: %s - %s", id, credential.getClass());
 
         if (credential instanceof io.undertow.security.idm.PasswordCredential password) {
             return authenticateBlocking(new UsernamePasswordAuthenticationRequest(id, new PasswordCredential(password.getPassword())));
@@ -56,7 +53,7 @@ public class TFyreIdentityManager implements IdentityManager {
 
     @Override
     public Account verify(final Credential credential) {
-        log.debugf("verify3: %s", credential.getClass());
+        Log.debugf("verify3: %s", credential.getClass());
         return null;
     }
 }

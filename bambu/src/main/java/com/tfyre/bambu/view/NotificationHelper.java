@@ -4,8 +4,9 @@ import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import io.quarkus.logging.Log;
 import java.time.Duration;
-import org.jboss.logging.Logger;
+import org.jboss.logging.Logger.Level;
 
 /**
  *
@@ -61,7 +62,7 @@ public interface NotificationHelper {
 
     default void showErrorLog(final Throwable ex) {
         showError(ex);
-        Logger.getLogger(getClass().getName()).log(Logger.Level.ERROR, ex.getMessage(), ex);
+        Log.error(ex.getMessage(), ex);
     }
 
     default void showWarning(final String warning) {

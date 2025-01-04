@@ -9,6 +9,7 @@ import com.tfyre.bambu.model.Pushing;
 import com.tfyre.bambu.printer.BambuConst.PrinterModel;
 import com.tfyre.bambu.security.SecurityUtils;
 import com.vaadin.flow.server.VaadinSession;
+import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduler;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.Dependent;
@@ -28,7 +29,6 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -55,8 +55,6 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     private final AtomicBoolean running = new AtomicBoolean();
     private OffsetDateTime nextFullStatus = OffsetDateTime.now();
 
-    @Inject
-    Logger log;
     @Inject
     CamelContext context;
     @Inject
@@ -113,7 +111,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
         iframe = config.stream().url()
                 .or(() -> bambuConfig.liveViewUrl().map(url -> "%s%s".formatted(url, id)));
         if (iframe.isEmpty()) {
-            log.errorf("%s: Live View needs [bambu.printers.XXX.stream.url] or [bambu.live-view-url] configured", name);
+            Log.errorf("%s: Live View needs [bambu.printers.XXX.stream.url] or [bambu.live-view-url] configured", name);
         }
     }
 
@@ -206,7 +204,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
             PARSER.merge(data, builder);
             return Optional.of(builder.build());
         } catch (InvalidProtocolBufferException ex) {
-            log.errorf(ex, "Cannot build message: %s - %s", ex.getMessage(), data);
+            Log.errorf(ex, "Cannot build message: %s - %s", ex.getMessage(), data);
             return Optional.empty();
         }
     }
@@ -215,7 +213,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
         try {
             return Optional.of(PRINTER.print(message));
         } catch (InvalidProtocolBufferException ex) {
-            log.errorf(ex, "Cannot build message: %s", ex.getMessage());
+            Log.errorf(ex, "Cannot build message: %s", ex.getMessage());
             return Optional.empty();
         }
     }
@@ -224,8 +222,8 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
     public void process(final Exchange exchange) throws Exception {
         final org.apache.camel.Message message = exchange.getMessage();
         final String body = message.getBody(String.class);
-        log.debugf("%s: Received - [%d]", name, body.length());
-        log.tracef("%s: Received RAW: %s", name, body);
+        Log.debugf("%s: Received - [%d]", name, body.length());
+        Log.tracef("%s: Received RAW: %s", name, body);
 
         fromJson(body)
                 .map(msg -> new BambuPrinter.Message(OffsetDateTime.now(), msg, body))
@@ -240,18 +238,18 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
 
     private void sendData(final String data) {
         if (producerTemplate == null) {
-            log.debugf("%s: producerTemplate is null", name);
+            Log.debugf("%s: producerTemplate is null", name);
             return;
         }
-        log.debugf("%s: Sending - [%d]", name, data.length());
-        log.tracef("%s: Sending RAW: %s", name, data);
+        Log.debugf("%s: Sending - [%d]", name, data.length());
+        Log.tracef("%s: Sending RAW: %s", name, data);
         producerTemplate.sendBody(endpoint, data);
     }
 
     private void logUser(final String data) {
         final String user = SecurityUtils.getPrincipal().map(p -> p.getName()).orElse("null");
         final String ip = Optional.ofNullable(VaadinSession.getCurrent()).map(vs -> vs.getBrowser().getAddress()).orElse("null");
-        log.infof("%s user[%s] ip[%s]", data, user, ip);
+        Log.infof("%s user[%s] ip[%s]", data, user, ip);
     }
 
     private void commandFullStatusInternal(final boolean fromUser, final boolean force) {
@@ -265,7 +263,7 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
         if (fromUser) {
             logUser("%s: Requesting full Status, next: %s".formatted(name, nextFullStatus));
         } else {
-            log.debugf("%s: Requesting full Status, next: %s", name, nextFullStatus);
+            Log.debugf("%s: Requesting full Status, next: %s", name, nextFullStatus);
         }
         final BambuMessage message = BambuMessage.newBuilder()
                 .setPushing(
@@ -286,18 +284,18 @@ public class BambuPrinterImpl implements BambuPrinter, Processor {
 
     @PostConstruct
     public void postConstruct() {
-        log.debug("postConstruct");
+        Log.debug("postConstruct");
         producerTemplate = context.createProducerTemplate();
     }
 
     public void start() {
-        log.debug("start");
+        Log.debug("start");
         running.set(true);
         commandFullStatusInternal(false, false);
     }
 
     public void stop() {
-        log.debug("stop");
+        Log.debug("stop");
         running.set(false);
     }
 

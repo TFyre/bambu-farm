@@ -2,6 +2,7 @@ package com.tfyre.bambu.server;
 
 import com.tfyre.bambu.mqtt.AbstractMqttController;
 import com.tfyre.bambu.server.BambuConfig.Printer;
+import io.quarkus.logging.Log;
 import io.quarkus.runtime.Startup;
 import io.quarkus.scheduler.Scheduler;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -11,7 +12,6 @@ import java.util.List;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.StartupListener;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -24,8 +24,6 @@ public class CamelController extends AbstractMqttController implements StartupLi
     @Inject
     BambuConfig config;
     @Inject
-    Logger log;
-    @Inject
     Scheduler scheduler;
 
     private final List<BambuPrinterProcessor> list = new ArrayList<>();
@@ -37,7 +35,7 @@ public class CamelController extends AbstractMqttController implements StartupLi
 
     @Override
     public void onCamelContextFullyStarted(final CamelContext context, final boolean alreadyStarted) throws Exception {
-        log.info("Starting all printers");
+        Log.info("Starting all printers");
         list.forEach(p -> p.start(context, scheduler));
     }
 
@@ -45,7 +43,7 @@ public class CamelController extends AbstractMqttController implements StartupLi
     public void configure() throws Exception {
         getCamelContext().addStartupListener(this);
         config.printers().forEach(this::configurePrinter);
-        log.info("configured");
+        Log.info("configured");
     }
 
     private BambuPrinterProcessor newPrinter(final Endpoint endpoint, final String name) {
@@ -56,10 +54,10 @@ public class CamelController extends AbstractMqttController implements StartupLi
 
     private void configurePrinter(final String name, final Printer config) {
         if (!config.enabled()) {
-            log.infof("Skipping: %s", name);
+            Log.infof("Skipping: %s", name);
             return;
         }
-        log.infof("Configuring: %s", name);
+        Log.infof("Configuring: %s", name);
 
         final Endpoint ep = getPrinterEndpoint(name);
         final BambuPrinterProcessor printer = newPrinter(ep, name);

@@ -2,6 +2,7 @@ package com.tfyre.ftp;
 
 import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.ssl.NoopTrustSocketFactory;
+import io.quarkus.logging.Log;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
@@ -15,7 +16,6 @@ import java.security.Security;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -30,18 +30,16 @@ public class FTPSClientProvider {
     BambuConfig config;
     @Inject
     NoopTrustSocketFactory noopTrustSocketFactory;
-    @Inject
-    Logger log;
 
     private SSLContext sslContext;
 
     @PostConstruct
     public void postConstruct() throws KeyManagementException, NoSuchAlgorithmException, NoSuchProviderException {
         if (!config.useBouncyCastle()) {
-            log.info("BouncyCastle disabled");
+            Log.info("BouncyCastle disabled");
             return;
         }
-        log.infof("BouncyCastle enabled: %s=[%s]", SETTING, System.getProperty(SETTING));
+        Log.infof("BouncyCastle enabled: %s=[%s]", SETTING, System.getProperty(SETTING));
 
         Security.addProvider(new BouncyCastleJsseProvider());
         sslContext = SSLContext.getInstance("TLSv1.2", "BCJSSE");

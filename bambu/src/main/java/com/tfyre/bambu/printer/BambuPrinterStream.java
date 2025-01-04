@@ -4,6 +4,7 @@ import com.tfyre.bambu.BambuConfig;
 import com.vaadin.flow.server.StreamResource;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -19,7 +20,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -38,8 +38,6 @@ public class BambuPrinterStream {
 
     @Inject
     ScheduledExecutorService executor;
-    @Inject
-    Logger log;
 
     private BambuConfig.Printer config;
     private boolean enabled;
@@ -96,14 +94,14 @@ public class BambuPrinterStream {
                     final ByteBuf buffer = Unpooled.buffer(0, MAX_SIZE);
                     socket.handler(h -> {
                         buffer.writeBytes(h.getBytes());
-                        log.debugf("%s: readable %d", name, buffer.readableBytes());
+                        Log.debugf("%s: readable %d", name, buffer.readableBytes());
                         if (buffer.readableBytes() <= 16) {
                             return;
                         }
 
                         buffer.markReaderIndex();
                         final int size = buffer.readIntLE();
-                        log.debugf("%s: size %d", name, size);
+                        Log.debugf("%s: size %d", name, size);
                         buffer.skipBytes(4 + 8);
                         if (buffer.readableBytes() < size) {
                             buffer.resetReaderIndex();
@@ -118,11 +116,11 @@ public class BambuPrinterStream {
                     })
                             .write(getHandshake())
                             .onFailure(h -> {
-                                log.errorf(h, "%s: socketFailure", name);
+                                Log.errorf(h, "%s: socketFailure", name);
                             });
                 })
                 .onFailure(h -> {
-                    log.errorf("%s: clientFailure: %s - %s", name, h.getClass().getName(), h.getMessage());
+                    Log.errorf("%s: clientFailure: %s - %s", name, h.getClass().getName(), h.getMessage());
                 });
     }
 
@@ -141,7 +139,7 @@ public class BambuPrinterStream {
         if (nextImage.isAfter(OffsetDateTime.now())) {
             return;
         }
-        log.errorf("%s: No image received since %s", name, nextImage);
+        Log.errorf("%s: No image received since %s", name, nextImage);
         closeSocket();
         executor.schedule(this::startStream, 10, TimeUnit.SECONDS);
     }
@@ -160,7 +158,7 @@ public class BambuPrinterStream {
             return;
         }
         running.set(false);
-        log.infof("%s: stopping", name);
+        Log.infof("%s: stopping", name);
         closeSocket();
     }
 

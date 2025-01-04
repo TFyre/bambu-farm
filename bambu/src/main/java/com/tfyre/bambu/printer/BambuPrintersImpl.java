@@ -1,6 +1,7 @@
 package com.tfyre.bambu.printer;
 
 import com.tfyre.bambu.BambuConfig;
+import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduler;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -19,7 +20,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -28,8 +28,6 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class BambuPrintersImpl implements BambuPrinters {
 
-    @Inject
-    Logger log;
     @Inject
     Instance<BambuPrinter> _bambuPrinter;
     @Inject
@@ -61,7 +59,7 @@ public class BambuPrintersImpl implements BambuPrinters {
 
     private Consumer<BambuPrinter.Thumbnail> getConsumer(final String name) {
         return o -> {
-            log.errorf("%s: no image consumer, BambuPrinter does not extend BambuPrinterImpl", name);
+            Log.errorf("%s: no image consumer, BambuPrinter does not extend BambuPrinterImpl", name);
         };
     }
 
@@ -98,7 +96,7 @@ public class BambuPrintersImpl implements BambuPrinters {
         if (detail.isRunning()) {
             return;
         }
-        log.infof("%s: starting", detail.name());
+        Log.infof("%s: starting", detail.name());
         try {
             for (final Route r : getRoutes(detail)) {
                 try {
@@ -112,7 +110,7 @@ public class BambuPrintersImpl implements BambuPrinters {
             }
             detail.stream().start();
             detail.running().set(true);
-            log.infof("%s: started", detail.name());
+            Log.infof("%s: started", detail.name());
         } catch (Throwable t) {
             throw new BambuPrinterException("Unknown Exception: %s".formatted(t), t);
         }
@@ -122,7 +120,7 @@ public class BambuPrintersImpl implements BambuPrinters {
         if (!detail.isRunning()) {
             return;
         }
-        log.infof("%s: stopping", detail.name());
+        Log.infof("%s: stopping", detail.name());
         detail.running().set(false);
         try {
             detail.stream().stop();
@@ -136,7 +134,7 @@ public class BambuPrintersImpl implements BambuPrinters {
                     throw new BambuPrinterException("%s: Error starting route: %s".formatted(detail.name(), r.getRouteId()), ex);
                 }
             }
-            log.infof("%s: stopped", detail.name());
+            Log.infof("%s: stopped", detail.name());
         } catch (Throwable t) {
             throw new BambuPrinterException("Unknown Exception: %s".formatted(t), t);
         }
@@ -175,7 +173,7 @@ public class BambuPrintersImpl implements BambuPrinters {
             } catch (BambuPrinterException ex) {
                 final String message = "%s: %s".formatted(pd.name(), ex.getMessage());
                 errors.add(message);
-                log.error(message, ex);
+                Log.error(message, ex);
             }
         }
 
@@ -197,11 +195,11 @@ public class BambuPrintersImpl implements BambuPrinters {
 
     @PreDestroy
     public void preDestroy() {
-        log.info("Stopping Printers");
+        Log.info("Stopping Printers");
         try {
             stopPrinters();
         } catch (BambuPrinterException ex) {
-            log.error(ex);
+            Log.error(ex);
         }
     }
 

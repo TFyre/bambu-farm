@@ -2,6 +2,7 @@ package com.tfyre.ftp;
 
 import com.tfyre.bambu.BambuConfig;
 import com.tfyre.bambu.printer.BambuPrinters;
+import io.quarkus.logging.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -12,7 +13,6 @@ import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.ftp.FTP;
 import org.bouncycastle.jsse.BCExtendedSSLSession;
 import org.bouncycastle.jsse.BCSSLSocket;
-import org.jboss.logging.Logger;
 
 /**
  * FTPS Client with SSL Session Reuse.
@@ -20,8 +20,6 @@ import org.jboss.logging.Logger;
  * @author Francois Steyn - (fsteyn@tfyre.co.za)
  */
 public class BambuFtp extends org.apache.commons.net.ftp.FTPSClient {
-
-    private static final Logger log = Logger.getLogger(BambuFtp.class.getName());
 
     private final boolean useBC;
     private BambuConfig.Printer config;
@@ -58,7 +56,7 @@ public class BambuFtp extends org.apache.commons.net.ftp.FTPSClient {
         return new ProtocolCommandListener() {
 
             private void log(ProtocolCommandEvent event) {
-                log.infof("%s: command[%s] message[%s]", name, event.getCommand(), event.getMessage().trim());
+                Log.infof("%s: command[%s] message[%s]", name, event.getCommand(), event.getMessage().trim());
             }
 
             @Override

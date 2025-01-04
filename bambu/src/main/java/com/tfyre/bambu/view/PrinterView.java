@@ -23,7 +23,6 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.util.Comparator;
 import java.util.Optional;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -34,8 +33,6 @@ import org.jboss.logging.Logger;
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
 public class PrinterView extends PushDiv implements HasUrlParameter<String>, NotificationHelper, UpdateHeader {
 
-    @Inject
-    Logger log;
     @Inject
     BambuPrinters printers;
     @Inject

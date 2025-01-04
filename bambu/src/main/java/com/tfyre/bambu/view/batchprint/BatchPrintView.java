@@ -35,6 +35,7 @@ import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
+import io.quarkus.logging.Log;
 import io.quarkus.runtime.configuration.MemorySize;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.inject.Instance;
@@ -48,7 +49,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -62,8 +62,6 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
     private static final String IMAGE_CLASS = "small";
     private static final SerializablePredicate<PrinterMapping> PREDICATE = pm -> true;
 
-    @Inject
-    Logger log;
     @Inject
     BambuPrinters printers;
     @Inject
@@ -104,11 +102,6 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
     private ProjectFile projectFile;
     private List<PrinterMapping> printerMappings = List.of();
     private SerializablePredicate<PrinterMapping> predicate = PREDICATE;
-
-    @Override
-    public Logger getLogger() {
-        return log;
-    }
 
     @Override
     public Grid<PrinterMapping> getGrid() {
@@ -196,7 +189,7 @@ public class BatchPrintView extends PushDiv implements NotificationHelper, Filam
     private void printAll(final Set<PrinterMapping> selected) {
         final String user = SecurityUtils.getPrincipal().map(p -> p.getName()).orElse("null");
         final String ip = Optional.ofNullable(VaadinSession.getCurrent()).map(vs -> vs.getBrowser().getAddress()).orElse("null");
-        log.infof("printAll: user[%s] ip[%s] file[%s] printers[%s]", user, ip, projectFile.getFilename(),
+        Log.infof("printAll: user[%s] ip[%s] file[%s] printers[%s]", user, ip, projectFile.getFilename(),
                 selected.stream().map(pm -> pm.getPrinterDetail().name()).toList());
         final BambuPrinter.CommandPPF command = new BambuPrinter.CommandPPF("", 0, true, timelapse.getValue(), bedLevelling.getValue(), flowCalibration.getValue(), vibrationCalibration.getValue(), List.of());
         selected.forEach(pm -> executor.submit(() -> pm.sendPrint(projectFile, command)));

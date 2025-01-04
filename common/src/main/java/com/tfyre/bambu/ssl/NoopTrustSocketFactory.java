@@ -1,9 +1,9 @@
 package com.tfyre.bambu.ssl;
 
+import io.quarkus.logging.Log;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
-import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.net.Socket;
 import java.security.KeyManagementException;
@@ -15,7 +15,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -26,46 +25,44 @@ public class NoopTrustSocketFactory {
 
     public static final String FACTORY = "NoopTrustSocketFactory";
 
-    @Inject
-    Logger log;
 
     public X509ExtendedTrustManager createNoopTrustManager() {
         return new X509ExtendedTrustManager() {
 
             @Override
             public X509Certificate[] getAcceptedIssuers() {
-                log.debug("INSECURE: getAcceptedIssuers");
+                Log.debug("INSECURE: getAcceptedIssuers");
                 return null;
             }
 
             @Override
             public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                log.debugf("INSECURE: checkClientTrusted %s", authType);
+                Log.debugf("INSECURE: checkClientTrusted %s", authType);
             }
 
             @Override
             public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                log.debugf("INSECURE: checkServerTrusted %s", authType);
+                Log.debugf("INSECURE: checkServerTrusted %s", authType);
             }
 
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
-                log.debugf("INSECURE: checkClientTrusted %s", authType);
+                Log.debugf("INSECURE: checkClientTrusted %s", authType);
             }
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
-                log.debugf("INSECURE: checkServerTrusted %s", authType);
+                Log.debugf("INSECURE: checkServerTrusted %s", authType);
             }
 
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) throws CertificateException {
-                log.debugf("INSECURE: checkClientTrusted %s", authType);
+                Log.debugf("INSECURE: checkClientTrusted %s", authType);
             }
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) throws CertificateException {
-                log.debugf("INSECURE: checkServerTrusted %s", authType);
+                Log.debugf("INSECURE: checkServerTrusted %s", authType);
             }
         };
     }
@@ -80,7 +77,7 @@ public class NoopTrustSocketFactory {
 
     @PostConstruct
     public void postConstruct() {
-        log.errorf("Using INSECURE %s", getClass().getName());
+        Log.errorf("Using INSECURE %s", getClass().getName());
     }
 
 }

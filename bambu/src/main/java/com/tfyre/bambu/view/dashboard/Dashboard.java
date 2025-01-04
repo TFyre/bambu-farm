@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
-import org.jboss.logging.Logger;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.bambu.view.PushDiv;
 import jakarta.annotation.security.RolesAllowed;
@@ -28,9 +27,6 @@ import jakarta.enterprise.inject.Instance;
 @PageTitle("Dashboard")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN, SystemRoles.ROLE_NORMAL })
 public class Dashboard extends PushDiv {
-
-    @Inject
-    Logger log;
 
     @Inject
     BambuPrinters printers;

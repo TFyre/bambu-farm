@@ -37,6 +37,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.Command;
 import com.vaadin.flow.server.StreamResource;
+import io.quarkus.logging.Log;
 import io.quarkus.runtime.configuration.MemorySize;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.inject.Instance;
@@ -57,7 +58,6 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -80,8 +80,6 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Grid
             .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
             .toFormatter();
 
-    @Inject
-    Logger log;
     @Inject
     BambuPrinters printers;
     @Inject
@@ -121,11 +119,6 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Grid
     }
 
     @Override
-    public Logger getLogger() {
-        return log;
-    }
-
-    @Override
     public Grid<FTPFile> getGrid() {
         return grid;
     }
@@ -144,9 +137,9 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Grid
             try {
                 callable.run();
             } catch (Exception ex) {
-                log.error(ex.getMessage(), ex);
+                Log.error(ex.getMessage(), ex);
                 if (ex.getCause() != null) {
-                    log.error(ex.getCause().getMessage(), ex.getCause());
+                    Log.error(ex.getCause().getMessage(), ex.getCause());
                 }
                 runInUI(() -> nh.showError(ex.getMessage()));
             }
@@ -309,12 +302,12 @@ public class SdCardView extends PushDiv implements HasUrlParameter<String>, Grid
                     //return new BufferedInputStream(s);
                 } finally {
                     if (!client.completePendingCommand()) {
-                        log.error("could not complete pending command");
+                        Log.error("could not complete pending command");
                     }
                     runInUI(() -> showProgressBar(false));
                 }
             } catch (IOException ex) {
-                log.errorf(ex, "Cannot find file: %s - %s", file.getName(), ex.getMessage());
+                Log.errorf(ex, "Cannot find file: %s - %s", file.getName(), ex.getMessage());
             }
             return null;
         });

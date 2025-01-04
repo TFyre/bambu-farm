@@ -18,6 +18,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import io.quarkus.logging.Log;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import java.time.OffsetDateTime;
@@ -28,7 +29,6 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 import org.eclipse.microprofile.context.ManagedExecutor;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -51,8 +51,6 @@ public class MaintenanceView extends VerticalLayout implements NotificationHelpe
             .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
             .toFormatter();
 
-    @Inject
-    Logger log;
     @Inject
     BambuPrinters printers;
 
@@ -83,7 +81,7 @@ public class MaintenanceView extends VerticalLayout implements NotificationHelpe
                 try {
                     consumer.accept(pd.name());
                 } catch (BambuPrinterException ex) {
-                    log.error(ex.getMessage(), ex);
+                    Log.error(ex.getMessage(), ex);
                     ui.get().access(() -> {
                         showError(ex.getMessage());
                         refreshItems();

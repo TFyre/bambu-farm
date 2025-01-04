@@ -1,8 +1,6 @@
 package com.tfyre.bambu.view;
 
-import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import jakarta.inject.Inject;
@@ -11,7 +9,6 @@ import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -19,8 +16,6 @@ import org.jboss.logging.Logger;
  */
 public abstract class PushDiv extends Div implements FlexComponent {
 
-    @Inject
-    Logger log;
     @Inject
     ScheduledExecutorService ses;
 

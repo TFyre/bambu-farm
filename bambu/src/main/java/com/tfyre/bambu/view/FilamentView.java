@@ -11,12 +11,12 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.textfield.IntegerField;
+import io.quarkus.logging.Log;
 import jakarta.xml.bind.DatatypeConverter;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -24,17 +24,10 @@ import org.jboss.logging.Logger;
  */
 public class FilamentView extends FormLayout implements NotificationHelper, ViewHelper {
 
-    private static final Logger log = Logger.getLogger(FilamentView.class.getName());
-
     private final ComboBox<Filament> filaments = new ComboBox<>("Filament");
     private final ColorField color = new ColorField("Custom Color");
     private final IntegerField minTemp = new IntegerField("Min Temperature");
     private final IntegerField maxTemp = new IntegerField("Max Temperature");
-
-    @Override
-    public Logger getLogger() {
-        return log;
-    }
 
     private static Optional<Tray> fromPrinter(final BambuPrinter printer, final int amsId, final int trayId) {
         final String ams = Integer.toString(amsId);
@@ -90,7 +83,7 @@ public class FilamentView extends FormLayout implements NotificationHelper, View
         try {
             DatatypeConverter.parseHexBinary(result);
         } catch (IllegalArgumentException ex) {
-            log.errorf("[%s] is not a valid color: %s", result, ex.getMessage());
+            Log.errorf("[%s] is not a valid color: %s", result, ex.getMessage());
             return Optional.empty();
         }
 

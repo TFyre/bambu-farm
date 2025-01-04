@@ -6,6 +6,7 @@ import com.tfyre.bambu.CloudService;
 import com.tfyre.bambu.printer.BambuPrinters;
 import com.tfyre.bambu.mqtt.AbstractMqttController;
 import com.tfyre.bambu.printer.BambuPrinterException;
+import io.quarkus.logging.Log;
 import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -17,7 +18,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.StartupListener;
 import org.eclipse.microprofile.context.ManagedExecutor;
-import org.jboss.logging.Logger;
 
 /**
  *
@@ -31,8 +31,6 @@ public class CamelController extends AbstractMqttController implements StartupLi
     BambuConfig config;
     @Inject
     CloudService cloud;
-    @Inject
-    Logger log;
 
     @Inject
     BambuPrinters printers;
@@ -53,7 +51,7 @@ public class CamelController extends AbstractMqttController implements StartupLi
             try {
                 printers.startPrinters();
             } catch (BambuPrinterException ex) {
-                log.errorf(ex, "onCamelContextFullyStarted: %s", ex.getMessage());
+                Log.errorf(ex, "onCamelContextFullyStarted: %s", ex.getMessage());
             }
         });
     }
@@ -66,7 +64,7 @@ public class CamelController extends AbstractMqttController implements StartupLi
             if (list.size() < 2) {
                 return;
             }
-            log.errorf("!!BROKEN CONFIG!! found duplicate printers: %s", list);
+            Log.errorf("!!BROKEN CONFIG!! found duplicate printers: %s", list);
         });
     }
 
@@ -76,7 +74,7 @@ public class CamelController extends AbstractMqttController implements StartupLi
         getCamelContext().addStartupListener(this);
         cloudData = cloud.getLoginData();
         config.printers().forEach(this::configurePrinter);
-        log.info("configured");
+        Log.info("configured");
     }
 
     private String getUrl(final Printer config) {
@@ -92,10 +90,10 @@ public class CamelController extends AbstractMqttController implements StartupLi
     private void configurePrinter(final String id, final Printer config) {
         final String name = config.name().orElse(id);
         if (!config.enabled()) {
-            log.infof("Skipping: id[%s] as name[%s]", id, name);
+            Log.infof("Skipping: id[%s] as name[%s]", id, name);
             return;
         }
-        log.infof("Configuring: id[%s] as name[%s]", id, name);
+        Log.infof("Configuring: id[%s] as name[%s]", id, name);
         final String producerTopic = getTopic(config.mqtt().requestTopic(), config.deviceId(), "request");
         final String consumerTopic = getTopic(config.mqtt().reportTopic(), config.deviceId(), "report");
         final Endpoint producer = getMqttEndpoint(producerTopic, config);
