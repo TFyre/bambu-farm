@@ -9,7 +9,10 @@ import com.tfyre.bambu.printer.BambuPrinterException;
 import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.StartupListener;
@@ -55,8 +58,21 @@ public class CamelController extends AbstractMqttController implements StartupLi
         });
     }
 
+    private void checkDuplicates() {
+        final Map<String, List<String>> map = config.printers().keySet()
+                .stream()
+                .collect(Collectors.groupingBy(String::toLowerCase));
+        map.values().forEach(list -> {
+            if (list.size() < 2) {
+                return;
+            }
+            log.errorf("!!BROKEN CONFIG!! found duplicate printers: %s", list);
+        });
+    }
+
     @Override
     public void configure() throws Exception {
+        checkDuplicates();
         getCamelContext().addStartupListener(this);
         cloudData = cloud.getLoginData();
         config.printers().forEach(this::configurePrinter);
