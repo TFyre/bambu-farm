@@ -84,10 +84,10 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
     private final Span printTime = new Span();
     private final Span printWeight = new Span();
     private final Div printFilaments = newDiv("filaments");
-    private final Checkbox timelapse = new Checkbox("Timelapse", true);
-    private final Checkbox bedLevelling = new Checkbox("Bed Levelling", true);
-    private final Checkbox flowCalibration = new Checkbox("Flow Calibration", true);
-    private final Checkbox vibrationCalibration = new Checkbox("Vibration Calibration", true);
+    private final Checkbox timelapse = new Checkbox("Timelapse");
+    private final Checkbox bedLevelling = new Checkbox("Bed Levelling");
+    private final Checkbox flowCalibration = new Checkbox("Flow Calibration");
+    private final Checkbox vibrationCalibration = new Checkbox("Vibration Calibration");
     private GridListDataView<PrinterMapping> dataView;
     private final Div actions = newDiv("actions", plateLookup,
             newDiv("detail", printTime, printWeight),
@@ -245,10 +245,18 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         printerMappings.forEach(PrinterMapping::updateBulkStatus);
     }
 
+    private void configureActions() {
+        timelapse.setValue(config.batchPrint().timelapse());
+        bedLevelling.setValue(config.batchPrint().bedLevelling());
+        flowCalibration.setValue(config.batchPrint().flowCalibration());
+        vibrationCalibration.setValue(config.batchPrint().vibrationCalibration());
+    }
+
     @Override
     protected void onAttach(final AttachEvent attachEvent) {
         super.onAttach(attachEvent);
         addClassName("batchprint-view");
+        configureActions();
         configurePlateLookup();
         configureGrid();
         configureUpload();

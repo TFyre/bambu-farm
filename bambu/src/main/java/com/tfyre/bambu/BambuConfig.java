@@ -41,6 +41,8 @@ public interface BambuConfig {
 
     Dashboard dashboard();
 
+    BatchPrint batchPrint();
+
     Map<String, Printer> printers();
 
     @WithDefault("false")
@@ -51,6 +53,22 @@ public interface BambuConfig {
     Optional<List<Temperature>> preheat();
 
     Cloud cloud();
+
+    public interface BatchPrint {
+
+        @WithDefault("true")
+        boolean timelapse();
+
+        @WithDefault("true")
+        boolean bedLevelling();
+
+        @WithDefault("true")
+        boolean flowCalibration();
+
+        @WithDefault("true")
+        boolean vibrationCalibration();
+
+    }
 
     public interface Cloud {
 
