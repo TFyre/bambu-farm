@@ -62,6 +62,8 @@ public enum Filament {
     GENERIC_PLA_SLIK_12("GFSL99_12", "Generic PLA Silk 12", FilamentType.PLA);
 
     private static final Map<String, Filament> MAP = EnumSet.allOf(Filament.class).stream().collect(Collectors.toMap(Filament::getCode, Function.identity()));
+    private static final Function<Filament, String> MAPPER_DESCRIPTION = filament -> filament.getDescription();
+    private static final Function<Filament, String> MAPPER_TYPE = filament -> filament.getType().getDescription();
 
     private final String code;
     private final String description;
@@ -88,9 +90,12 @@ public enum Filament {
     public static Optional<Filament> getFilament(final String code) {
         return Optional.ofNullable(MAP.get(code));
     }
-    
-    public static String getFilamentDescription(final String code) {
-        return Optional.ofNullable(MAP.get(code)).map(Filament::getDescription).orElse(Filament.UNKNOWN.getDescription());
+
+    public static String getFilamentDescription(final String code, final boolean fullName) {
+        final Function<Filament, String> mapper = fullName ? MAPPER_DESCRIPTION : MAPPER_TYPE;
+        return Optional.ofNullable(MAP.get(code))
+                .map(mapper)
+                .orElseGet(() -> mapper.apply(UNKNOWN));
     }
 
 }
