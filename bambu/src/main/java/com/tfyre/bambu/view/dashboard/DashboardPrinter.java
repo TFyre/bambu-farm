@@ -66,7 +66,7 @@ import java.util.ArrayList;
  * @author Francois Steyn - (fsteyn@tfyre.co.za)
  */
 @Dependent
-public class DashboardPrinter implements NotificationHelper, ViewHelper {
+public final class DashboardPrinter implements NotificationHelper, ViewHelper {
 
     //DateTimeFormatter.ISO_DATE_TIME;
     private static final DateTimeFormatter DTF = new DateTimeFormatterBuilder()

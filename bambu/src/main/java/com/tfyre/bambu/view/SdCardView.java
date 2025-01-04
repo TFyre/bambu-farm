@@ -66,7 +66,7 @@ import org.eclipse.microprofile.context.ManagedExecutor;
 @Route(value = "sdcard", layout = MainLayout.class)
 @PageTitle("SD Card")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class SdCardView extends PushDiv implements HasUrlParameter<String>, GridHelper<FTPFile>, ViewHelper {
+public final class SdCardView extends PushDiv implements HasUrlParameter<String>, GridHelper<FTPFile>, ViewHelper {
 
     private static final DateTimeFormatter DTF = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()

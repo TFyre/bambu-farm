@@ -126,7 +126,7 @@ public class FilamentView extends FormLayout implements NotificationHelper, View
         return this;
     }
 
-    public class ColorField extends CustomField<String> {
+    public final class ColorField extends CustomField<String> {
 
         private final Input input = new Input();
 

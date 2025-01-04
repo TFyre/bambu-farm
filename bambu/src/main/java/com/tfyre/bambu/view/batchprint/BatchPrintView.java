@@ -57,7 +57,7 @@ import org.eclipse.microprofile.context.ManagedExecutor;
 @Route(value = "batchprint", layout = MainLayout.class)
 @PageTitle("Batch Print")
 @RolesAllowed({ SystemRoles.ROLE_ADMIN })
-public class BatchPrintView extends PushDiv implements NotificationHelper, FilamentHelper, GridHelper<PrinterMapping> {
+public final class BatchPrintView extends PushDiv implements NotificationHelper, FilamentHelper, GridHelper<PrinterMapping> {
 
     private static final String IMAGE_CLASS = "small";
     private static final SerializablePredicate<PrinterMapping> PREDICATE = pm -> true;

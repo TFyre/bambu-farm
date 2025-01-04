@@ -33,7 +33,7 @@ import java.util.stream.IntStream;
  * @author Francois Steyn - (fsteyn@tfyre.co.za)
  */
 @Dependent
-public class PrinterMapping implements FilamentHelper, NotificationHelper {
+public final class PrinterMapping implements FilamentHelper, NotificationHelper {
 
     @Inject
     BambuConfig config;
