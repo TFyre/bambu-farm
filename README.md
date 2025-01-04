@@ -240,6 +240,16 @@ bambu.users.guest.role=normal
 bambu.auto-login=true
 ```
 
+### Batch Print Section
+Default batch printing options is below:
+
+```properties
+bambu.batch-print.timelapse=true
+bambu.batch-print.bed-levelling=true
+bambu.batch-print.flow-calibration=true
+bambu.batch-print.vibration-calibration=true
+```
+
 ### Preheat
 
 Default preheat configuration is below:
