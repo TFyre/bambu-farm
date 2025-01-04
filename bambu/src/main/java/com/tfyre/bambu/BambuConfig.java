@@ -78,17 +78,10 @@ public interface BambuConfig {
         @WithDefault("ssl://us.mqtt.bambulab.com:8883")
         String url();
 
-        Optional<CloudLogin> login();
+        Optional<String> username();
 
         Optional<String> token();
 
-    }
-
-    public interface CloudLogin {
-
-        String username();
-
-        String password();
     }
 
     public interface Dashboard {
