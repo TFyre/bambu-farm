@@ -33,10 +33,21 @@
 }
 
 .dashboard-view {
-    display: grid;
-    grid-template-columns: repeat(var(--bambu-columns), minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--lumo-space-m);
     padding: var(--lumo-space-s);
+}
+
+.dashboard-view > * {
+    flex: 1 1 calc((100% / var(--bambu-columns)) - var(--lumo-space-m));
+    max-width: calc((100% / var(--bambu-columns)) - var(--lumo-space-m));
+    min-width: 0;
+}
+
+.dashboard-printer {
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard-printer .name {
@@ -100,10 +111,6 @@
     margin-bottom: 10px;
 }
 
-.controlsbox iframe {
-    height: 60vh;
-}
-
 .dashboard-printer .status {
     width: 100%;
     flex-wrap: wrap;
@@ -127,10 +134,14 @@
 
 .dashboard-printer .filaments {
     width: 100%;
+    flex: 2;
+    display: flex;
+    flex-direction: column;
 }
 
 .dashboard-printer .ams {
-    width: 100%;
+    /*width: 100%;*/
+    flex: 1;
 }
 
 .dashboard-printer .amsheader {
@@ -210,6 +221,10 @@
     justify-content: center;
     align-items: center;
     gap: var(--lumo-space-m);
+}
+
+.controlsbox iframe {
+    height: 60vh;
 }
 
 .controlsbox .controls {
@@ -296,7 +311,7 @@
 .batchprint-view .filaments {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;    
+    justify-content: center;
 }
 
 .batchprint-view-menu vaadin-context-menu-list-box::part(items) {
