@@ -152,8 +152,11 @@
                     <target>${maven.compiler.target}</target>
                     <showDeprecation>true</showDeprecation>
                     <compilerArgs>
+                        <!-- 
+                        Disable due to quarkus hot reload: java.lang.IllegalArgumentException: error: invalid flag: 1000
+                        https://github.com/quarkusio/quarkus/issues/26755                        
                         <arg>-Xmaxerrs</arg>
-                        <arg>1000</arg>
+                        <arg>1000</arg>-->
                         <arg>-Xlint:all,-path,-serial</arg>
                     </compilerArgs>
                 </configuration>
