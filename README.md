@@ -186,30 +186,70 @@ bambu.printers.myprinter1.stream.watch-dog=5m
 
 ### Cloud Section
 
-Enable MQTT connection via cloud instead of directly to printer. You can either provide the username/password or a access token.
+Enable MQTT connection via cloud instead of directly to printer. 
 
-* Option 1 - username/password
-
-Provide the username and password for https://bambulab.com/ in the format below
-
-* Option 2 - access token
-
-The access token can be fetched from your browser cookies or a 1 liner curl
+The access userid and token can be fetched from your browser cookies or a multi liner curl
 ```bash
-curl -v -X POST -H 'Content-Type: application/json' -d '{"account":"YOUR_USER_NAME","password":"YOUR_PASSWORD"}' https://bambulab.com/api/sign-in/form 2>&1 | grep token= | awk '{print$3}'
+export MY_USERNAME=fixme@fixme.com
+export MY_PASSWORD=fixme
+
+# Request verification code
+curl -sS --fail -X POST -H 'Content-Type: application/json' -d "{\"account\":\"${MY_USERNAME}\",\"password\":\"${MY_PASSWORD}\"}" https://api.bambulab.com/v1/user-service/user/login | jq
+```
+
+Output:
+```json
+{
+  "accessToken": "",
+  "refreshToken": "",
+  "expiresIn": 0,
+  "refreshExpiresIn": 0,
+  "tfaKey": "",
+  "accessMethod": "",
+  "loginType": "verifyCode"
+}
+```
+
+```bash
+# Check email for verification code
+export MY_CODE=1234
+curl -sS --fail -X POST -H 'Content-Type: application/json' -d "{\"account\":\"${MY_USERNAME}\",\"code\":\"${MY_CODE}\"}" https://api.bambulab.com/v1/user-service/user/login | jq
+```
+
+Output:
+```json
+{
+  "accessToken": "AA...",
+  "refreshToken": "SAME_AS_ACCESS_TOKEN",
+  "expiresIn": 7776000,
+  "refreshExpiresIn": 7776000,
+  "tfaKey": "",
+  "accessMethod": "",
+  "loginType": ""
+}
+```
+
+```bash
+# Grab the access Token
+export MY_TOKEN=AA...
+
+# Grab username (uid) from here
+curl -sS --fail  -H "Authorization: Bearer ${MY_TOKEN}" https://api.bambulab.com/v1/design-user-service/my/preference | jq '{"username": ("u_" + (.uid | tostring))}'
+```
+
+Output:
+```json
+{
+  "username": "u_12345"
+}
 ```
 
 Configuration:
 
 ```properties
 bambu.cloud.enabled=true
-
-# Option1: Let bambufarm login and fetch token
-bambu.cloud.login.username=YOUR_LOGIN_USER
-bambu.cloud.login.password=YOUR_LOGIN_PASSWORD
-
-# Option2: fetch token via curl and paste here
-bambu.cloud.token=FULL_JWT_TOKEN_FROM_COOKIES
+bambu.cloud.username=u_12345
+bambu.cloud.token=AA...
 ```
 
 ### User Section
