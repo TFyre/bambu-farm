@@ -28,7 +28,8 @@ To enable access from internet, add your public ip or DNS **OR** to enable acces
 
 # Bambu Web
 
-* Download the [latest](/releases/latest) version of bambu-web-X.X.X-runner.jar
+* Download the [latest](https://github.com/TFyre/bambu-farm/releases/latest) version of bambu-web-X.X.X-runner.jar
+
 * `bambu-web-env.txt` is the config file instead of normal `.env`
 * Update `compose.yml` and replace `bambu-web-X.X.X-runner.jar` with the correct version
 
