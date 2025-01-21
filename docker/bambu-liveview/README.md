@@ -82,7 +82,7 @@ Edit `compose.yml` and fix the printers (lines with FIXME)
 > [!NOTE]
 > `PRINTER_ID` is the printer id in the `.env` configuration file eg: 
 > ```properties
-> bambu.printer.PRINTER_ID.name=My Printer Name
+> bambu.printers.PRINTER_ID.name=My Printer Name
 > ```
 
 # Ports required for outside access
