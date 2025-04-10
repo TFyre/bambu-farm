@@ -5,6 +5,7 @@ import com.tfyre.bambu.model.Tray;
 import com.tfyre.bambu.printer.BambuConst;
 import com.tfyre.bambu.printer.BambuPrinter;
 import com.tfyre.bambu.printer.Filament;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -133,6 +134,16 @@ public class FilamentView extends FormLayout implements NotificationHelper, View
         public ColorField(final String label) {
             input.setType("color");
             setLabel(label);
+        }
+
+        @Override
+        public final void setLabel(final String label) {
+            super.setLabel(label);
+        }
+
+        @Override
+        protected void onAttach(final AttachEvent attachEvent) {
+            super.onAttach(attachEvent);
 
             final Div presets = new Div();
             add(input, presets);
@@ -148,7 +159,6 @@ public class FilamentView extends FormLayout implements NotificationHelper, View
                 });
                 presets.add(preset);
             });
-
         }
 
         @Override
