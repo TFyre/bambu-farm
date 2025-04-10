@@ -52,11 +52,10 @@
                             <outputDirectory>${project.build.directory}/generated-sources/schema</outputDirectory>
                             <clearOutputDir>true</clearOutputDir>
                             <extension>true</extension>
-                            <arguments>
-                                <!-- https://github.com/mojohaus/jaxb2-maven-plugin/issues/275 -->
-                                <argument>-Xfluent-api</argument>                                
-                                <argument>-Xdefault-value</argument>                                
-                            </arguments>
+                            <plugins>
+                                <plugin>fluent-api</plugin>
+                                <plugin>default-value</plugin>
+                            </plugins>
                         </configuration>
                     </execution>
                 </executions>
