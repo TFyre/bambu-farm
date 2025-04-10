@@ -84,6 +84,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
     private final Span printTime = new Span();
     private final Span printWeight = new Span();
     private final Div printFilaments = newDiv("filaments");
+    private final Checkbox skipSameSize = new Checkbox("Skip if same size");
     private final Checkbox timelapse = new Checkbox("Timelapse");
     private final Checkbox bedLevelling = new Checkbox("Bed Levelling");
     private final Checkbox flowCalibration = new Checkbox("Flow Calibration");
@@ -92,7 +93,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
     private final Div actions = newDiv("actions", plateLookup,
             newDiv("detail", printTime, printWeight),
             printFilaments,
-            newDiv("options", timelapse, bedLevelling, flowCalibration, vibrationCalibration),
+            newDiv("options", skipSameSize, timelapse, bedLevelling, flowCalibration, vibrationCalibration),
             newDiv("buttons",
                     new Button("Print", VaadinIcon.PRINT.create(), l -> printAll()),
                     new Button("Refresh", VaadinIcon.REFRESH.create(), l -> refresh())
@@ -192,7 +193,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         Log.infof("printAll: user[%s] ip[%s] file[%s] printers[%s]", user, ip, projectFile.getFilename(),
                 selected.stream().map(pm -> pm.getPrinterDetail().name()).toList());
         final BambuPrinter.CommandPPF command = new BambuPrinter.CommandPPF("", 0, true, timelapse.getValue(), bedLevelling.getValue(), flowCalibration.getValue(), vibrationCalibration.getValue(), List.of());
-        selected.forEach(pm -> executor.submit(() -> pm.sendPrint(projectFile, command)));
+        selected.forEach(pm -> executor.submit(() -> pm.sendPrint(projectFile, command, skipSameSize.getValue())));
         showNotification("Queued: %d".formatted(selected.size()));
     }
 
@@ -246,6 +247,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
     }
 
     private void configureActions() {
+        skipSameSize.setValue(config.batchPrint().skipSameSize());
         timelapse.setValue(config.batchPrint().timelapse());
         bedLevelling.setValue(config.batchPrint().bedLevelling());
         flowCalibration.setValue(config.batchPrint().flowCalibration());

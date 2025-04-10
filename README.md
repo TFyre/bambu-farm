@@ -284,6 +284,7 @@ bambu.auto-login=true
 Default batch printing options is below:
 
 ```properties
+bambu.batch-print.skip-same-size=true
 bambu.batch-print.timelapse=true
 bambu.batch-print.bed-levelling=true
 bambu.batch-print.flow-calibration=true
