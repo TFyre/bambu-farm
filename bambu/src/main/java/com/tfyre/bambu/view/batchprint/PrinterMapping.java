@@ -22,11 +22,14 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
+import org.apache.commons.net.ftp.FTPFile;
 
 /**
  *
@@ -99,7 +102,7 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
         printerDetail.printer().setBlocked(isBlocked);
     }
 
-    private void doFtp(final ProjectFile projectFile) throws IOException {
+    private void doFtp(final ProjectFile projectFile, final boolean skipIfSameSize) throws IOException {
         Log.debugf("%s: doFtp", printerDetail.name());
         final BambuFtp client = clientInstance.get().setup(printerDetail, this::bytesTransferred);
         try {
@@ -109,6 +112,20 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
             Log.debugf("%s: loggingin", printerDetail.name());
             setPrinterState(PrinterState.FTP_LOGIN);
             client.doLogin();
+            if (skipIfSameSize) {
+                Log.debugf("%s: checking", printerDetail.name());
+                setPrinterState(PrinterState.FTP_SIZE);
+                final Optional<FTPFile> oFile = Stream.of(client.listFiles())
+                        .filter(file -> file.isFile() && projectFile.getFilename().equals(file.getName()))
+                        .findAny();
+                if (oFile.isPresent()) {
+                    final FTPFile ftpFile = oFile.get();
+                    Log.debugf("%s: size local[%d] remote[%d]", printerDetail.name(), projectFile.getFileSize(), ftpFile.getSize());
+                    if (projectFile.getFileSize() == ftpFile.getSize()) {
+                        return;
+                    }
+                }
+            }
             Log.debugf("%s: uploading", printerDetail.name());
             setPrinterState(PrinterState.FTP_UPLOADING);
             client.doUpload(projectFile.getFilename(), projectFile.getStream());
@@ -122,13 +139,13 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
         }
     }
 
-    public void sendPrint(final ProjectFile projectFile, final BambuPrinter.CommandPPF command) {
+    public void sendPrint(final ProjectFile projectFile, final BambuPrinter.CommandPPF command, final boolean skipIfSameSize) {
         Log.debugf("%s: sendPrint", printerDetail.name());
         doBlock(true);
         fileSize = projectFile.getFileSize();
         percentageComplete = 0;
         try {
-            doFtp(projectFile);
+            doFtp(projectFile, skipIfSameSize);
             final List<Integer> mapping = generateAmsMapping();
             final boolean useAms = mapping.stream().noneMatch(i -> i == BambuConst.AMS_TRAY_VIRTUAL);
             final BambuPrinter.CommandPPF _command = new BambuPrinter.CommandPPF(
@@ -329,6 +346,7 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
         NEEDS_MAPPING("Needs Filament Mapping"),
         FTP_CONNECT("FTP Connect"),
         FTP_LOGIN("FTP Login"),
+        FTP_SIZE("FTP Size"),
         FTP_UPLOADING("FTP Uploading"),
         SENT("Sent"),
         ERROR("Error");

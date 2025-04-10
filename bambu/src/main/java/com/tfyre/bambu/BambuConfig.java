@@ -57,6 +57,9 @@ public interface BambuConfig {
     public interface BatchPrint {
 
         @WithDefault("true")
+        boolean skipSameSize();
+
+        @WithDefault("true")
         boolean timelapse();
 
         @WithDefault("true")
