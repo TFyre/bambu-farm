@@ -58,6 +58,15 @@ public enum Filament {
     POLYLITE_PLA("GFL00", "PolyLite PLA", FilamentType.PLA),
     POLYTERRA_PLA("GFL01", "PolyTerra PLA", FilamentType.PLA),
     ESUN_PLA("GFL03", "eSUN PLA+", FilamentType.PLA),
+    SUNLU_PLA("GFSNL03", "SUNLU PLA+", FilamentType.PLA),
+    SUNLU_PLA2("GFSNL04", "SUNLU PLA+ 2.0", FilamentType.PLA),
+    SUNLU_PLA_MARBLE("GFSNL06", "SUNLU PLA Marble", FilamentType.PLA),
+    SUNLU_PLA_MATTE("GFSNL02", "SUNLU PLA Matte", FilamentType.PLA),
+    SUNLU_PLA_SILK("GFSNL05", "SUNLU PLA Silk", FilamentType.PLA),
+    SUNLU_PLA_WOOD("GFSNL07", "SUNLU PLA Wood", FilamentType.PLA),
+    SUNLU_PETG("GFSNL08", "SUNLU PETG", FilamentType.PETG),
+    
+
     GENERIC_PLA_SLIK_01("GFSL99_01", "Generic PLA Silk 01", FilamentType.PLA),
     GENERIC_PLA_SLIK_12("GFSL99_12", "Generic PLA Silk 12", FilamentType.PLA);
 
