@@ -269,7 +269,7 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
             setupFilament(fbottom, pf.name(), pf.color());
 
             menu.addItem(newDiv("myfilament", ftop, fbottom), l -> {
-                if (plateFilament.type() != pf.type()) {
+                if (config.enforceFilamentMapping() && plateFilament.type() != pf.type()) {
                     showError("Filament [%s] does not match Printer [%s]".formatted(plateFilament.type(), pf.type()));
                     return;
                 }
