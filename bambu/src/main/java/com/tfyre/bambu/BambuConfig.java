@@ -71,6 +71,9 @@ public interface BambuConfig {
         @WithDefault("true")
         boolean vibrationCalibration();
 
+        @WithDefault("true")
+        boolean enforceFilamentMapping();
+        
     }
 
     public interface Cloud {
