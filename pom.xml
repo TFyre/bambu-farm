@@ -19,7 +19,7 @@
 
         <failOnMissingWebXml>false</failOnMissingWebXml>
         <vaadin.version>24.7.5</vaadin.version>
-        <quarkus.version>3.23.0</quarkus.version>
+        <quarkus.version>3.23.2</quarkus.version>
         <compiler-plugin.version>3.14.0</compiler-plugin.version>
         <jna.version>5.17.0</jna.version>
         <commons-net.version>3.11.1</commons-net.version>
