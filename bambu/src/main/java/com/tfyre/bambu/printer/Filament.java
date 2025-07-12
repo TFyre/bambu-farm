@@ -20,6 +20,7 @@ public enum Filament {
     BAMBU_PC("GFC00", "Bambu PC", FilamentType.PC),
     BAMBU_PET_CF("GFT01", "Bambu PET-CF", FilamentType.PETCF),
     BAMBU_PETG_BASIC("GFG00", "Bambu PETG Basic", FilamentType.PETG),
+    BAMBU_PETG_TRANSLUCENT("GFG01", "Bambu PETG Translucent", FilamentType.PETG),
     BAMBU_PETG_CF("GFG50", "Bambu PETG-CF", FilamentType.PETGCF),
     BAMBU_PLA_AERO("GFA11", "Bambu PLA Aero", FilamentType.PLA_AERO),
     BAMBU_PLA_BASIC("GFA00", "Bambu PLA Basic", FilamentType.PLA),
