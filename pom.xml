@@ -18,7 +18,7 @@
         <maven.deploy.skip>true</maven.deploy.skip>
 
         <failOnMissingWebXml>false</failOnMissingWebXml>
-        <vaadin.version>24.8.8</vaadin.version>
+        <vaadin.version>24.9.3</vaadin.version>
         <quarkus.version>3.26.3</quarkus.version>
         <compiler-plugin.version>3.14.1</compiler-plugin.version>
         <jna.version>5.17.0</jna.version>
