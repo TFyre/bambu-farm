@@ -49,6 +49,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
+import com.tfyre.bambu.printer.BatchPrintDelayConfig;
+import com.tfyre.bambu.printer.BatchPrintDelayService;
+import java.time.Duration;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.button.ButtonVariant;
 
 /**
  *
@@ -76,6 +81,10 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
     MemorySize maxBodySize;
     @Inject
     BambuConfig config;
+	@Inject
+	BatchPrintDelayService delayService;
+	@Inject
+	BatchPrintDelayConfig delayConfig;
 
     private final ComboBox<Plate> plateLookup = new ComboBox<>("Plate Id");
     private final Grid<PrinterMapping> grid = new Grid<>();
@@ -90,15 +99,21 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
     private final Checkbox flowCalibration = new Checkbox("Flow Calibration");
     private final Checkbox vibrationCalibration = new Checkbox("Vibration Calibration");
 	private final Checkbox skipFilamentMapping = new Checkbox("Skip Filament Mapping");
-    private GridListDataView<PrinterMapping> dataView;
-    private final Div actions = newDiv("actions", plateLookup,
-            newDiv("detail", printTime, printWeight),
-            printFilaments,
-            newDiv("options", skipSameSize, timelapse, bedLevelling, flowCalibration, vibrationCalibration, skipFilamentMapping),
-            newDiv("buttons",
-                    new Button("Print", VaadinIcon.PRINT.create(), l -> printAll()),
-                    new Button("Refresh", VaadinIcon.REFRESH.create(), l -> refresh())
-            ));
+	private GridListDataView<PrinterMapping> dataView;
+	private final Button printButton = new Button("Print", VaadinIcon.PRINT.create(), l -> printAll());
+	private final Button refreshButton = new Button("Refresh", VaadinIcon.REFRESH.create(), l -> refresh());
+	// Delay control fields
+	private final Checkbox enableDelay = new Checkbox("Enable batch delay", true);
+	private final IntegerField simultaneousPrintersField = new IntegerField();
+	//private final IntegerField delaySecondsField = new IntegerField();
+	private final IntegerField delayHoursField = new IntegerField();
+	private final IntegerField delayMinutesField = new IntegerField();
+	private final IntegerField delaySecondsField = new IntegerField();	
+	private final Button applySimultaneousButton = new Button(VaadinIcon.CHECK.create());
+	private final Button applyDelayButton = new Button(VaadinIcon.CHECK.create());
+
+	// Will be created in onAttach after configuring delay controls
+	private Div actions;
     private final FileBuffer buffer = new FileBuffer();
     private final Upload upload = new Upload(buffer);
     private ProjectFile projectFile;
@@ -109,6 +124,164 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
     public Grid<PrinterMapping> getGrid() {
         return grid;
     }
+
+	private void updateEstimatedTime() {
+		Set<PrinterMapping> selected = grid.getSelectedItems();
+		int printerCount = selected.size();
+		
+		Integer simultaneousValue = simultaneousPrintersField.getValue();
+		if (simultaneousValue == null) {
+			return;
+		}
+
+		int simultaneous = simultaneousValue;
+		long delaySeconds = getTotalDelaySeconds();
+		
+		// Calculate batches
+		int batchCount = (int) Math.ceil((double) printerCount / simultaneous);
+		long totalDelaySeconds = delaySeconds * (batchCount - 1);
+	}
+
+	private String formatDuration(Duration duration) {
+		long seconds = duration.toSeconds();
+		if (seconds < 60) {
+			return seconds + "s";
+		} else if (seconds < 3600) {
+			long minutes = seconds / 60;
+			long remainingSeconds = seconds % 60;
+			return remainingSeconds == 0 
+				? minutes + "m" 
+				: String.format("%dm %ds", minutes, remainingSeconds);
+		} else {
+			long hours = seconds / 3600;
+			long remainingMinutes = (seconds % 3600) / 60;
+			return remainingMinutes == 0 
+				? hours + "h" 
+				: String.format("%dh %dm", hours, remainingMinutes);
+		}
+	}
+
+	/**
+	 * Get total delay in seconds from the three time fields
+	 */
+	private int getTotalDelaySeconds() {
+		Integer hours = delayHoursField.getValue();
+		Integer minutes = delayMinutesField.getValue();
+		Integer seconds = delaySecondsField.getValue();
+		
+		if (hours == null) hours = 0;
+		if (minutes == null) minutes = 0;
+		if (seconds == null) seconds = 0;
+		
+		return (hours * 3600) + (minutes * 60) + seconds;
+	}
+
+	/**
+	 * Set the time fields from total seconds
+	 */
+	private void setTimeFieldsFromSeconds(int totalSeconds) {
+		int hours = totalSeconds / 3600;
+		int minutes = (totalSeconds % 3600) / 60;
+		int seconds = totalSeconds % 60;
+		
+		delayHoursField.setValue(hours);
+		delayMinutesField.setValue(minutes);
+		delaySecondsField.setValue(seconds);
+	}
+
+	private void configureDelayControls() {
+		// Simultaneous printers field
+		simultaneousPrintersField.setValue(delayConfig.simultaneousPrinters());
+		simultaneousPrintersField.setMin(1);
+		simultaneousPrintersField.setPlaceholder("Enter number");
+		simultaneousPrintersField.setHelperText("Number of printers in batch");
+		simultaneousPrintersField.addClassName("delay-field");
+		
+		// Apply button for simultaneous
+		applySimultaneousButton.addThemeVariants(
+			ButtonVariant.LUMO_PRIMARY,
+			ButtonVariant.LUMO_SMALL,
+			ButtonVariant.LUMO_SUCCESS
+		);
+		applySimultaneousButton.addClassName("delay-apply-button");
+		applySimultaneousButton.addClickListener(e -> {
+			showNotification("Simultaneous printers count updated");
+			updateEstimatedTime();
+		});
+		
+		// Delay field
+		// Parse initial time from config
+		int initialSeconds = (int) delayConfig.jobDelay().toSeconds();
+		int initialHours = initialSeconds / 3600;
+		int initialMinutes = (initialSeconds % 3600) / 60;
+		int initialSecs = initialSeconds % 60;
+
+		// Hours field
+		delayHoursField.setValue(initialHours);
+		delayHoursField.setMin(0);
+		delayHoursField.setMax(23);
+		delayHoursField.setWidth("60px");
+		delayHoursField.setPlaceholder("HH");
+		delayHoursField.setHelperText("Hours");
+		delayHoursField.addClassName("delay-time-part");
+		delayHoursField.addValueChangeListener(e -> updateEstimatedTime());
+
+		// Minutes field
+		delayMinutesField.setValue(initialMinutes);
+		delayMinutesField.setMin(0);
+		delayMinutesField.setMax(59);
+		delayMinutesField.setWidth("60px");
+		delayMinutesField.setPlaceholder("MM");
+		delayMinutesField.setHelperText("Minutes");
+		delayMinutesField.addClassName("delay-time-part");
+		delayMinutesField.addValueChangeListener(e -> updateEstimatedTime());
+
+		// Seconds field
+		delaySecondsField.setValue(initialSecs);
+		delaySecondsField.setMin(0);
+		delaySecondsField.setMax(59);
+		delaySecondsField.setWidth("60px");
+		delaySecondsField.setPlaceholder("SS");
+		delaySecondsField.setHelperText("Seconds");
+		delaySecondsField.addClassName("delay-time-part");
+		delaySecondsField.addValueChangeListener(e -> updateEstimatedTime());
+		
+		// Apply button for delay
+		applyDelayButton.addThemeVariants(
+			ButtonVariant.LUMO_PRIMARY,
+			ButtonVariant.LUMO_SMALL,
+			ButtonVariant.LUMO_SUCCESS
+		);
+		applyDelayButton.addClassName("delay-apply-button");
+		applyDelayButton.addClickListener(e -> {
+			updateEstimatedTime();
+			showNotification("Delay time updated");
+		});
+		
+		// Enable delay checkbox
+		enableDelay.setValue(delayConfig.enableDelay());
+		enableDelay.addValueChangeListener(e -> {
+			boolean enabled = e.getValue();
+			simultaneousPrintersField.setEnabled(enabled);
+			applySimultaneousButton.setEnabled(enabled);
+			delayHoursField.setEnabled(enabled);
+			delayMinutesField.setEnabled(enabled);
+			delaySecondsField.setEnabled(enabled);
+			applyDelayButton.setEnabled(enabled);
+			updateEstimatedTime();
+		});
+	}
+
+	private void updatePrintButtonState() {
+		boolean isInDelay = delayService.isInDelayPeriod();
+		printButton.setEnabled(!isInDelay);
+		
+		if (isInDelay) {
+			printButton.setText("Print (Batch in Progress...)");
+		} else {
+			printButton.setText("Print");
+		}
+	}
 
     private void configurePlate(final Plate plate) {
         if (plate == null) {
@@ -180,6 +353,10 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 
         grid.sort(GridSortOrder.asc(colName).build());
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
+		grid.addSelectionListener(e -> {
+			updateEstimatedTime();
+		});
+
         final UI ui = getUI().get();
         printerMappings = printers.getPrintersDetail().stream()
                 .filter(pd -> pd.isRunning())
@@ -190,15 +367,61 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         dataView.addFilter(predicate);
     }
 
-    private void printAll(final Set<PrinterMapping> selected) {
-        final String user = SecurityUtils.getPrincipal().map(p -> p.getName()).orElse("null");
-        final String ip = Optional.ofNullable(VaadinSession.getCurrent()).map(vs -> vs.getBrowser().getAddress()).orElse("null");
-        Log.infof("printAll: user[%s] ip[%s] file[%s] printers[%s]", user, ip, projectFile.getFilename(),
-                selected.stream().map(pm -> pm.getPrinterDetail().name()).toList());
-        final BambuPrinter.CommandPPF command = new BambuPrinter.CommandPPF("", 0, true, timelapse.getValue(), bedLevelling.getValue(), flowCalibration.getValue(), vibrationCalibration.getValue(), List.of());
-        selected.forEach(pm -> executor.submit(() -> pm.sendPrint(projectFile, command, skipSameSize.getValue())));
-        showNotification("Queued: %d".formatted(selected.size()));
-    }
+	private void printAll(final Set<PrinterMapping> selected) {
+		final String user = SecurityUtils.getPrincipal().map(p -> p.getName()).orElse("null");
+		final String ip = Optional.ofNullable(VaadinSession.getCurrent()).map(vs -> vs.getBrowser().getAddress()).orElse("null");
+		Log.infof("printAll: user[%s] ip[%s] file[%s] printers[%s]", user, ip, projectFile.getFilename(),
+				selected.stream().map(pm -> pm.getPrinterDetail().name()).toList());
+		
+		final BambuPrinter.CommandPPF command = new BambuPrinter.CommandPPF("", 0, true, 
+				timelapse.getValue(), bedLevelling.getValue(), flowCalibration.getValue(), 
+				vibrationCalibration.getValue(), List.of());
+		
+		Duration delay = enableDelay.getValue()
+			? Duration.ofSeconds(getTotalDelaySeconds())
+			: Duration.ZERO;
+		int simultaneousPrinters = simultaneousPrintersField.getValue() != null
+			? simultaneousPrintersField.getValue()
+			: 1;
+		
+		// Create job list for delay service
+		List<BatchPrintDelayService.PrinterJob> jobs = new java.util.ArrayList<>();
+		for (PrinterMapping pm : selected) {
+			jobs.add(new BatchPrintDelayService.PrinterJob() {
+				@Override
+				public String getPrinterName() {
+					return pm.getPrinterDetail().name();
+				}
+				
+				@Override
+				public void execute() throws Exception {
+					pm.sendPrint(projectFile, command, skipSameSize.getValue());
+				}
+			});
+		}
+		
+	// Disable print button immediately
+	printButton.setEnabled(false);
+	printButton.setText("Print (Batch in Progress...)");
+
+	// Start batch with delay
+	delayService.sendBatchJobsWithDelay(jobs, delay, simultaneousPrinters)
+		.thenRun(() -> {
+			getUI().ifPresent(ui -> ui.access(() -> {
+				showNotification("All batch print jobs queued successfully!");
+				updatePrintButtonState();  // Re-enable button
+			}));
+		})
+		.exceptionally(ex -> {
+			getUI().ifPresent(ui -> ui.access(() -> {
+				showError("Error during batch print: " + ex.getMessage());
+				updatePrintButtonState();  // Re-enable button even on error
+			}));
+			return null;
+		});
+
+	showNotification("Starting batch print for %d printers...".formatted(selected.size()));
+	}
 
     private void refresh() {
         printerMappings.forEach(PrinterMapping::refresh);
@@ -219,10 +442,10 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         doConfirm(() -> printAll(selected));
     }
 
-    private void headerVisible(final boolean isVisible) {
-        thumbnail.setVisible(isVisible);
-        actions.setVisible(isVisible);
-    }
+	private void headerVisible(final boolean isVisible) {
+		thumbnail.setVisible(isVisible);
+		actions.setVisible(isVisible);
+	}
 
     private void configureUpload() {
         upload.setAcceptedFileTypes(BambuConst.FILE_3MF);
@@ -263,20 +486,40 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		});
     }
 
-    @Override
-    protected void onAttach(final AttachEvent attachEvent) {
-        super.onAttach(attachEvent);
-        addClassName("batchprint-view");
-        configureActions();
-        configurePlateLookup();
-        configureGrid();
-        configureUpload();
-        configureThumbnail();
-        headerVisible(false);
-        add(newDiv("header", thumbnail, actions, newDiv("upload", upload)), grid);
-        final UI ui = attachEvent.getUI();
-        createFuture(() -> ui.access(this::updateBulkStatus), config.refreshInterval());
-    }
+	@Override
+	protected void onAttach(final AttachEvent attachEvent) {
+		super.onAttach(attachEvent);
+		addClassName("batchprint-view");
+		configureActions();
+		configureDelayControls();  // NEW: Configure delay controls
+		configurePlateLookup();
+		configureGrid();
+		configureUpload();
+		configureThumbnail();
+		
+		// Create actions div with delay controls included
+		actions = newDiv("actions", 
+			plateLookup,
+			newDiv("detail", printTime, printWeight),
+			printFilaments,
+			newDiv("options", 
+				skipSameSize, timelapse, bedLevelling, 
+				flowCalibration, vibrationCalibration, skipFilamentMapping, enableDelay, simultaneousPrintersField,
+				applySimultaneousButton, delayHoursField, delayMinutesField, delaySecondsField,
+				applyDelayButton
+			),
+			newDiv("buttons", printButton, refreshButton)
+		);
+		
+		headerVisible(false);
+		add(newDiv("header", thumbnail, actions, newDiv("upload", upload)), grid);
+		
+		final UI ui = attachEvent.getUI();
+		createFuture(() -> ui.access(() -> {
+			updateBulkStatus();
+			updatePrintButtonState();
+		}), config.refreshInterval());
+	}
 
     @Override
     protected void onDetach(final DetachEvent detachEvent) {
