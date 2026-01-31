@@ -42,7 +42,7 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
     BambuConfig config;
     @Inject
     Instance<BambuFtp> clientInstance;
-
+	private boolean skipFilamentMapping = false;
     private final Map<Integer, Integer> amsMapping = new HashMap<>();
     private final Map<Integer, Integer> amsMappingCache = new HashMap<>();
     private final Div filamentMapping = newDiv("filamentmapping");
@@ -54,6 +54,29 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
     private long fileSize;
     private double percentageComplete = 0;
     private UI ui;
+
+	public void skipFilamentMapping(boolean skip) {
+		this.skipFilamentMapping = skip;
+		if (skip) {
+			setPrinterState(PrinterState.READY);
+			// Refresh the plate UI to show "SKIPPED"
+			if (plate != null) {
+				runInUI(this::setupPlate);
+			}
+		} else {
+			// Refresh the plate UI to restore interactive mapping
+			if (plate != null) {
+				runInUI(() -> {
+					setupPlate();
+					isMapped();
+				});
+			}
+		}
+	}
+
+	public boolean isSkipFilamentMapping() {
+		return skipFilamentMapping;
+	}
 
     public PrinterMapping setup(final UI ui, final BambuPrinters.PrinterDetail printerDetail) {
         this.ui = ui;
@@ -91,7 +114,17 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
         return printerDetail.id();
     }
 
+	public void setFilamentMappingVisible(boolean visible) {
+		filamentMapping.setVisible(visible);
+	}
+
     private List<Integer> generateAmsMapping() {
+		if (skipFilamentMapping) {
+				// Return virtual tray for all filaments when skipping
+				if (plate == null || plate.filaments().isEmpty()) {
+					return List.of();
+				}
+			}
         final int max = plate.filaments().stream().mapToInt(PlateFilament::filamentId).max().getAsInt();
         return IntStream.range(0, max)
                 .mapToObj(i -> amsMapping.getOrDefault(i + 1, -1))
@@ -175,6 +208,13 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
     }
 
     public boolean isMapped() {
+		if (skipFilamentMapping) {
+			return true; // Skip validation if bypass is enabled
+		}
+		// Handle case where plate is not yet loaded
+		if (plate == null) {
+			return false;
+		}
         final boolean result = plate.filaments().stream().allMatch(pf -> amsMapping.containsKey(pf.filamentId()));
         setPrinterState(result ? PrinterState.READY : PrinterState.NEEDS_MAPPING);
         return result;
@@ -248,7 +288,13 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
     }
 
     private void setupFilamentMapping(final Div mapped, final PlateFilament plateFilament) {
-        final ContextMenu menu = newContextMenu(mapped);
+		
+		if (skipFilamentMapping) {
+        setupFilament(mapped, "SKIPPED", 0x808080); // Gray color to indicate skipped
+        return;
+		}
+        
+		final ContextMenu menu = newContextMenu(mapped);
         final List<PrinterFilament> list = getPrinterFilaments(printerDetail.printer());
         Optional.ofNullable(amsMappingCache.get(plateFilament.filamentId()))
                 .ifPresent(amsTrayId -> {
@@ -285,19 +331,29 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
     private void setupPlate() {
         amsMapping.clear();
         filamentMapping.removeAll();
+		
+		if (skipFilamentMapping) {
+        // When skipping, show a single solid box for all filaments
         plate.filaments().forEach(pf -> {
             final Div filament = newFilament(pf);
-            filament.addClassName("filamenttop");
-            setupFilament(filament, pf.type().getDescription(), pf.color());
-
-            final Div mapped = newDiv("filament");
-            mapped.addClassName("filamentbottom");
-            setupFilament(mapped, "--\u25BC", 0xffffff);
-
-            setupFilamentMapping(mapped, pf);
-            filamentMapping.add(newDiv("mapping", filament, mapped));
+            setupFilament(filament, "SKIPPED", 0x808080); // Gray color
+            filamentMapping.add(newDiv("mapping", filament));
         });
-    }
+		} else {
+			plate.filaments().forEach(pf -> {
+				final Div filament = newFilament(pf);
+				filament.addClassName("filamenttop");
+				setupFilament(filament, pf.type().getDescription(), pf.color());
+
+				final Div mapped = newDiv("filament");
+				mapped.addClassName("filamentbottom");
+				setupFilament(mapped, "--\u25BC", 0xffffff);
+
+				setupFilamentMapping(mapped, pf);
+				filamentMapping.add(newDiv("mapping", filament, mapped));
+			});
+		}
+	}
 
     public void setPlate(final Plate plate) {
         this.plate = plate;

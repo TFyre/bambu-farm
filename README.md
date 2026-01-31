@@ -290,6 +290,7 @@ bambu.batch-print.bed-levelling=true
 bambu.batch-print.flow-calibration=true
 bambu.batch-print.vibration-calibration=true
 bambu.batch-print.enforce-filament-mapping=true
+bambu.batch-print.skip-filament-mapping=false
 ```
 
 ### Preheat

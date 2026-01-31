@@ -16,7 +16,7 @@ import java.util.Optional;
 @ConfigMapping(prefix = "bambu")
 public interface BambuConfig {
 
-    @WithDefault("false")
+	@WithDefault("false")
     boolean useBouncyCastle();
 
     @WithDefault("true")
@@ -73,6 +73,9 @@ public interface BambuConfig {
 
         @WithDefault("true")
         boolean enforceFilamentMapping();
+		
+		@WithDefault("false")
+		boolean skipFilamentMapping();
         
     }
 
