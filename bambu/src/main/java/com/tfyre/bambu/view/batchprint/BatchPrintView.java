@@ -89,11 +89,12 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
     private final Checkbox bedLevelling = new Checkbox("Bed Levelling");
     private final Checkbox flowCalibration = new Checkbox("Flow Calibration");
     private final Checkbox vibrationCalibration = new Checkbox("Vibration Calibration");
+	private final Checkbox skipFilamentMapping = new Checkbox("Skip Filament Mapping");
     private GridListDataView<PrinterMapping> dataView;
     private final Div actions = newDiv("actions", plateLookup,
             newDiv("detail", printTime, printWeight),
             printFilaments,
-            newDiv("options", skipSameSize, timelapse, bedLevelling, flowCalibration, vibrationCalibration),
+            newDiv("options", skipSameSize, timelapse, bedLevelling, flowCalibration, vibrationCalibration, skipFilamentMapping),
             newDiv("buttons",
                     new Button("Print", VaadinIcon.PRINT.create(), l -> printAll()),
                     new Button("Refresh", VaadinIcon.REFRESH.create(), l -> refresh())
@@ -120,8 +121,10 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         plate.filaments().forEach(pf -> {
             printFilaments.add(newDiv("filament", newFilament(pf), new Span("%.2fg".formatted(pf.weight()))));
         });
-        printerMappings.forEach(pm -> pm.setPlate(plate));
-        dataView.refreshAll();
+		printerMappings.forEach(pm -> {
+			pm.skipFilamentMapping(skipFilamentMapping.getValue());
+			pm.setPlate(plate);
+		});        dataView.refreshAll();
     }
 
     private void configurePlateLookup() {
@@ -252,6 +255,12 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         bedLevelling.setValue(config.batchPrint().bedLevelling());
         flowCalibration.setValue(config.batchPrint().flowCalibration());
         vibrationCalibration.setValue(config.batchPrint().vibrationCalibration());
+		skipFilamentMapping.setValue(config.batchPrint().skipFilamentMapping());
+		skipFilamentMapping.addValueChangeListener(e -> {
+			boolean skip = e.getValue();
+			printerMappings.forEach(pm -> pm.skipFilamentMapping(skip));
+			dataView.refreshAll();
+		});
     }
 
     @Override
