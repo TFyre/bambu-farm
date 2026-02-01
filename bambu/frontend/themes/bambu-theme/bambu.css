@@ -648,3 +648,206 @@
     border-left: 3px solid var(--lumo-error-color);
     margin-top: var(--lumo-space-xs);
 }
+
+//* ========================================
+   BATCH UPLOAD VIEW STYLES
+   Matches BatchPrint page styling
+   ======================================== */
+
+.batchupload-view {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-m);
+    padding: var(--lumo-space-m);
+    align-items: flex-start;
+    box-sizing: border-box;
+    height: 100%;
+}
+
+/* Smooth progress bar transitions */
+.batchupload-view .smooth-progress vaadin-progress-bar::part(bar) {
+    transition: width 0.3s ease-in-out;
+}
+
+.batchupload-view .smooth-progress {
+    transition: all 0.3s ease-in-out;
+}
+
+.batchupload-view vaadin-progress-bar {
+    --lumo-primary-color: var(--lumo-primary-color);
+}
+
+.batchupload-view vaadin-progress-bar::part(bar) {
+    transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
+.batchupload-view .header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-m);
+}
+
+.batchupload-view .actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-s);
+}
+
+.batchupload-view .actions .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--lumo-space-m);
+    flex-wrap: wrap;
+}
+
+.batchupload-view .buttons vaadin-button {
+    flex-grow: 0;
+}
+
+/* Upload info section - shows batch upload progress */
+.batchupload-view .upload-info-section {
+    padding: var(--lumo-space-s) var(--lumo-space-m);
+    background-color: var(--lumo-primary-color-10pct);
+    border-left: 4px solid var(--lumo-primary-color);
+    border-radius: var(--lumo-border-radius-s);
+    margin-bottom: var(--lumo-space-s);
+}
+
+.batchupload-view .upload-batch-info {
+    font-size: var(--lumo-font-size-m);
+    font-weight: 600;
+    color: var(--lumo-primary-text-color);
+    display: block;
+    margin-bottom: var(--lumo-space-xs);
+}
+
+.batchupload-view .upload-time-estimate {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+    display: block;
+}
+
+.batchupload-view .file-section,
+.batchupload-view .printer-section,
+.batchupload-view .control-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-s);
+}
+
+.batchupload-view .file-section > span:first-child,
+.batchupload-view .printer-section > span:first-child {
+    font-size: var(--lumo-font-size-l);
+    font-weight: 600;
+    margin-bottom: var(--lumo-space-xs);
+}
+
+.batchupload-view .upload {
+    width: 100%;
+}
+
+.batchupload-view vaadin-grid {
+    box-shadow: var(--lumo-box-shadow-s);
+    border-radius: var(--lumo-border-radius-m);
+}
+
+.batchupload-view vaadin-grid-sorter {
+    width: 100%;
+}
+
+/* Progress panel */
+.batchupload-view .progress-panel {
+    width: 100%;
+    padding: var(--lumo-space-m);
+    background-color: var(--lumo-contrast-5pct);
+    border-radius: var(--lumo-border-radius-m);
+    margin-top: var(--lumo-space-m);
+}
+
+.batchupload-view .progress-item {
+    padding: var(--lumo-space-s);
+    margin: var(--lumo-space-xs) 0;
+    border-radius: var(--lumo-border-radius-s);
+    background-color: var(--lumo-contrast-5pct);
+    border-left: 4px solid var(--lumo-primary-color);
+}
+
+.batchupload-view .progress-item.success {
+    background-color: var(--lumo-success-color-10pct);
+    border-left-color: var(--lumo-success-color);
+}
+
+.batchupload-view .progress-item.error {
+    background-color: var(--lumo-error-color-10pct);
+    border-left-color: var(--lumo-error-color);
+}
+
+/* Control section */
+.batchupload-view .control-section {
+    margin-top: var(--lumo-space-m);
+}
+
+.batchupload-view .control-section .buttons {
+    display: flex;
+    justify-content: center;
+    gap: var(--lumo-space-m);
+}
+
+.batchupload-view .control-section .buttons vaadin-button {
+    min-width: 200px;
+}
+
+/* Summary panel */
+.batchupload-view .summary-panel {
+    padding: var(--lumo-space-m);
+    margin: var(--lumo-space-m) 0;
+    background-color: var(--lumo-contrast-5pct);
+    border-radius: var(--lumo-border-radius-m);
+    text-align: center;
+}
+
+/* Match BatchPrint grid styling */
+.batchupload-view vaadin-grid {
+    --lumo-font-size-s: 0.875rem;
+}
+
+.batchupload-view vaadin-grid::part(cell) {
+    padding: var(--lumo-space-xs) var(--lumo-space-s);
+}
+
+/* Instructions box */
+.batchupload-view .instructions {
+    width: 100%;
+    background-color: var(--lumo-contrast-5pct);
+    padding: var(--lumo-space-m);
+    border-radius: var(--lumo-border-radius-m);
+    margin-bottom: var(--lumo-space-m);
+}
+
+.batchupload-view .instructions > span:first-child {
+    font-weight: bold;
+    display: block;
+    margin-bottom: var(--lumo-space-s);
+}
+
+/* Button groups */
+.batchupload-view .file-section .buttons,
+.batchupload-view .printer-section .buttons {
+    display: flex;
+    gap: var(--lumo-space-s);
+    margin-bottom: var(--lumo-space-s);
+}
+
+/* Responsive layout */
+@media screen and (max-width: 1110px) {
+    .batchupload-view .actions .buttons {
+        flex-direction: column;
+    }
+    
+    .batchupload-view .buttons vaadin-button {
+        width: 100%;
+    }
+}

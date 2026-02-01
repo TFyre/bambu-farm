@@ -14,15 +14,20 @@ import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -30,6 +35,7 @@ import com.vaadin.flow.component.upload.SucceededEvent;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.selection.SelectionEvent;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
@@ -45,14 +51,21 @@ import jakarta.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
@@ -60,6 +73,13 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
 /**
+ * SD Card View with Bulk Operations Support
+ * 
+ * Features:
+ * - Bulk file download
+ * - Bulk file deletion
+ * - SD card wipe functionality
+ * - Individual file operations (existing)
  *
  * @author Francois Steyn - (fsteyn@tfyre.co.za)
  */
@@ -101,7 +121,14 @@ public final class SdCardView extends PushDiv implements HasUrlParameter<String>
     private final Button disconnect = new Button("Disconnect", new Icon(VaadinIcon.CLOSE), l -> doDisconnect());
     private final Button cdup = new Button("", new Icon(VaadinIcon.ARROW_BACKWARD), l -> doCDUP());
     private final Button refresh = new Button("Refresh", new Icon(VaadinIcon.REFRESH), l -> runCallable(this::doRefresh));
+    
+    // New bulk operation buttons
+    private final Button bulkDownload = new Button("Download Selected", new Icon(VaadinIcon.DOWNLOAD_ALT), l -> doBulkDownload());
+    private final Button bulkDelete = new Button("Delete Selected", new Icon(VaadinIcon.TRASH), l -> doBulkDelete());
+    private final Button wipeSD = new Button("Wipe SD Card", new Icon(VaadinIcon.ERASER), l -> doWipeSD());
+    
     private final ProgressBar progressBar = newProgressBar();
+    private final Span statusLabel = new Span();
     private final MemoryBuffer buffer = new MemoryBuffer();
     private final Upload upload = new Upload(buffer);
     private BambuFtp client;
@@ -116,6 +143,7 @@ public final class SdCardView extends PushDiv implements HasUrlParameter<String>
         percentageComplete = 0;
         progressBar.setValue(percentageComplete);
         progressBar.setVisible(visible);
+        statusLabel.setVisible(visible);
     }
 
     @Override
@@ -166,6 +194,13 @@ public final class SdCardView extends PushDiv implements HasUrlParameter<String>
         cdup.setEnabled(!canConnect);
         refresh.setEnabled(!canConnect);
         upload.setVisible(!canConnect);
+        
+        // Bulk operation buttons
+        bulkDownload.setEnabled(!canConnect);
+        bulkDelete.setEnabled(!canConnect);
+        wipeSD.setEnabled(!canConnect);
+        
+        updateBulkButtonStates();
     }
 
     private void buildList(final BambuPrinters.PrinterDetail printer) {
@@ -238,12 +273,29 @@ public final class SdCardView extends PushDiv implements HasUrlParameter<String>
         upload.addFileRejectedListener(l -> {
             nh.showError(l.getErrorMessage());
         });
-        final HorizontalLayout result = new HorizontalLayout(new Span("Printers"), comboBox, connect, disconnect, new Span("Path"),
-                path, cdup, refresh, upload
+        
+        // Style bulk operation buttons
+        bulkDelete.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        wipeSD.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+        bulkDownload.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        
+        final HorizontalLayout topRow = new HorizontalLayout(
+            new Span("Printers"), comboBox, connect, disconnect, 
+            new Span("Path"), path, cdup, refresh, upload
         );
+        topRow.setWidthFull();
+        topRow.setAlignItems(Alignment.CENTER);
+        
+        final HorizontalLayout bulkOpsRow = new HorizontalLayout(
+            new Span("Bulk Operations:"), bulkDownload, bulkDelete, wipeSD
+        );
+        bulkOpsRow.setAlignItems(Alignment.CENTER);
+        
+        final VerticalLayout result = new VerticalLayout(topRow, bulkOpsRow);
         result.setWidthFull();
-        result.setAlignItems(Alignment.CENTER);
-        result.setMinHeight(80, Unit.PIXELS);
+        result.setPadding(true);
+        result.setSpacing(true);
+        
         return result;
     }
 
@@ -262,7 +314,13 @@ public final class SdCardView extends PushDiv implements HasUrlParameter<String>
         addClassName("sdcard-view");
         configureGrid();
         showProgressBar(false);
-        add(buildToolbar(), progressBar, grid);
+        
+        statusLabel.getStyle().set("margin-left", "10px");
+        final HorizontalLayout progressLayout = new HorizontalLayout(progressBar, statusLabel);
+        progressLayout.setAlignItems(Alignment.CENTER);
+        progressLayout.setWidthFull();
+        
+        add(buildToolbar(), progressLayout, grid);
         _printer.ifPresent(comboBox::setValue);
         createFuture(this::updateProgressBar, config.refreshInterval());
     }
@@ -294,12 +352,14 @@ public final class SdCardView extends PushDiv implements HasUrlParameter<String>
         final StreamResource stream = new StreamResource(fileName, () -> {
             try {
                 fileSize = file.getSize();
-                runInUI(() -> showProgressBar(true));
+                runInUI(() -> {
+                    showProgressBar(true);
+                    statusLabel.setText("Downloading: " + fileName);
+                });
 
                 client.setFileType(FTP.BINARY_FILE_TYPE);
                 try (final InputStream s = client.retrieveFileStream(file.getName())) {
                     return new ByteArrayInputStream(s.readAllBytes());
-                    //return new BufferedInputStream(s);
                 } finally {
                     if (!client.completePendingCommand()) {
                         Log.error("could not complete pending command");
@@ -335,6 +395,10 @@ public final class SdCardView extends PushDiv implements HasUrlParameter<String>
     }
 
     private void configureGrid() {
+        // Enable multi-selection for bulk operations
+        grid.setSelectionMode(Grid.SelectionMode.MULTI);
+        grid.addSelectionListener(this::onSelectionChanged);
+        
         setupColumn("Type", getTypeRender());
         setupColumn("Name", f -> f.getName());
 
@@ -347,6 +411,19 @@ public final class SdCardView extends PushDiv implements HasUrlParameter<String>
         grid.addComponentColumn(this::getComponentColumn);
         grid.addItemDoubleClickListener(l -> doDoubleClick(l.getItem()));
         grid.sort(GridSortOrder.desc(coldDate).build());
+    }
+
+    private void onSelectionChanged(SelectionEvent<Grid<FTPFile>, FTPFile> event) {
+        updateBulkButtonStates();
+    }
+
+    private void updateBulkButtonStates() {
+        Set<FTPFile> selected = grid.getSelectedItems();
+        boolean hasSelection = !selected.isEmpty();
+        boolean hasFiles = selected.stream().anyMatch(FTPFile::isFile);
+        
+        bulkDownload.setEnabled(hasFiles && client != null && client.isConnected());
+        bulkDelete.setEnabled(hasSelection && client != null && client.isConnected());
     }
 
     private String buildFileName(final String fileName) {
@@ -372,6 +449,7 @@ public final class SdCardView extends PushDiv implements HasUrlParameter<String>
     private void doUpload(final SucceededEvent event) {
         fileSize = event.getContentLength();
         showProgressBar(true);
+        statusLabel.setText("Uploading: " + event.getFileName());
 
         final InputStream inputStream = buffer.getInputStream();
         nh.showNotification("Uploading to Printer");
@@ -449,21 +527,405 @@ public final class SdCardView extends PushDiv implements HasUrlParameter<String>
         });
     }
 
+    // ==================== BULK OPERATIONS ====================
+
+    /**
+     * Bulk download selected files from the printer.
+     */
+    private void doBulkDownload() {
+        Set<FTPFile> selectedFiles = grid.getSelectedItems().stream()
+                .filter(FTPFile::isFile)
+                .collect(Collectors.toSet());
+        
+        if (selectedFiles.isEmpty()) {
+            nh.showError("No files selected");
+            return;
+        }
+
+        // Create download dialog
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Bulk Download");
+        
+        TextField downloadPathField = new TextField("Download Directory");
+        downloadPathField.setValue(System.getProperty("user.home") + "/bambu-downloads");
+        downloadPathField.setWidthFull();
+        
+        Span fileCount = new Span("Files to download: " + selectedFiles.size());
+        Div fileList = new Div();
+        selectedFiles.forEach(f -> {
+            Div fileItem = new Div(new Span("• " + f.getName() + " (" + formatSize(f.getSize()) + ")"));
+            fileList.add(fileItem);
+        });
+        
+        Button downloadButton = new Button("Download", e -> {
+            dialog.close();
+            executeBulkDownload(selectedFiles, downloadPathField.getValue());
+        });
+        downloadButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        
+        Button cancelButton = new Button("Cancel", e -> dialog.close());
+        
+        VerticalLayout layout = new VerticalLayout(
+            downloadPathField,
+            fileCount,
+            fileList,
+            new HorizontalLayout(downloadButton, cancelButton)
+        );
+        
+        dialog.add(layout);
+        dialog.open();
+    }
+
+    private void executeBulkDownload(Set<FTPFile> files, String downloadPath) {
+        runInUI(() -> {
+            showProgressBar(true);
+            statusLabel.setText("Preparing bulk download...");
+        });
+        
+        runCallable(() -> {
+            Path localDir = Paths.get(downloadPath);
+            if (!Files.exists(localDir)) {
+                Files.createDirectories(localDir);
+            }
+            
+            int successCount = 0;
+            int failCount = 0;
+            List<String> errors = new ArrayList<>();
+            
+            client.setFileType(FTP.BINARY_FILE_TYPE);
+            
+            for (FTPFile file : files) {
+                try {
+                    fileSize = file.getSize();
+                    runInUI(() -> statusLabel.setText("Downloading: " + file.getName()));
+                    
+                    Path localPath = localDir.resolve(file.getName());
+                    try (OutputStream outputStream = Files.newOutputStream(localPath)) {
+                        boolean success = client.retrieveFile(file.getName(), outputStream);
+                        if (success) {
+                            successCount++;
+                            Log.infof("Downloaded: %s", file.getName());
+                        } else {
+                            failCount++;
+                            errors.add(file.getName() + ": Download returned false");
+                        }
+                    }
+                } catch (IOException e) {
+                    failCount++;
+                    errors.add(file.getName() + ": " + e.getMessage());
+                    Log.errorf(e, "Error downloading: %s", file.getName());
+                }
+            }
+            
+            final int finalSuccess = successCount;
+            final int finalFail = failCount;
+            final String errorMsg = errors.isEmpty() ? "" : "\nErrors:\n" + String.join("\n", errors);
+            
+            runInUI(() -> {
+                showProgressBar(false);
+                grid.deselectAll();
+                
+                String message = String.format("Bulk Download Complete\nSucceeded: %d\nFailed: %d%s", 
+                    finalSuccess, finalFail, errorMsg);
+                
+                if (finalFail == 0) {
+                    nh.showNotification(message);
+                } else {
+                    showResultDialog("Bulk Download Results", message, finalSuccess, finalFail);
+                }
+            });
+        });
+    }
+
+    /**
+     * Bulk delete selected files/directories from the printer.
+     */
+    private void doBulkDelete() {
+        Set<FTPFile> selectedItems = grid.getSelectedItems();
+        
+        if (selectedItems.isEmpty()) {
+            nh.showError("No items selected");
+            return;
+        }
+
+        Div confirmContent = new Div();
+        confirmContent.add(new Span("Are you sure you want to delete " + selectedItems.size() + " item(s)?"));
+        
+        Div itemList = new Div();
+        selectedItems.forEach(f -> {
+            String type = f.isDirectory() ? "[DIR]" : "[FILE]";
+            itemList.add(new Div(new Span(type + " " + f.getName())));
+        });
+        confirmContent.add(itemList);
+        
+        YesNoCancelDialog.show(List.of(confirmContent), "Confirm Bulk Delete", ync -> {
+            if (!ync.isConfirmed()) {
+                return;
+            }
+            executeBulkDelete(selectedItems);
+        });
+    }
+
+    private void executeBulkDelete(Set<FTPFile> items) {
+        runInUI(() -> {
+            showProgressBar(true);
+            statusLabel.setText("Deleting files...");
+        });
+        
+        runCallable(() -> {
+            int successCount = 0;
+            int failCount = 0;
+            List<String> errors = new ArrayList<>();
+            
+            for (FTPFile item : items) {
+                try {
+                    runInUI(() -> statusLabel.setText("Deleting: " + item.getName()));
+                    
+                    boolean success;
+                    if (item.isDirectory()) {
+                        success = client.removeDirectory(item.getName());
+                    } else if (item.isFile()) {
+                        success = client.deleteFile(item.getName());
+                    } else {
+                        success = true; // Skip unknown types
+                    }
+                    
+                    if (success) {
+                        successCount++;
+                        Log.infof("Deleted: %s", item.getName());
+                    } else {
+                        failCount++;
+                        errors.add(item.getName() + ": Delete returned false");
+                    }
+                } catch (IOException e) {
+                    failCount++;
+                    errors.add(item.getName() + ": " + e.getMessage());
+                    Log.errorf(e, "Error deleting: %s", item.getName());
+                }
+            }
+            
+            final int finalSuccess = successCount;
+            final int finalFail = failCount;
+            final String errorMsg = errors.isEmpty() ? "" : "\nErrors:\n" + String.join("\n", errors);
+            
+            runInUI(() -> {
+                showProgressBar(false);
+                grid.deselectAll();
+                
+                String message = String.format("Bulk Delete Complete\nSucceeded: %d\nFailed: %d%s", 
+                    finalSuccess, finalFail, errorMsg);
+                
+                if (finalFail == 0) {
+                    nh.showNotification(message);
+                } else {
+                    showResultDialog("Bulk Delete Results", message, finalSuccess, finalFail);
+                }
+            });
+            
+            doRefresh();
+        });
+    }
+
+    /**
+     * Wipe all files from the SD card.
+     * WARNING: This is a destructive operation!
+     */
+    private void doWipeSD() {
+        Dialog confirmDialog = new Dialog();
+        confirmDialog.setHeaderTitle("⚠️ WARNING: Wipe SD Card");
+        
+        VerticalLayout layout = new VerticalLayout();
+        layout.add(new H3("This will delete ALL files in the current directory!"));
+        layout.add(new Span("Current path: " + path.getValue()));
+        
+        Checkbox recursiveCheckbox = new Checkbox("Include subdirectories (recursive delete)", false);
+        recursiveCheckbox.getStyle().set("color", "red");
+        layout.add(recursiveCheckbox);
+        
+        Checkbox confirmCheckbox = new Checkbox("I understand this action cannot be undone", false);
+        layout.add(confirmCheckbox);
+        
+        Button wipeButton = new Button("WIPE SD CARD", e -> {
+            if (!confirmCheckbox.getValue()) {
+                nh.showError("Please confirm you understand this action");
+                return;
+            }
+            confirmDialog.close();
+            executeWipeSD(recursiveCheckbox.getValue());
+        });
+        wipeButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+        wipeButton.setEnabled(false);
+        
+        confirmCheckbox.addValueChangeListener(e -> wipeButton.setEnabled(e.getValue()));
+        
+        Button cancelButton = new Button("Cancel", e -> confirmDialog.close());
+        
+        layout.add(new HorizontalLayout(wipeButton, cancelButton));
+        confirmDialog.add(layout);
+        confirmDialog.open();
+    }
+
+    private void executeWipeSD(boolean recursive) {
+        runInUI(() -> {
+            showProgressBar(true);
+            statusLabel.setText("Wiping SD card...");
+        });
+        
+        runCallable(() -> {
+            List<String> allFiles = new ArrayList<>();
+            String currentPath = path.getValue();
+            
+            // List all files
+            if (recursive) {
+                allFiles.addAll(listFilesRecursive(currentPath));
+            } else {
+                FTPFile[] files = client.listFiles(currentPath);
+                for (FTPFile file : files) {
+                    if (file.isFile()) {
+                        allFiles.add(file.getName());
+                    }
+                }
+            }
+            
+            if (allFiles.isEmpty()) {
+                runInUI(() -> {
+                    showProgressBar(false);
+                    nh.showNotification("No files found to delete");
+                });
+                return;
+            }
+            
+            Log.warnf("WIPING SD CARD: %d files at path %s (recursive: %s)", 
+                allFiles.size(), currentPath, recursive);
+            
+            int successCount = 0;
+            int failCount = 0;
+            List<String> errors = new ArrayList<>();
+            
+            for (String fileName : allFiles) {
+                try {
+                    runInUI(() -> statusLabel.setText("Deleting: " + fileName));
+                    
+                    boolean success = client.deleteFile(fileName);
+                    if (success) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                        errors.add(fileName + ": Delete returned false");
+                    }
+                } catch (IOException e) {
+                    failCount++;
+                    errors.add(fileName + ": " + e.getMessage());
+                    Log.errorf(e, "Error deleting: %s", fileName);
+                }
+            }
+            
+            final int finalSuccess = successCount;
+            final int finalFail = failCount;
+            final String errorMsg = errors.isEmpty() ? "" : "\nErrors:\n" + String.join("\n", errors.subList(0, Math.min(10, errors.size())));
+            
+            runInUI(() -> {
+                showProgressBar(false);
+                
+                String message = String.format("SD Card Wipe Complete\nDeleted: %d files\nFailed: %d%s", 
+                    finalSuccess, finalFail, finalFail > 10 ? errorMsg + "\n... and more" : errorMsg);
+                
+                showResultDialog("SD Card Wipe Results", message, finalSuccess, finalFail);
+            });
+            
+            doRefresh();
+        });
+    }
+
+    /**
+     * Recursively list all files in a directory.
+     */
+    private List<String> listFilesRecursive(String remotePath) throws IOException {
+        List<String> allFiles = new ArrayList<>();
+        listFilesRecursiveHelper(remotePath, allFiles);
+        return allFiles;
+    }
+
+    private void listFilesRecursiveHelper(String remotePath, List<String> accumulator) throws IOException {
+        FTPFile[] files = client.listFiles(remotePath);
+        
+        if (files == null) {
+            return;
+        }
+        
+        for (FTPFile file : files) {
+            if (file == null) {
+                continue;
+            }
+            
+            String fullPath = remotePath.endsWith(BambuConst.PATHSEP) ? 
+                remotePath + file.getName() : 
+                remotePath + BambuConst.PATHSEP + file.getName();
+            
+            if (file.isFile()) {
+                accumulator.add(fullPath);
+            } else if (file.isDirectory() && !file.getName().equals(".") && !file.getName().equals("..")) {
+                listFilesRecursiveHelper(fullPath, accumulator);
+            }
+        }
+    }
+
+    /**
+     * Show a dialog with operation results.
+     */
+    private void showResultDialog(String title, String message, int successCount, int failCount) {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle(title);
+        
+        VerticalLayout layout = new VerticalLayout();
+        
+        Div successDiv = new Div(new Span("✓ Succeeded: " + successCount));
+        successDiv.getStyle().set("color", "green");
+        layout.add(successDiv);
+        
+        if (failCount > 0) {
+            Div failDiv = new Div(new Span("✗ Failed: " + failCount));
+            failDiv.getStyle().set("color", "red");
+            layout.add(failDiv);
+        }
+        
+        if (message.contains("Errors:")) {
+            Div errorDetails = new Div(new Span(message.substring(message.indexOf("Errors:"))));
+            errorDetails.getStyle()
+                .set("max-height", "200px")
+                .set("overflow-y", "auto")
+                .set("font-family", "monospace")
+                .set("font-size", "12px");
+            layout.add(errorDetails);
+        }
+        
+        Button closeButton = new Button("Close", e -> dialog.close());
+        closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        layout.add(closeButton);
+        
+        dialog.add(layout);
+        dialog.open();
+    }
+
+    /**
+     * Format file size for display.
+     */
+    private String formatSize(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+        return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
+    }
+
     private void bytesTransferred(long totalBytesTransferred, int bytesTransferred, long streamSize) {
         percentageComplete = 100.0 * totalBytesTransferred / fileSize;
     }
 
     @FunctionalInterface
     private interface Callable {
-
-        /**
-         * Runs this operation.
-         */
         void run() throws Exception;
     }
 
     private class MyGrid<T> extends Grid<T> {
-
         private Optional<UI> ui = Optional.empty();
 
         @Override
@@ -476,7 +938,5 @@ public final class SdCardView extends PushDiv implements HasUrlParameter<String>
             super.onAttach(attachEvent);
             ui = Optional.of(attachEvent.getUI());
         }
-
     }
-
 }
