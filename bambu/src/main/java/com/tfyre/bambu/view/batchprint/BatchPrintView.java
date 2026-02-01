@@ -54,6 +54,7 @@ import com.tfyre.bambu.printer.BatchPrintDelayService;
 import java.time.Duration;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.button.ButtonVariant;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -102,15 +103,22 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 	private GridListDataView<PrinterMapping> dataView;
 	private final Button printButton = new Button("Print", VaadinIcon.PRINT.create(), l -> printAll());
 	private final Button refreshButton = new Button("Refresh", VaadinIcon.REFRESH.create(), l -> refresh());
+	private final Button queueMoreButton = new Button("Add to Queue", VaadinIcon.PLUS.create());
+	private final Button removeFromQueueButton = new Button("Remove from Queue", VaadinIcon.MINUS.create());
+	private final Button cancelSelectedButton = new Button("Cancel", VaadinIcon.STOP.create());
+	private final Button cancelAllButton = new Button("ABORT", VaadinIcon.BAN.create());
+	
 	// Delay control fields
 	private final Checkbox enableDelay = new Checkbox("Enable batch delay", true);
 	private final IntegerField simultaneousPrintersField = new IntegerField();
-	//private final IntegerField delaySecondsField = new IntegerField();
 	private final IntegerField delayHoursField = new IntegerField();
 	private final IntegerField delayMinutesField = new IntegerField();
 	private final IntegerField delaySecondsField = new IntegerField();	
 	private final Button applySimultaneousButton = new Button(VaadinIcon.CHECK.create());
 	private final Button applyDelayButton = new Button(VaadinIcon.CHECK.create());
+	private final Span batchInfoSpan = new Span();
+	private final Span estimatedTimeSpan = new Span();
+	private final Span activeJobsSpan = new Span();
 
 	// Will be created in onAttach after configuring delay controls
 	private Div actions;
@@ -124,42 +132,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
     public Grid<PrinterMapping> getGrid() {
         return grid;
     }
-
-	private void updateEstimatedTime() {
-		Set<PrinterMapping> selected = grid.getSelectedItems();
-		int printerCount = selected.size();
-		
-		Integer simultaneousValue = simultaneousPrintersField.getValue();
-		if (simultaneousValue == null) {
-			return;
-		}
-
-		int simultaneous = simultaneousValue;
-		long delaySeconds = getTotalDelaySeconds();
-		
-		// Calculate batches
-		int batchCount = (int) Math.ceil((double) printerCount / simultaneous);
-		long totalDelaySeconds = delaySeconds * (batchCount - 1);
-	}
-
-	private String formatDuration(Duration duration) {
-		long seconds = duration.toSeconds();
-		if (seconds < 60) {
-			return seconds + "s";
-		} else if (seconds < 3600) {
-			long minutes = seconds / 60;
-			long remainingSeconds = seconds % 60;
-			return remainingSeconds == 0 
-				? minutes + "m" 
-				: String.format("%dm %ds", minutes, remainingSeconds);
-		} else {
-			long hours = seconds / 3600;
-			long remainingMinutes = (seconds % 3600) / 60;
-			return remainingMinutes == 0 
-				? hours + "h" 
-				: String.format("%dh %dm", hours, remainingMinutes);
-		}
-	}
 
 	/**
 	 * Get total delay in seconds from the three time fields
@@ -193,9 +165,11 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		// Simultaneous printers field
 		simultaneousPrintersField.setValue(delayConfig.simultaneousPrinters());
 		simultaneousPrintersField.setMin(1);
+		simultaneousPrintersField.setWidth("80px");
 		simultaneousPrintersField.setPlaceholder("Enter number");
 		simultaneousPrintersField.setHelperText("Number of printers in batch");
 		simultaneousPrintersField.addClassName("delay-field");
+		simultaneousPrintersField.addValueChangeListener(e -> updateEstimatedTime());
 		
 		// Apply button for simultaneous
 		applySimultaneousButton.addThemeVariants(
@@ -209,7 +183,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			updateEstimatedTime();
 		});
 		
-		// Delay field
 		// Parse initial time from config
 		int initialSeconds = (int) delayConfig.jobDelay().toSeconds();
 		int initialHours = initialSeconds / 3600;
@@ -254,8 +227,9 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		);
 		applyDelayButton.addClassName("delay-apply-button");
 		applyDelayButton.addClickListener(e -> {
+			int totalSeconds = getTotalDelaySeconds();
+			showNotification("Delay time updated to " + formatDuration(Duration.ofSeconds(totalSeconds)));
 			updateEstimatedTime();
-			showNotification("Delay time updated");
 		});
 		
 		// Enable delay checkbox
@@ -270,6 +244,236 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			applyDelayButton.setEnabled(enabled);
 			updateEstimatedTime();
 		});
+		
+		// Info spans
+		batchInfoSpan.addClassName("batch-info");
+		estimatedTimeSpan.addClassName("time-estimate");
+		
+		// Active jobs span
+		activeJobsSpan.addClassName("active-jobs");
+		activeJobsSpan.getStyle()
+			.set("font-size", "var(--lumo-font-size-s)")
+			.set("color", "var(--lumo-error-text-color)")
+			.set("font-weight", "600")
+			.set("display", "none");
+	}
+
+	private void configureCancelButtons() {
+		cancelSelectedButton.addClickListener(e -> {
+			doConfirm(() -> {
+				cancelSelectedPrints();
+			});
+		});
+		
+		cancelAllButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+		cancelAllButton.addClickListener(e -> {
+			doConfirm(() -> {
+				cancelAllPrints();
+			});
+		});
+	}
+	
+	private void configureQueueMoreButton() {
+		queueMoreButton.setTooltipText("Add selected printers to batch queue");
+		queueMoreButton.setEnabled(false); // Disabled until batch is running
+		queueMoreButton.addClickListener(e -> queueMorePrinters());
+	}
+	
+	private void configureRemoveFromQueueButton() {
+		removeFromQueueButton.setTooltipText("Remove selected printers from batch queue");
+		removeFromQueueButton.setEnabled(false); // Disabled until batch is running
+		removeFromQueueButton.addClickListener(e -> {
+			doConfirm(() -> {
+				removeSelectedFromQueue();
+			});
+		});
+	}
+	
+	private void removeSelectedFromQueue() {
+		final Set<PrinterMapping> selected = grid.getSelectedItems();
+		if (selected.isEmpty()) {
+			showError("No printers selected");
+			return;
+		}
+		
+		List<String> printerNames = selected.stream()
+			.map(pm -> pm.getPrinterDetail().name())
+			.collect(Collectors.toList());
+		
+		int removed = delayService.abortSelectedPrinters(printerNames);
+		
+		if (removed > 0) {
+			showNotification("Removed %d printer(s) from queue".formatted(removed));
+			updateActiveJobsDisplay();
+			
+			// If no jobs left, disable queue buttons
+			if (delayService.getQueuedJobCount() == 0 && !delayService.isBatchRunning()) {
+				queueMoreButton.setEnabled(false);
+				removeFromQueueButton.setEnabled(false);
+				updatePrintButtonState();
+			}
+		} else {
+			showNotification("No matching printers found in queue");
+		}
+	}
+
+	private void updateActiveJobsDisplay() {
+		int activeJobs = delayService.getActiveJobCount();
+		int queuedJobs = delayService.getQueuedJobCount();
+		
+		if (activeJobs > 0 || queuedJobs > 0) {
+			if (queuedJobs > 0) {
+				activeJobsSpan.setText(String.format("🔄 %d queued", queuedJobs));
+			} else {
+				activeJobsSpan.setText(String.format("🔄 Processing..."));
+			}
+			activeJobsSpan.getStyle().set("display", "block");
+		} else {
+			activeJobsSpan.getStyle().set("display", "none");
+		}
+	}
+	
+	private void cancelSelectedPrints() {
+		final Set<PrinterMapping> selected = grid.getSelectedItems();
+		if (selected.isEmpty()) {
+			showError("No printers selected to cancel");
+			return;
+		}
+		
+		// Cancel actual print jobs on printers
+		int cancelled = 0;
+		for (PrinterMapping pm : selected) {
+			try {
+				// Send stop command to printer using commandControl
+				pm.getPrinterDetail().printer().commandControl(BambuConst.CommandControl.STOP);
+				cancelled++;
+				Log.infof("Sent stop command to printer: %s", pm.getPrinterDetail().name());
+			} catch (Exception ex) {
+				Log.errorf(ex, "Failed to stop print on printer: %s", pm.getPrinterDetail().name());
+			}
+		}
+		
+		showNotification("Sent stop command to %d printer(s)".formatted(cancelled));
+		
+		// Refresh grid to show updated printer states
+		executor.execute(() -> {
+			try {
+				Thread.sleep(1000);
+				getUI().ifPresent(ui -> ui.access(() -> {
+					refresh();
+				}));
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		});
+	}
+	
+	private void cancelAllPrints() {
+		// Get all printers that might be printing (check GCode state)
+		Set<PrinterMapping> allPrinters = printerMappings.stream()
+			.filter(pm -> {
+				BambuConst.GCodeState state = pm.getPrinterDetail().printer().getGCodeState();
+				return state == BambuConst.GCodeState.RUNNING || 
+				       state == BambuConst.GCodeState.PREPARE ||
+				       state == BambuConst.GCodeState.PAUSE;
+			})
+			.collect(Collectors.toSet());
+		
+		if (allPrinters.isEmpty()) {
+			showNotification("No printers are currently printing");
+			return;
+		}
+		
+		// Send stop command to all printers that are printing
+		int cancelled = 0;
+		for (PrinterMapping pm : allPrinters) {
+			try {
+				// Send stop command to printer using commandControl
+				pm.getPrinterDetail().printer().commandControl(BambuConst.CommandControl.STOP);
+				cancelled++;
+				Log.infof("Sent stop command to printer: %s", pm.getPrinterDetail().name());
+			} catch (Exception ex) {
+				Log.errorf(ex, "Failed to stop print on printer: %s", pm.getPrinterDetail().name());
+			}
+		}
+		
+		showNotification("Sent stop command to %d printer(s)".formatted(cancelled));
+		
+		// Refresh grid to show updated printer states
+		executor.execute(() -> {
+			try {
+				Thread.sleep(1000);
+				getUI().ifPresent(ui -> ui.access(() -> {
+					refresh();
+				}));
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		});
+	}
+
+	private void queueMorePrinters() {
+		final Set<PrinterMapping> selected = grid.getSelectedItems();
+		if (selected.isEmpty()) {
+			showError("Nothing selected");
+			return;
+		}
+		if (selected.stream().filter(PrinterMapping::canPrint).count() != selected.size()) {
+			showError("Please ensure printers are idle and filaments are mapped");
+			return;
+		}
+		
+		doConfirm(() -> {
+			queueMorePrintersConfirmed(selected);
+		});
+	}
+
+	private void queueMorePrintersConfirmed(final Set<PrinterMapping> selected) {
+		final String user = SecurityUtils.getPrincipal().map(p -> p.getName()).orElse("null");
+		final String ip = Optional.ofNullable(VaadinSession.getCurrent()).map(vs -> vs.getBrowser().getAddress()).orElse("null");
+		Log.infof("queueMore: user[%s] ip[%s] file[%s] printers[%s]", user, ip, projectFile.getFilename(),
+				selected.stream().map(pm -> pm.getPrinterDetail().name()).toList());
+		
+		final BambuPrinter.CommandPPF command = new BambuPrinter.CommandPPF("", 0, true, 
+				timelapse.getValue(), bedLevelling.getValue(), flowCalibration.getValue(), 
+				vibrationCalibration.getValue(), List.of());
+		
+		Duration delay = enableDelay.getValue()
+			? Duration.ofSeconds(getTotalDelaySeconds())
+			: Duration.ZERO;
+		int simultaneousPrinters = simultaneousPrintersField.getValue() != null
+			? simultaneousPrintersField.getValue()
+			: 1;
+		
+		List<BatchPrintDelayService.PrinterJob> jobs = new java.util.ArrayList<>();
+		for (PrinterMapping pm : selected) {
+			jobs.add(new BatchPrintDelayService.PrinterJob() {
+				@Override
+				public String getPrinterName() {
+					return pm.getPrinterDetail().name();
+				}
+				
+				@Override
+				public void execute() throws Exception {
+					pm.sendPrint(projectFile, command, skipSameSize.getValue());
+				}
+			});
+		}
+		
+		delayService.sendBatchJobsWithDelay(jobs, delay, simultaneousPrinters)
+			.thenRun(() -> {
+				getUI().ifPresent(ui -> ui.access(() -> {
+					showNotification("Added %d printer(s)".formatted(selected.size()));
+				}));
+			})
+			.exceptionally(ex -> {
+				getUI().ifPresent(ui -> ui.access(() -> {
+					showError("Error: " + ex.getMessage());
+				}));
+				return null;
+			});
+		
+		showNotification("Queuing %d more...".formatted(selected.size()));
 	}
 
 	private void updatePrintButtonState() {
@@ -277,9 +481,71 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		printButton.setEnabled(!isInDelay);
 		
 		if (isInDelay) {
-			printButton.setText("Print (Batch in Progress...)");
+			long remainingSeconds = delayService.getRemainingDelaySeconds();
+			printButton.setText("Print (Wait %ds...)".formatted(remainingSeconds));
 		} else {
 			printButton.setText("Print");
+		}
+	}
+
+	private void updateEstimatedTime() {
+		Set<PrinterMapping> selected = grid.getSelectedItems();
+		int printerCount = selected.size();
+		
+		if (!enableDelay.getValue() || printerCount <= 1) {
+			batchInfoSpan.setText("");
+			estimatedTimeSpan.setText("");
+			return;
+		}
+		
+		Integer simultaneousValue = simultaneousPrintersField.getValue();
+		if (simultaneousValue == null) {
+			return;
+		}
+
+		int simultaneous = simultaneousValue;
+		long delaySeconds = getTotalDelaySeconds();
+		
+		// Calculate batches
+		int batchCount = (int) Math.ceil((double) printerCount / simultaneous);
+		long totalDelaySeconds = delaySeconds * (batchCount - 1);
+		
+		// Batch info
+		batchInfoSpan.setText(String.format(
+			"📊 %d printer%s → %d batch%s of %d", 
+			printerCount,
+			printerCount != 1 ? "s" : "",
+			batchCount,
+			batchCount != 1 ? "es" : "",
+			simultaneous
+		));
+		
+		// Estimated time
+		String timeEstimate = formatDuration(Duration.ofSeconds(totalDelaySeconds));
+		estimatedTimeSpan.setText(String.format(
+			"⏱️ Total delay: %s (%d × %ds)", 
+			timeEstimate,
+			batchCount - 1,
+			delaySeconds
+		));
+	}
+
+	private String formatDuration(Duration duration) {
+		long seconds = duration.toSeconds();
+		if (seconds < 60) {
+			return seconds + "s";
+		} else if (seconds < 3600) {
+			long minutes = seconds / 60;
+			long remainingSeconds = seconds % 60;
+			return remainingSeconds == 0 
+				? minutes + "m" 
+				: String.format("%dm %ds", minutes, remainingSeconds);
+		} else {
+			long hours = seconds / 3600;
+			long remainingMinutes = (seconds % 3600) / 60;
+			return remainingMinutes == 0 
+				? hours + "h" 
+				: String.format("%dh %dm", hours, remainingMinutes);
 		}
 	}
 
@@ -297,7 +563,8 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		printerMappings.forEach(pm -> {
 			pm.skipFilamentMapping(skipFilamentMapping.getValue());
 			pm.setPlate(plate);
-		});        dataView.refreshAll();
+		});        
+		dataView.refreshAll();
     }
 
     private void configurePlateLookup() {
@@ -329,7 +596,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
             dataView.refreshAll();
         }));
         return result;
-
     }
 
     private Component newCheckbox(final boolean checked) {
@@ -353,9 +619,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 
         grid.sort(GridSortOrder.asc(colName).build());
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
-		grid.addSelectionListener(e -> {
-			updateEstimatedTime();
-		});
+		grid.addSelectionListener(e -> updateEstimatedTime());
 
         final UI ui = getUI().get();
         printerMappings = printers.getPrintersDetail().stream()
@@ -400,27 +664,38 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			});
 		}
 		
-	// Disable print button immediately
-	printButton.setEnabled(false);
-	printButton.setText("Print (Batch in Progress...)");
+		// Update button states
+		printButton.setEnabled(false);
+		printButton.setText("Print (Batch in Progress...)");
+		queueMoreButton.setEnabled(true);
+		removeFromQueueButton.setEnabled(true);
 
-	// Start batch with delay
-	delayService.sendBatchJobsWithDelay(jobs, delay, simultaneousPrinters)
-		.thenRun(() -> {
-			getUI().ifPresent(ui -> ui.access(() -> {
-				showNotification("All batch print jobs queued successfully!");
-				updatePrintButtonState();  // Re-enable button
-			}));
-		})
-		.exceptionally(ex -> {
-			getUI().ifPresent(ui -> ui.access(() -> {
-				showError("Error during batch print: " + ex.getMessage());
-				updatePrintButtonState();  // Re-enable button even on error
-			}));
-			return null;
-		});
+		// Start batch with delay
+		delayService.sendBatchJobsWithDelay(jobs, delay, simultaneousPrinters)
+			.thenRun(() -> {
+				getUI().ifPresent(ui -> ui.access(() -> {
+					showNotification("All batch jobs completed!");
+					queueMoreButton.setEnabled(false);
+					removeFromQueueButton.setEnabled(false);
+					updatePrintButtonState();
+				}));
+			})
+			.exceptionally(ex -> {
+				getUI().ifPresent(ui -> ui.access(() -> {
+					// Check if it was aborted or error
+					if (ex.getMessage() != null && ex.getMessage().contains("aborted")) {
+						showNotification("Batch was cancelled");
+					} else {
+						showError("Error: " + ex.getMessage());
+					}
+					queueMoreButton.setEnabled(false);
+					removeFromQueueButton.setEnabled(false);
+					updatePrintButtonState();
+				}));
+				return null;
+			});
 
-	showNotification("Starting batch print for %d printers...".formatted(selected.size()));
+		showNotification("Starting batch print for %d printers...".formatted(selected.size()));
 	}
 
     private void refresh() {
@@ -491,7 +766,10 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		super.onAttach(attachEvent);
 		addClassName("batchprint-view");
 		configureActions();
-		configureDelayControls();  // NEW: Configure delay controls
+		configureDelayControls();
+		configureCancelButtons();
+		configureQueueMoreButton();
+		configureRemoveFromQueueButton();
 		configurePlateLookup();
 		configureGrid();
 		configureUpload();
@@ -502,13 +780,30 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			plateLookup,
 			newDiv("detail", printTime, printWeight),
 			printFilaments,
-			newDiv("options", 
+			newDiv("options",                          // ← Only checkboxes now
 				skipSameSize, timelapse, bedLevelling, 
-				flowCalibration, vibrationCalibration, skipFilamentMapping, enableDelay, simultaneousPrintersField,
-				applySimultaneousButton, delayHoursField, delayMinutesField, delaySecondsField,
-				applyDelayButton
+				flowCalibration, vibrationCalibration, skipFilamentMapping
 			),
-			newDiv("buttons", printButton, refreshButton)
+			newDiv("delay-controls",                   // ← NEW separate div
+				enableDelay,
+				simultaneousPrintersField,
+				applySimultaneousButton,
+				delayHoursField,
+				delayMinutesField,
+				delaySecondsField,
+				applyDelayButton,
+				batchInfoSpan, 
+				estimatedTimeSpan,
+				activeJobsSpan
+			),
+			newDiv("buttons",                          // ← Same buttons, new layout
+				printButton, 
+				refreshButton, 
+				cancelSelectedButton, 
+				cancelAllButton,
+				queueMoreButton, 
+				removeFromQueueButton
+			)
 		);
 		
 		headerVisible(false);
@@ -518,6 +813,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		createFuture(() -> ui.access(() -> {
 			updateBulkStatus();
 			updatePrintButtonState();
+			updateActiveJobsDisplay();
 		}), config.refreshInterval());
 	}
 
@@ -554,5 +850,4 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         projectFileInstance.destroy(projectFile);
         projectFile = null;
     }
-
 }

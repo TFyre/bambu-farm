@@ -391,7 +391,6 @@
     width: 100%;
     display: flex;
     align-items: center;
-
     gap: var(--lumo-space-l);
 }
 
@@ -402,6 +401,7 @@
 
 .batchprint-view .actions .detail,
 .batchprint-view .actions .options,
+.batchprint-view .actions .delay-controls,
 .batchprint-view .actions .buttons {
     display: flex;
     flex-direction: row;
@@ -431,4 +431,220 @@
     align-content: center;
     justify-content: center;
     flex-wrap: wrap;
+}
+
+/* ========================================
+   DELAY COMPONENT STYLING
+   ======================================== */
+
+/* Options section - contains checkboxes only */
+.batchprint-view .options {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: var(--lumo-space-m);
+    align-items: center;
+}
+
+/* First 6 items are checkboxes - let them flow naturally */
+.batchprint-view .options > vaadin-checkbox:nth-child(-n+6) {
+    justify-self: start;
+}
+
+/* Enable delay checkbox spans all columns and adds top margin */
+.batchprint-view .options > vaadin-checkbox:nth-child(7) {
+    grid-column: 1 / -1;
+    /*margin-top: var(--lumo-space-m);
+    padding-top: var(--lumo-space-m);
+    border-top: 1px solid var(--lumo-contrast-10pct);*/
+}
+
+/* Simultaneous controls - one row */
+.batchprint-view .options > span:nth-child(8),
+.batchprint-view .options > vaadin-integer-field:nth-child(9),
+.batchprint-view .options > vaadin-button:nth-child(10) {
+    /* "Simultaneous:" label, field, apply button */
+    align-self: end;
+}
+
+.batchprint-view .options > span:nth-child(8) {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+    white-space: nowrap;
+    /*padding-bottom: var(--lumo-space-xs);*/
+}
+
+/* Delay time controls - another row */
+.batchprint-view .options > span:nth-child(11) {
+    /* "Delay:" label */
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+    white-space: nowrap;
+    align-self: end;
+    /*padding-bottom: var(--lumo-space-xs);*/
+}
+
+/* Time fields group - HH:MM:SS */
+.batchprint-view .options > vaadin-integer-field:nth-child(12),
+.batchprint-view .options > span:nth-child(13),
+.batchprint-view .options > vaadin-integer-field:nth-child(14),
+.batchprint-view .options > span:nth-child(15),
+.batchprint-view .options > vaadin-integer-field:nth-child(16) {
+    align-self: end;
+}
+
+/* Colon separators */
+.batchprint-view .options > span:nth-child(13),
+.batchprint-view .options > span:nth-child(15) {
+    font-size: var(--lumo-font-size-l);
+    font-weight: bold;
+    color: var(--lumo-secondary-text-color);
+    padding: 0 2px;
+    align-self: center;
+}
+
+/* Delay apply button */
+.batchprint-view .options > vaadin-button:nth-child(17) {
+    align-self: end;
+}
+
+/* Info spans span all columns */
+.batchprint-view .options > span:nth-child(18),
+.batchprint-view .options > span:nth-child(19),
+.batchprint-view .options > span:nth-child(20) {
+    grid-column: 1 / -1;
+}
+
+/* Active jobs span styling */
+.batchprint-view .active-jobs {
+    padding: var(--lumo-space-xs);
+    border-left: 3px solid var(--lumo-error-color);
+    margin-top: var(--lumo-space-xs);
+}
+
+/* Delay fields styling */
+.batchprint-view .delay-field {
+    min-width: 80px;
+}
+
+/* Time part fields - compact styling */
+.batchprint-view .delay-time-part {
+    min-width: 60px;
+    max-width: 60px;
+}
+
+/* Input field text - centered and monospace */
+.batchprint-view .delay-time-part input {
+    text-align: center;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: var(--lumo-font-size-m);
+    font-weight: bold;
+}
+
+/* Delay apply buttons - small and animated */
+.batchprint-view .delay-apply-button {
+    min-width: 40px !important;
+    padding: 0 8px !important;
+    transition: all 0.2s ease;
+}
+
+/* Button active state (click animation) */
+.batchprint-view .delay-apply-button:active {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px var(--lumo-primary-color);
+    transition: all 0.1s ease;
+}
+
+/* Button hover effect */
+.batchprint-view .delay-apply-button:hover:not(:disabled) {
+    box-shadow: 0 0 5px var(--lumo-primary-color-50pct);
+}
+
+/* Batch info span styling */
+.batchprint-view .batch-info {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-primary-text-color);
+    font-weight: 500;
+    display: block;
+    margin-top: var(--lumo-space-xs);
+}
+
+/* Time estimate span styling */
+.batchprint-view .time-estimate {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+    font-style: italic;
+    display: block;
+}
+
+ Button spacing and layout 
+.batchprint-view .buttons {
+    display: flex;
+    gap: var(--lumo-space-s);
+    flex-wrap: wrap;
+    align-items: center;
+}
+/* Group buttons visually */
+.batchprint-view .buttons vaadin-button:nth-child(1),
+.batchprint-view .buttons vaadin-button:nth-child(2),
+.batchprint-view .buttons vaadin-button:nth-child(3) {
+    /* Print, Add to Queue, Remove from Queue */
+    margin-right: var(--lumo-space-m);
+}
+
+/* Separator before cancel buttons */
+.batchprint-view .buttons vaadin-button:nth-child(5) {
+    margin-left: var(--lumo-space-m);
+}
+
+.batchprint-view .buttons vaadin-button[theme~="error"] {
+    background-color: var(--lumo-error-color);
+}
+
+/* ========================================
+   DELAY CONTROLS SECTION (between options and buttons)
+   ======================================== */
+
+.batchprint-view .delay-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--lumo-space-s);
+    margin-top: var(--lumo-space-s);
+}
+
+/* Enable delay checkbox */
+.batchprint-view .delay-controls > vaadin-checkbox {
+    margin-right: var(--lumo-space-m);
+}
+
+/* Labels */
+.batchprint-view .delay-controls > span:nth-child(2),
+.batchprint-view .delay-controls > span:nth-child(6) {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+    white-space: nowrap;
+    margin-right: var(--lumo-space-xs);
+}
+
+/* Colon separators */
+.batchprint-view .delay-controls > span:nth-child(8),
+.batchprint-view .delay-controls > span:nth-child(10) {
+    font-size: var(--lumo-font-size-l);
+    font-weight: bold;
+    color: var(--lumo-secondary-text-color);
+    padding: 0 2px;
+}
+
+/* Info spans - full width */
+.batchprint-view .delay-controls > span.batch-info,
+.batchprint-view .delay-controls > span.time-estimate,
+.batchprint-view .delay-controls > span.active-jobs {
+    flex-basis: 100%;
+}
+
+/* Active jobs span */
+.batchprint-view .active-jobs {
+    padding: var(--lumo-space-xs);
+    border-left: 3px solid var(--lumo-error-color);
+    margin-top: var(--lumo-space-xs);
 }
