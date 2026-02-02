@@ -298,7 +298,8 @@
 }
 
 .batchprint-view,
-.sdcard-view {
+.sdcard-view,
+.batchupload-view {
     display: flex;
     flex-direction: column;
     gap: var(--lumo-space-m);
@@ -745,13 +746,10 @@
     margin-bottom: var(--lumo-space-xs);
 }
 
-.batchupload-view .upload {
-    width: 100%;
-}
-
 .batchupload-view vaadin-grid {
     box-shadow: var(--lumo-box-shadow-s);
     border-radius: var(--lumo-border-radius-m);
+	--lumo-font-size-s: 0.875rem;
 }
 
 .batchupload-view vaadin-grid-sorter {
@@ -807,11 +805,6 @@
     background-color: var(--lumo-contrast-5pct);
     border-radius: var(--lumo-border-radius-m);
     text-align: center;
-}
-
-/* Match BatchPrint grid styling */
-.batchupload-view vaadin-grid {
-    --lumo-font-size-s: 0.875rem;
 }
 
 .batchupload-view vaadin-grid::part(cell) {

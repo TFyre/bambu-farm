@@ -45,10 +45,17 @@ import org.eclipse.microprofile.context.ManagedExecutor;
 import java.util.concurrent.ConcurrentHashMap;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.UUID;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 /**
@@ -155,7 +162,6 @@ public class BatchUploadView extends PushDiv implements NotificationHelper, Grid
         
         Div fileSection = new Div(
             uploadInfoDiv,  // Upload info at top
-            new Span("📁 Uploaded Files"), 
             fileButtons, 
             fileGrid, 
             summaryPanel
@@ -167,7 +173,6 @@ public class BatchUploadView extends PushDiv implements NotificationHelper, Grid
         printerButtons.addClassName("buttons");
         
         Div printerSection = new Div(
-            new Span("🖨️ Select Printers"), 
             printerButtons, 
             printerGrid
         );
@@ -191,64 +196,11 @@ public class BatchUploadView extends PushDiv implements NotificationHelper, Grid
         uploadedFiles.clear();
     }
 
-    private Component buildInstructions() {
-        Div instructions = new Div();
-        instructions.getStyle()
-            .set("background-color", "var(--lumo-contrast-5pct)")
-            .set("padding", "var(--lumo-space-m)")
-            .set("border-radius", "var(--lumo-border-radius-m)")
-            .set("margin-bottom", "var(--lumo-space-m)");
-        
-        Span title = new Span("📋 Batch Upload - Upload Multiple Files to Multiple Printers");
-        title.getStyle().set("font-weight", "bold").set("display", "block").set("margin-bottom", "var(--lumo-space-s)");
-        
-        Div steps = new Div();
-        steps.add(new Div(new Span("1. Upload one or more .3mf or .gcode files")));
-        steps.add(new Div(new Span("2. Select printers from the grid below")));
-        steps.add(new Div(new Span("3. Click 'Start Batch Upload' to upload all files to all selected printers")));
-        
-        Div note = new Div(new Span("⚠️ Files are only uploaded. No print jobs will be started."));
-        note.getStyle()
-            .set("margin-top", "var(--lumo-space-s)")
-            .set("padding", "var(--lumo-space-s)")
-            .set("background-color", "var(--lumo-warning-color-10pct)")
-            .set("border-left", "4px solid var(--lumo-warning-color)")
-            .set("border-radius", "var(--lumo-border-radius-s)");
-        
-        instructions.add(title, steps, note);
-        return instructions;
-    }
-
-    private void configureProgressPanel() {
-        uploadStatusSpan.getStyle()
-            .set("font-weight", "600")
-            .set("font-size", "var(--lumo-font-size-m)")
-            .set("margin-bottom", "var(--lumo-space-s)")
-            .set("display", "none");
-        
-        progressPanel.getStyle()
-            .set("display", "flex")
-            .set("flex-direction", "column")
-            .set("gap", "var(--lumo-space-s)");
-    }
-
     private void configureUploadInfo() {
         // Upload info span - shows batch details
         uploadInfoSpan.addClassName("upload-batch-info");
-        uploadInfoSpan.getStyle()
-            .set("font-size", "var(--lumo-font-size-m)")
-            .set("font-weight", "600")
-            .set("color", "var(--lumo-primary-text-color)")
-            .set("display", "block")
-            .set("margin-bottom", "var(--lumo-space-xs)");
-        
-        // Upload time span - shows elapsed/estimated time
         uploadTimeSpan.addClassName("upload-time-estimate");
-        uploadTimeSpan.getStyle()
-            .set("font-size", "var(--lumo-font-size-s)")
-            .set("color", "var(--lumo-secondary-text-color)")
-            .set("display", "block");
-    }
+        }
 
     private String formatDuration(long seconds) {
         if (seconds < 60) {
@@ -271,8 +223,6 @@ public class BatchUploadView extends PushDiv implements NotificationHelper, Grid
     private void configurePrinterGrid() {
         printerGrid.setSelectionMode(Grid.SelectionMode.MULTI);
         printerGrid.setWidthFull();
-        printerGrid.setHeight("300px");
-        printerGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         
         // Name column with filter
         Grid.Column<PrinterRow> colName = setupPrinterColumnFilter("Name", PrinterRow::getName)
@@ -325,7 +275,6 @@ public class BatchUploadView extends PushDiv implements NotificationHelper, Grid
         fileGrid.setSelectionMode(Grid.SelectionMode.MULTI);
         fileGrid.setWidthFull();
         fileGrid.setHeight("200px");
-        fileGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         
         fileGrid.addColumn(FileItem::getFileName)
             .setHeader("File Name")
@@ -345,7 +294,6 @@ public class BatchUploadView extends PushDiv implements NotificationHelper, Grid
     private void configureUpload() {
         multiFileUpload.setAcceptedFileTypes(".3mf", ".gcode");
         multiFileUpload.setMaxFileSize((int) maxBodySize.asLongValue());
-        multiFileUpload.setMaxFiles(20);
         multiFileUpload.setDropLabel(new Span("Drop .3mf or .gcode files here (max: %dMB per file)".formatted(maxBodySize.asLongValue() / 1_000_000)));
         
         multiFileUpload.addSucceededListener(event -> {
@@ -414,12 +362,8 @@ public class BatchUploadView extends PushDiv implements NotificationHelper, Grid
             });
         });
         
-        startUploadButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_LARGE);
         startUploadButton.setEnabled(false);
         startUploadButton.addClickListener(e -> startBatchUpload());
-        
-        removeSelectedFiles.addThemeVariants(ButtonVariant.LUMO_ERROR);
-        clearAllFiles.addThemeVariants(ButtonVariant.LUMO_ERROR);
     }
 
     private void loadPrinters() {
@@ -456,30 +400,21 @@ public class BatchUploadView extends PushDiv implements NotificationHelper, Grid
         summaryPanel.removeAll();
         
         if (fileCount == 0 && printerCount == 0) {
-            summaryPanel.add(new Span("Upload files and select printers to begin"));
             startUploadButton.setEnabled(false);
         } else if (fileCount == 0) {
-            summaryPanel.add(new Span("⚠️ No files uploaded"));
             startUploadButton.setEnabled(false);
         } else if (printerCount == 0) {
-            summaryPanel.add(new Span("⚠️ No printers selected"));
             startUploadButton.setEnabled(false);
         } else {
             Span summary = new Span(String.format(
                 "📊 Ready: %d file(s) × %d printer(s) = %d total upload(s)",
                 fileCount, printerCount, totalUploads
             ));
-            summary.getStyle().set("font-weight", "bold").set("font-size", "var(--lumo-font-size-l)");
             summaryPanel.add(summary);
             startUploadButton.setEnabled(!uploadInProgress);
             startUploadButton.setText("Start Batch Upload (" + totalUploads + " uploads)");
         }
-        
-        summaryPanel.getStyle()
-            .set("padding", "var(--lumo-space-m)")
-            .set("margin", "var(--lumo-space-m) 0")
-            .set("background-color", "var(--lumo-contrast-5pct)")
-            .set("border-radius", "var(--lumo-border-radius-m)");
+  
     }
 
     private void updatePrinterStatuses() {
@@ -573,7 +508,6 @@ public class BatchUploadView extends PushDiv implements NotificationHelper, Grid
         });
         
 		AtomicInteger totalUploadCount = new AtomicInteger(totalUploads);
-        //AtomicInteger totalUploads = new AtomicInteger(uploadedFiles.size() * selectedPrinters.size());
         AtomicInteger completedUploads = new AtomicInteger(0);
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger failCount = new AtomicInteger(0);
