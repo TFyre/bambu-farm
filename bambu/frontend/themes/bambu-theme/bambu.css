@@ -415,43 +415,6 @@
     flex-basis: 0;
 }
 
-/* Thumbnail placeholder - always visible */
-.batchprint-view .header img {
-    background-color: var(--lumo-base-color);
-    box-shadow: var(--lumo-box-shadow-s);
-    border-radius: var(--lumo-border-radius-l);
-    /* Add minimum dimensions to show placeholder */
-    min-height: 256px;
-    min-width: 256px;
-    /* Add border to make empty state visible */
-    border: 2px dashed var(--lumo-contrast-20pct);
-    /* Center any content */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-	padding: var(--lumo-space-m);
-}
-
-.batchprint-view .header img.small {
-    max-height: 256px;
-    max-width: 256px;
-}
-
-/* When image is loaded, remove the dashed border */
-.batchprint-view .header img[src]:not([src=""]) {
-    border: none;
-}
-
-/* Optional: Add a subtle background pattern or text hint */
-.batchprint-view .header img:not([src])::before,
-.batchprint-view .header img[src=""]::before {
-    content: "Upload a .3MF file to see preview";
-    color: var(--lumo-disabled-text-color);
-    font-size: var(--lumo-font-size-s);
-    text-align: center;
-    padding: var(--lumo-space-m);
-}
-
 .batchprint-view .filamentmapping {
     display: flex;
     flex-direction: row;
@@ -459,6 +422,62 @@
     justify-content: center;
     flex-wrap: wrap;
 }
+
+/* Thumbnail placeholder text block - shown on initial page load */
+.batchprint-view .header .thumbnail-placeholder {
+    background-color: var(--lumo-base-color);
+    box-shadow: var(--lumo-box-shadow-s);
+    border-radius: var(--lumo-border-radius-l);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 256px;
+    width: 256px;
+    margin: 0;
+    padding: var(--lumo-space-m);
+    /* Text styling */
+    color: var(--lumo-disabled-text-color);
+    font-size: var(--lumo-font-size-s);
+    text-align: center;
+    cursor: default;
+    /* Ensure consistent alignment */
+    vertical-align: top;
+}
+
+/* Thumbnail image - hidden initially, shown after upload/remove */
+.batchprint-view .header img {
+    background-color: var(--lumo-base-color);
+    box-shadow: var(--lumo-box-shadow-s);
+    border-radius: var(--lumo-border-radius-l);
+    display: block;
+    cursor: default;
+    height: 256px;
+    width: 256px;
+    object-fit: contain;
+    margin: 0;
+    padding: 0;
+    vertical-align: top;
+    border: none;
+}
+
+/* Small size - explicit dimensions (same as default) */
+.batchprint-view .header img.small {
+    height: 256px;
+    width: 256px;
+}
+
+/* Large size - when clicked - use explicit dimensions instead of auto */
+.batchprint-view .header img:not(.small) {
+    height: 512px;
+    width: 512px;
+}
+
+/* When image is loaded, keep no border and make clickable */
+.batchprint-view .header img[src]:not([src=""]) {
+    border: none;
+    cursor: pointer;
+}
+
 
 /* ========================================
    DELAY COMPONENT STYLING

@@ -119,6 +119,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 	private final Span batchInfoSpan = new Span();
 	private final Span estimatedTimeSpan = new Span();
 	private final Span activeJobsSpan = new Span();
+	private final Div thumbnailPlaceholder = new Div();
 
 	// Will be created in onAttach after configuring delay controls
 	private Div actions;
@@ -727,24 +728,29 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         });
 		    // Add file removed listener to clear thumbnail and project data
 		upload.addFileRemovedListener(e -> {
+			thumbnailPlaceholder.setVisible(true);
+			thumbnail.setVisible(false);
 			thumbnail.setSrc(""); // Clear thumbnail to show placeholder
 			closeProjectFile();
 			plateLookup.setItems(List.of());
 			plateLookup.clear();
-			showNotification("File removed");
 		});
     }
 
     private void configureThumbnail() {
-        thumbnail.addClassName(IMAGE_CLASS);
-        thumbnail.addClickListener(l -> {
+    thumbnail.addClassName(IMAGE_CLASS);
+    thumbnail.addClickListener(l -> {
+        // Only allow size toggle if image has a valid src
+        String src = thumbnail.getSrc();
+        if (src != null && !src.isEmpty()) {
             if (thumbnail.hasClassName(IMAGE_CLASS)) {
                 thumbnail.removeClassName(IMAGE_CLASS);
             } else {
                 thumbnail.addClassName(IMAGE_CLASS);
             }
-        });
-    }
+        }
+    });
+}
 
     private void updateBulkStatus() {
         printerMappings.forEach(PrinterMapping::updateBulkStatus);
@@ -777,6 +783,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		configureGrid();
 		configureUpload();
 		configureThumbnail();
+		configureThumbnailPlaceholder();
 		
 		// Create actions div with delay controls included
 		actions = newDiv("actions", 
@@ -809,8 +816,13 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			)
 		);
 		
+		thumbnailPlaceholder.setVisible(true);
+		thumbnail.setVisible(false);
+    
+		add(newDiv("header", thumbnailPlaceholder, thumbnail, actions, upload), grid);
+		
 		//add(newDiv("header", thumbnail, actions, newDiv("upload", upload)), grid);
-		add(newDiv("header", thumbnail, actions, upload), grid);
+		//add(newDiv("header", thumbnail, actions, upload), grid);
 		
 		final UI ui = attachEvent.getUI();
 		createFuture(() -> ui.access(() -> {
@@ -826,24 +838,35 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         closeProjectFile();
     }
 
-    private void loadProjectFile(final String filename) {
-        closeProjectFile();
-        plateLookup.setItems(List.of());
-        try {
-            projectFile = projectFileInstance.get().setup(filename, buffer.getFileData().getFile());
-        } catch (ProjectException ex) {
-            showError(ex);
-            return;
-        }
-        final List<Plate> plates = projectFile.getPlates();
-        plateLookup.setItems(plates);
-        if (plates.isEmpty()) {
-            thumbnail.setSrc("");
+	private void configureThumbnailPlaceholder() {
+		thumbnailPlaceholder.addClassName("thumbnail-placeholder");
+		thumbnailPlaceholder.setText("Upload a .3MF file to see preview");
+	}
+
+	 private void loadProjectFile(final String filename) {
+		closeProjectFile();
+		plateLookup.setItems(List.of());
+		try {
+			projectFile = projectFileInstance.get().setup(filename, buffer.getFileData().getFile());
+		} catch (ProjectException ex) {
+			showError(ex);
+			return;
+		}
+		final List<Plate> plates = projectFile.getPlates();
+		plateLookup.setItems(plates);
+		if (plates.isEmpty()) {
+			// Show thumbnail (empty), hide placeholder
+			thumbnailPlaceholder.setVisible(false);
+			thumbnail.setVisible(true);
+			thumbnail.setSrc("");
 			showError("No sliced plates found");
-        } else {
-            plateLookup.setValue(plates.get(0));
-        }
-    }
+		} else {
+			// Show thumbnail with image, hide placeholder
+			thumbnailPlaceholder.setVisible(false);
+			thumbnail.setVisible(true);
+			plateLookup.setValue(plates.get(0));
+		}
+	}
 
     private void closeProjectFile() {
         if (projectFile == null) {
