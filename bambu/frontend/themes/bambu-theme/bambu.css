@@ -415,15 +415,41 @@
     flex-basis: 0;
 }
 
+/* Thumbnail placeholder - always visible */
 .batchprint-view .header img {
     background-color: var(--lumo-base-color);
     box-shadow: var(--lumo-box-shadow-s);
     border-radius: var(--lumo-border-radius-l);
+    /* Add minimum dimensions to show placeholder */
+    min-height: 256px;
+    min-width: 256px;
+    /* Add border to make empty state visible */
+    border: 2px dashed var(--lumo-contrast-20pct);
+    /* Center any content */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+	padding: var(--lumo-space-m);
 }
 
 .batchprint-view .header img.small {
     max-height: 256px;
-    max-height: 256px;
+    max-width: 256px;
+}
+
+/* When image is loaded, remove the dashed border */
+.batchprint-view .header img[src]:not([src=""]) {
+    border: none;
+}
+
+/* Optional: Add a subtle background pattern or text hint */
+.batchprint-view .header img:not([src])::before,
+.batchprint-view .header img[src=""]::before {
+    content: "Upload a .3MF file to see preview";
+    color: var(--lumo-disabled-text-color);
+    font-size: var(--lumo-font-size-s);
+    text-align: center;
+    padding: var(--lumo-space-m);
 }
 
 .batchprint-view .filamentmapping {
@@ -809,21 +835,6 @@
 
 .batchupload-view vaadin-grid::part(cell) {
     padding: var(--lumo-space-xs) var(--lumo-space-s);
-}
-
-/* Instructions box */
-.batchupload-view .instructions {
-    width: 100%;
-    background-color: var(--lumo-contrast-5pct);
-    padding: var(--lumo-space-m);
-    border-radius: var(--lumo-border-radius-m);
-    margin-bottom: var(--lumo-space-m);
-}
-
-.batchupload-view .instructions > span:first-child {
-    font-weight: bold;
-    display: block;
-    margin-bottom: var(--lumo-space-s);
 }
 
 /* Button groups */

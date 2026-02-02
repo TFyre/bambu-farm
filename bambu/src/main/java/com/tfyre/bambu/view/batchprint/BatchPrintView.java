@@ -717,11 +717,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         doConfirm(() -> printAll(selected));
     }
 
-	private void headerVisible(final boolean isVisible) {
-		thumbnail.setVisible(isVisible);
-		actions.setVisible(isVisible);
-	}
-
     private void configureUpload() {
         upload.setAcceptedFileTypes(BambuConst.FILE_3MF);
         upload.addSucceededListener(e -> loadProjectFile(e.getFileName()));
@@ -730,6 +725,14 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         upload.addFileRejectedListener(l -> {
             showError(l.getErrorMessage());
         });
+		    // Add file removed listener to clear thumbnail and project data
+		upload.addFileRemovedListener(e -> {
+			thumbnail.setSrc(""); // Clear thumbnail to show placeholder
+			closeProjectFile();
+			plateLookup.setItems(List.of());
+			plateLookup.clear();
+			showNotification("File removed");
+		});
     }
 
     private void configureThumbnail() {
@@ -806,8 +809,8 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			)
 		);
 		
-		headerVisible(false);
-		add(newDiv("header", thumbnail, actions, newDiv("upload", upload)), grid);
+		//add(newDiv("header", thumbnail, actions, newDiv("upload", upload)), grid);
+		add(newDiv("header", thumbnail, actions, upload), grid);
 		
 		final UI ui = attachEvent.getUI();
 		createFuture(() -> ui.access(() -> {
@@ -835,10 +838,9 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
         final List<Plate> plates = projectFile.getPlates();
         plateLookup.setItems(plates);
         if (plates.isEmpty()) {
-            headerVisible(false);
-            showError("No sliced plates found");
+            thumbnail.setSrc("");
+			showError("No sliced plates found");
         } else {
-            headerVisible(true);
             plateLookup.setValue(plates.get(0));
         }
     }

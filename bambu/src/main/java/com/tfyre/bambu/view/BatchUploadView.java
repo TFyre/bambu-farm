@@ -378,10 +378,6 @@ public class BatchUploadView extends PushDiv implements NotificationHelper, Grid
         printerDataView = printerGrid.setItems(rows);
         printerDataView.setIdentifierProvider(PrinterRow::getId);
         printerDataView.addFilter(printerPredicate);
-        
-        if (rows.isEmpty()) {
-            showError("No printers available. Please check printer configuration.");
-        }
     }
 
     private void refreshFileGrid() {
