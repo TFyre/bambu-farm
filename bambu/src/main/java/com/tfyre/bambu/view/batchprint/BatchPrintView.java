@@ -107,6 +107,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 	private final Button removeFromQueueButton = new Button("Remove from Queue", VaadinIcon.MINUS.create());
 	private final Button cancelSelectedButton = new Button("Cancel", VaadinIcon.STOP.create());
 	private final Button cancelAllButton = new Button("ABORT", VaadinIcon.BAN.create());
+	private final Button clearQueueButton = new Button("Clear Queue", VaadinIcon.TRASH.create());  // ADD THIS LINE
 	
 	// Delay control fields
 	private final Checkbox enableDelay = new Checkbox("Enable batch delay", true);
@@ -274,6 +275,17 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		});
 	}
 	
+	private void configureClearQueueButton() {
+		clearQueueButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+		clearQueueButton.setTooltipText("Remove all jobs from the batch queue");
+		clearQueueButton.setEnabled(false); // Disabled until batch is running
+		clearQueueButton.addClickListener(e -> {
+			doConfirm(() -> {
+				clearEntireQueue();
+			});
+		});
+	}
+	
 	private void configureQueueMoreButton() {
 		queueMoreButton.setTooltipText("Add selected printers to batch queue");
 		queueMoreButton.setEnabled(false); // Disabled until batch is running
@@ -308,11 +320,13 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			updateActiveJobsDisplay();
 			
 			// If no jobs left, disable queue buttons
-			if (delayService.getQueuedJobCount() == 0 && !delayService.isBatchRunning()) {
-				queueMoreButton.setEnabled(false);
-				removeFromQueueButton.setEnabled(false);
-				updatePrintButtonState();
-			}
+			// If no jobs left, disable queue buttons
+		if (delayService.getQueuedJobCount() == 0 && !delayService.isBatchRunning()) {
+			queueMoreButton.setEnabled(false);
+			removeFromQueueButton.setEnabled(false);
+			clearQueueButton.setEnabled(false);
+			updatePrintButtonState();
+		}
 		} else {
 			showNotification("No matching printers found in queue");
 		}
@@ -329,8 +343,11 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 				activeJobsSpan.setText(String.format("🔄 Processing..."));
 			}
 			activeJobsSpan.getStyle().set("display", "block");
+			// Enable clear queue button when there are queued jobs
+			clearQueueButton.setEnabled(queuedJobs > 0);
 		} else {
 			activeJobsSpan.getStyle().set("display", "none");
+			clearQueueButton.setEnabled(false);
 		}
 	}
 	
@@ -413,6 +430,25 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		});
 	}
 
+	private void clearEntireQueue() {
+		int queuedCount = delayService.getQueuedJobCount();
+		if (queuedCount == 0) {
+			showNotification("Queue is already empty");
+			return;
+		}
+		
+		// Abort all queued jobs
+		delayService.abortAllJobs();
+		showNotification("Cleared %d job(s) from queue".formatted(queuedCount));
+		updateActiveJobsDisplay();
+		
+		// Disable queue buttons when queue is cleared
+		queueMoreButton.setEnabled(false);
+		removeFromQueueButton.setEnabled(false);
+		clearQueueButton.setEnabled(false);
+		updatePrintButtonState();
+	}
+
 	private void queueMorePrinters() {
 		final Set<PrinterMapping> selected = grid.getSelectedItems();
 		if (selected.isEmpty()) {
@@ -465,6 +501,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			.thenRun(() -> {
 				getUI().ifPresent(ui -> ui.access(() -> {
 					showNotification("Added %d printer(s)".formatted(selected.size()));
+					updateActiveJobsDisplay();
 				}));
 			})
 			.exceptionally(ex -> {
@@ -670,31 +707,34 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		printButton.setText("Print (Batch in Progress...)");
 		queueMoreButton.setEnabled(true);
 		removeFromQueueButton.setEnabled(true);
+		clearQueueButton.setEnabled(true);
 
 		// Start batch with delay
 		delayService.sendBatchJobsWithDelay(jobs, delay, simultaneousPrinters)
-			.thenRun(() -> {
-				getUI().ifPresent(ui -> ui.access(() -> {
-					showNotification("All batch jobs completed!");
-					queueMoreButton.setEnabled(false);
-					removeFromQueueButton.setEnabled(false);
-					updatePrintButtonState();
-				}));
-			})
-			.exceptionally(ex -> {
-				getUI().ifPresent(ui -> ui.access(() -> {
-					// Check if it was aborted or error
-					if (ex.getMessage() != null && ex.getMessage().contains("aborted")) {
-						showNotification("Batch was cancelled");
-					} else {
-						showError("Error: " + ex.getMessage());
-					}
-					queueMoreButton.setEnabled(false);
-					removeFromQueueButton.setEnabled(false);
-					updatePrintButtonState();
-				}));
-				return null;
-			});
+		.thenRun(() -> {
+			getUI().ifPresent(ui -> ui.access(() -> {
+				showNotification("All batch jobs completed!");
+				queueMoreButton.setEnabled(false);
+				removeFromQueueButton.setEnabled(false);
+				clearQueueButton.setEnabled(false);
+				updatePrintButtonState();
+			}));
+		})
+		.exceptionally(ex -> {
+			getUI().ifPresent(ui -> ui.access(() -> {
+				// Check if it was aborted or error
+				if (ex.getMessage() != null && ex.getMessage().contains("aborted")) {
+					showNotification("Batch was cancelled");
+				} else {
+					showError("Error: " + ex.getMessage());
+				}
+				queueMoreButton.setEnabled(false);
+				removeFromQueueButton.setEnabled(false);
+				clearQueueButton.setEnabled(false);
+				updatePrintButtonState();
+			}));
+			return null;
+		});
 
 		showNotification("Starting batch print for %d printers...".formatted(selected.size()));
 	}
@@ -773,10 +813,15 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 	@Override
 	protected void onAttach(final AttachEvent attachEvent) {
 		super.onAttach(attachEvent);
+		if (delayService.getQueuedJobCount() > 0 || delayService.isBatchRunning()) {
+			Log.infof("Clearing %d queued job(s) on page load", delayService.getQueuedJobCount());
+			delayService.abortAllJobs();
+		}
 		addClassName("batchprint-view");
 		configureActions();
 		configureDelayControls();
 		configureCancelButtons();
+		configureClearQueueButton();
 		configureQueueMoreButton();
 		configureRemoveFromQueueButton();
 		configurePlateLookup();
@@ -811,6 +856,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 				refreshButton, 
 				cancelSelectedButton, 
 				cancelAllButton,
+				clearQueueButton,
 				queueMoreButton, 
 				removeFromQueueButton
 			)

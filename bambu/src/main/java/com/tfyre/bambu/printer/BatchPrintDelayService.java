@@ -96,6 +96,9 @@ public class BatchPrintDelayService {
         lastPrinterSentTime.set(Instant.now());
     }
     
+	public void abortAllJobs() {
+		abortEntireBatch();
+	}
     /**
      * Abort all running and queued batch jobs
      */
