@@ -298,7 +298,8 @@
 }
 
 .batchprint-view,
-.sdcard-view {
+.sdcard-view,
+.batchupload-view {
     display: flex;
     flex-direction: column;
     gap: var(--lumo-space-m);
@@ -383,6 +384,13 @@
     flex-direction: column;
 }
 
+.batchprint-view vaadin-grid {
+    box-shadow: var(--lumo-box-shadow-s);
+    border-radius: var(--lumo-border-radius-m);
+    min-height: 60vh;
+    flex-grow: 1;
+}
+
 .batchprint-view vaadin-grid-sorter {
     width: 100%;
 }
@@ -391,7 +399,6 @@
     width: 100%;
     display: flex;
     align-items: center;
-
     gap: var(--lumo-space-l);
 }
 
@@ -409,20 +416,15 @@
     gap: var(--lumo-space-l);
 }
 
+.batchprint-view .actions .delay-controls {
+    display: flex;
+    flex-direction: row;
+    gap: var(--lumo-space-l);
+}
+
 .batchprint-view .buttons vaadin-button {
     flex-grow: 1;
     flex-basis: 0;
-}
-
-.batchprint-view .header img {
-    background-color: var(--lumo-base-color);
-    box-shadow: var(--lumo-box-shadow-s);
-    border-radius: var(--lumo-border-radius-l);
-}
-
-.batchprint-view .header img.small {
-    max-height: 256px;
-    max-height: 256px;
 }
 
 .batchprint-view .filamentmapping {
@@ -431,4 +433,457 @@
     align-content: center;
     justify-content: center;
     flex-wrap: wrap;
+}
+
+/* Thumbnail placeholder text block - shown on initial page load */
+.batchprint-view .header .thumbnail-placeholder {
+    background-color: var(--lumo-base-color);
+    box-shadow: var(--lumo-box-shadow-s);
+    border-radius: var(--lumo-border-radius-l);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 256px;
+    width: 256px;
+    margin: 0;
+    padding: var(--lumo-space-m);
+    /* Text styling */
+    color: var(--lumo-disabled-text-color);
+    font-size: var(--lumo-font-size-s);
+    text-align: center;
+    cursor: default;
+    /* Ensure consistent alignment */
+    vertical-align: top;
+}
+
+/* Thumbnail image - hidden initially, shown after upload/remove */
+.batchprint-view .header img {
+    background-color: var(--lumo-base-color);
+    box-shadow: var(--lumo-box-shadow-s);
+    border-radius: var(--lumo-border-radius-l);
+    display: block;
+    cursor: default;
+    height: 256px;
+    width: 256px;
+    object-fit: contain;
+    margin: 0;
+    padding: 0;
+    vertical-align: top;
+    border: none;
+}
+
+/* Small size - explicit dimensions (same as default) */
+.batchprint-view .header img.small {
+    height: 256px;
+    width: 256px;
+}
+
+/* Large size - when clicked - use explicit dimensions instead of auto */
+.batchprint-view .header img:not(.small) {
+    height: 512px;
+    width: 512px;
+}
+
+/* When image is loaded, keep no border and make clickable */
+.batchprint-view .header img[src]:not([src=""]) {
+    border: none;
+    cursor: pointer;
+}
+
+
+/* ========================================
+   DELAY COMPONENT STYLING
+   ======================================== */
+
+/* Options section - contains checkboxes only */
+.batchprint-view .options {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: var(--lumo-space-m);
+    align-items: center;
+}
+
+/* First 6 items are checkboxes - let them flow naturally */
+.batchprint-view .options > vaadin-checkbox:nth-child(-n+6) {
+    justify-self: start;
+}
+
+/* Enable delay checkbox spans all columns and adds top margin */
+.batchprint-view .options > vaadin-checkbox:nth-child(7) {
+    grid-column: 1 / -1;
+    /*margin-top: var(--lumo-space-m);
+    padding-top: var(--lumo-space-m);
+    border-top: 1px solid var(--lumo-contrast-10pct);*/
+}
+
+/* Simultaneous controls - one row */
+.batchprint-view .options > span:nth-child(8),
+.batchprint-view .options > vaadin-integer-field:nth-child(9),
+.batchprint-view .options > vaadin-button:nth-child(10) {
+    /* "Simultaneous:" label, field, apply button */
+    align-self: end;
+}
+
+.batchprint-view .options > span:nth-child(8) {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+    white-space: nowrap;
+    /*padding-bottom: var(--lumo-space-xs);*/
+}
+
+/* Delay time controls - another row */
+.batchprint-view .options > span:nth-child(11) {
+    /* "Delay:" label */
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+    white-space: nowrap;
+    align-self: end;
+    /*padding-bottom: var(--lumo-space-xs);*/
+}
+
+/* Time fields group - HH:MM:SS */
+.batchprint-view .options > vaadin-integer-field:nth-child(12),
+.batchprint-view .options > span:nth-child(13),
+.batchprint-view .options > vaadin-integer-field:nth-child(14),
+.batchprint-view .options > span:nth-child(15),
+.batchprint-view .options > vaadin-integer-field:nth-child(16) {
+    align-self: end;
+}
+
+/* Colon separators */
+.batchprint-view .options > span:nth-child(13),
+.batchprint-view .options > span:nth-child(15) {
+    font-size: var(--lumo-font-size-l);
+    font-weight: bold;
+    color: var(--lumo-secondary-text-color);
+    padding: 0 2px;
+    align-self: center;
+}
+
+/* Delay apply button */
+.batchprint-view .options > vaadin-button:nth-child(17) {
+    align-self: end;
+}
+
+/* Info spans span all columns */
+.batchprint-view .options > span:nth-child(18),
+.batchprint-view .options > span:nth-child(19),
+.batchprint-view .options > span:nth-child(20) {
+    grid-column: 1 / -1;
+}
+
+/* Active jobs span styling */
+.batchprint-view .active-jobs {
+    padding: var(--lumo-space-xs);
+    border-left: 3px solid var(--lumo-error-color);
+    margin-top: var(--lumo-space-xs);
+}
+
+/* Delay fields styling */
+.batchprint-view .delay-field {
+    min-width: 80px;
+}
+
+/* Time part fields - compact styling */
+.batchprint-view .delay-time-part {
+    min-width: 60px;
+    max-width: 60px;
+}
+
+/* Input field text - centered and monospace */
+.batchprint-view .delay-time-part input {
+    text-align: center;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: var(--lumo-font-size-m);
+    font-weight: bold;
+}
+
+/* Batch info span styling */
+.batchprint-view .batch-info {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-primary-text-color);
+    font-weight: 500;
+    display: block;
+    margin-top: var(--lumo-space-xs);
+}
+
+/* Time estimate span styling */
+.batchprint-view .time-estimate {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+    font-style: italic;
+    display: block;
+}
+
+/* Selected printers span */
+.batchprint-view .selected-printers {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-primary-text-color);
+    font-weight: 600;
+    display: block;
+    margin-top: var(--lumo-space-xs);
+}
+
+/* Queue status span */
+.batchprint-view .queue-status {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-primary-text-color);
+    font-weight: 600;
+    display: block;
+    margin-top: var(--lumo-space-xs);
+}
+
+/* Remaining batches span */
+.batchprint-view .remaining-batches {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-70pct);
+    display: block;
+}
+
+/* Total delay span */
+.batchprint-view .total-delay {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-70pct);
+    font-style: italic;
+    display: block;
+}
+
+ Button spacing and layout 
+.batchprint-view .buttons {
+    display: flex;
+    gap: var(--lumo-space-s);
+    flex-wrap: wrap;
+    align-items: center;
+}
+/* Group buttons visually */
+.batchprint-view .buttons vaadin-button:nth-child(1),
+.batchprint-view .buttons vaadin-button:nth-child(2),
+.batchprint-view .buttons vaadin-button:nth-child(3) {
+    /* Print, Add to Queue, Remove from Queue */
+    margin-right: var(--lumo-space-m);
+}
+
+/* Separator before cancel buttons */
+.batchprint-view .buttons vaadin-button:nth-child(5) {
+    margin-left: var(--lumo-space-m);
+}
+
+.batchprint-view .buttons vaadin-button[theme~="error"] {
+    background-color: var(--lumo-error-color);
+}
+
+/* ========================================
+   DELAY CONTROLS SECTION (between options and buttons)
+   ======================================== */
+
+.batchprint-view .delay-controls,
+.batchprint-view .delay-info{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--lumo-space-s);
+    margin-top: var(--lumo-space-s);
+}
+
+/* Enable delay checkbox */
+.batchprint-view .delay-controls > vaadin-checkbox {
+    margin-right: var(--lumo-space-m);
+}
+
+/* Colon separators between time fields */
+.batchprint-view .delay-controls > span:nth-child(4),
+.batchprint-view .delay-controls > span:nth-child(6) {
+    font-size: var(--lumo-font-size-l);
+    font-weight: bold;
+    color: var(--lumo-secondary-text-color);
+    padding: 0 2px;
+}
+
+/* Info spans - full width */
+.batchprint-view .delay-info > span.selected-printers,
+.batchprint-view .delay-info > span.batch-info,
+.batchprint-view .delay-info > span.time-estimate,
+.batchprint-view .delay-info > span.queue-status,
+.batchprint-view .delay-info > span.remaining-batches,
+.batchprint-view .delay-info > span.total-delay {
+    flex-basis: 100%;
+}
+
+//* ========================================
+   BATCH UPLOAD VIEW STYLES
+   Matches BatchPrint page styling
+   ======================================== */
+
+.batchupload-view {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-m);
+    padding: var(--lumo-space-m);
+    align-items: flex-start;
+    box-sizing: border-box;
+    height: 100%;
+}
+
+/* Smooth progress bar transitions */
+.batchupload-view .smooth-progress vaadin-progress-bar::part(bar) {
+    transition: width 0.3s ease-in-out;
+}
+
+.batchupload-view .smooth-progress {
+    transition: all 0.3s ease-in-out;
+}
+
+.batchupload-view vaadin-progress-bar {
+    --lumo-primary-color: var(--lumo-primary-color);
+}
+
+.batchupload-view vaadin-progress-bar::part(bar) {
+    transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
+.batchupload-view .header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-m);
+}
+
+.batchupload-view .actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-s);
+}
+
+.batchupload-view .actions .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--lumo-space-m);
+    flex-wrap: wrap;
+}
+
+.batchupload-view .buttons vaadin-button {
+    flex-grow: 0;
+}
+
+/* Upload info section - shows batch upload progress */
+.batchupload-view .upload-info-section {
+    padding: var(--lumo-space-s) var(--lumo-space-m);
+    background-color: var(--lumo-primary-color-10pct);
+    border-left: 4px solid var(--lumo-primary-color);
+    border-radius: var(--lumo-border-radius-s);
+    margin-bottom: var(--lumo-space-s);
+}
+
+.batchupload-view .upload-batch-info {
+    font-size: var(--lumo-font-size-m);
+    font-weight: 600;
+    color: var(--lumo-primary-text-color);
+    display: block;
+    margin-bottom: var(--lumo-space-xs);
+}
+
+.batchupload-view .upload-time-estimate {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+    display: block;
+}
+
+.batchupload-view .file-section,
+.batchupload-view .printer-section,
+.batchupload-view .control-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-s);
+}
+
+.batchupload-view .file-section > span:first-child,
+.batchupload-view .printer-section > span:first-child {
+    font-size: var(--lumo-font-size-l);
+    font-weight: 600;
+    margin-bottom: var(--lumo-space-xs);
+}
+
+.batchupload-view vaadin-grid {
+    box-shadow: var(--lumo-box-shadow-s);
+    border-radius: var(--lumo-border-radius-m);
+}
+
+.batchupload-view vaadin-grid-sorter {
+    width: 100%;
+}
+
+/* Progress panel */
+.batchupload-view .progress-panel {
+    width: 100%;
+    padding: var(--lumo-space-m);
+    background-color: var(--lumo-contrast-5pct);
+    border-radius: var(--lumo-border-radius-m);
+    margin-top: var(--lumo-space-m);
+}
+
+.batchupload-view .progress-item {
+    padding: var(--lumo-space-s);
+    margin: var(--lumo-space-xs) 0;
+    border-radius: var(--lumo-border-radius-s);
+    background-color: var(--lumo-contrast-5pct);
+    border-left: 4px solid var(--lumo-primary-color);
+}
+
+.batchupload-view .progress-item.success {
+    background-color: var(--lumo-success-color-10pct);
+    border-left-color: var(--lumo-success-color);
+}
+
+.batchupload-view .progress-item.error {
+    background-color: var(--lumo-error-color-10pct);
+    border-left-color: var(--lumo-error-color);
+}
+
+/* Control section */
+.batchupload-view .control-section {
+    margin-top: var(--lumo-space-m);
+}
+
+.batchupload-view .control-section .buttons {
+    display: flex;
+    justify-content: center;
+    gap: var(--lumo-space-m);
+}
+
+.batchupload-view .control-section .buttons vaadin-button {
+    min-width: 200px;
+}
+
+/* Summary panel */
+.batchupload-view .summary-panel {
+    padding: var(--lumo-space-m);
+    margin: var(--lumo-space-m) 0;
+    background-color: var(--lumo-contrast-5pct);
+    border-radius: var(--lumo-border-radius-m);
+    text-align: center;
+}
+
+.batchupload-view vaadin-grid::part(cell) {
+    padding: var(--lumo-space-xs) var(--lumo-space-s);
+}
+
+/* Button groups */
+.batchupload-view .file-section .buttons,
+.batchupload-view .printer-section .buttons {
+    display: flex;
+    gap: var(--lumo-space-s);
+    margin-bottom: var(--lumo-space-s);
+}
+
+/* Responsive layout */
+@media screen and (max-width: 1110px) {
+    .batchupload-view .actions .buttons {
+        flex-direction: column;
+    }
+    
+    .batchupload-view .buttons vaadin-button {
+        width: 100%;
+    }
 }

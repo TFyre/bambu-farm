@@ -2,6 +2,7 @@ package com.tfyre.bambu;
 
 import com.tfyre.bambu.security.SecurityUtils;
 import com.tfyre.bambu.view.batchprint.BatchPrintView;
+import com.tfyre.bambu.view.BatchUploadView;
 import com.tfyre.bambu.view.LogsView;
 import com.tfyre.bambu.view.MaintenanceView;
 import com.tfyre.bambu.view.PrinterView;
@@ -50,6 +51,7 @@ public class MainLayout extends AppLayout {
             SdCardView.class,
             PrinterView.class,
             BatchPrintView.class,
+			BatchUploadView.class,
             LogsView.class,
             MaintenanceView.class
     ));
@@ -146,6 +148,7 @@ public class MainLayout extends AppLayout {
         getVerticalLayout(roleChecker, Stream.of(
                 PrinterView.class,
                 BatchPrintView.class,
+				BatchUploadView.class,
                 SdCardView.class,
                 LogsView.class,
                 MaintenanceView.class))

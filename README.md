@@ -290,6 +290,10 @@ bambu.batch-print.bed-levelling=true
 bambu.batch-print.flow-calibration=true
 bambu.batch-print.vibration-calibration=true
 bambu.batch-print.enforce-filament-mapping=true
+bambu.batch-print.skip-filament-mapping=false
+bambu.batch-print.simultaneous-printers=3
+bambu.batch-print.job-delay=30s
+bambu.batch-print.enable-delay=true
 ```
 
 ### Preheat
@@ -482,3 +486,4 @@ quarkus.log.file.path=application.log
 
 * https://json-to-proto.github.io/
 * https://formatter.org/protobuf-formatter
+
