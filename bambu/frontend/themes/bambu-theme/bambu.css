@@ -384,6 +384,13 @@
     flex-direction: column;
 }
 
+.batchprint-view vaadin-grid {
+    box-shadow: var(--lumo-box-shadow-s);
+    border-radius: var(--lumo-border-radius-m);
+    min-height: 60vh;
+    flex-grow: 1;
+}
+
 .batchprint-view vaadin-grid-sorter {
     width: 100%;
 }
@@ -586,25 +593,6 @@
     font-weight: bold;
 }
 
-/* Delay apply buttons - small and animated */
-.batchprint-view .delay-apply-button {
-    min-width: 40px !important;
-    padding: 0 8px !important;
-    transition: all 0.2s ease;
-}
-
-/* Button active state (click animation) */
-.batchprint-view .delay-apply-button:active {
-    transform: scale(1.1);
-    box-shadow: 0 0 10px var(--lumo-primary-color);
-    transition: all 0.1s ease;
-}
-
-/* Button hover effect */
-.batchprint-view .delay-apply-button:hover:not(:disabled) {
-    box-shadow: 0 0 5px var(--lumo-primary-color-50pct);
-}
-
 /* Batch info span styling */
 .batchprint-view .batch-info {
     font-size: var(--lumo-font-size-s);
@@ -618,6 +606,39 @@
 .batchprint-view .time-estimate {
     font-size: var(--lumo-font-size-s);
     color: var(--lumo-secondary-text-color);
+    font-style: italic;
+    display: block;
+}
+
+/* Selected printers span */
+.batchprint-view .selected-printers {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-primary-text-color);
+    font-weight: 600;
+    display: block;
+    margin-top: var(--lumo-space-xs);
+}
+
+/* Queue status span */
+.batchprint-view .queue-status {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-primary-text-color);
+    font-weight: 600;
+    display: block;
+    margin-top: var(--lumo-space-xs);
+}
+
+/* Remaining batches span */
+.batchprint-view .remaining-batches {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-70pct);
+    display: block;
+}
+
+/* Total delay span */
+.batchprint-view .total-delay {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-70pct);
     font-style: italic;
     display: block;
 }
@@ -663,18 +684,9 @@
     margin-right: var(--lumo-space-m);
 }
 
-/* Labels */
-.batchprint-view .delay-controls > span:nth-child(2),
+/* Colon separators between time fields */
+.batchprint-view .delay-controls > span:nth-child(4),
 .batchprint-view .delay-controls > span:nth-child(6) {
-    font-size: var(--lumo-font-size-s);
-    color: var(--lumo-secondary-text-color);
-    white-space: nowrap;
-    margin-right: var(--lumo-space-xs);
-}
-
-/* Colon separators */
-.batchprint-view .delay-controls > span:nth-child(8),
-.batchprint-view .delay-controls > span:nth-child(10) {
     font-size: var(--lumo-font-size-l);
     font-weight: bold;
     color: var(--lumo-secondary-text-color);
@@ -682,17 +694,13 @@
 }
 
 /* Info spans - full width */
+.batchprint-view .delay-controls > span.selected-printers,
 .batchprint-view .delay-controls > span.batch-info,
 .batchprint-view .delay-controls > span.time-estimate,
-.batchprint-view .delay-controls > span.active-jobs {
+.batchprint-view .delay-controls > span.queue-status,
+.batchprint-view .delay-controls > span.remaining-batches,
+.batchprint-view .delay-controls > span.total-delay {
     flex-basis: 100%;
-}
-
-/* Active jobs span */
-.batchprint-view .active-jobs {
-    padding: var(--lumo-space-xs);
-    border-left: 3px solid var(--lumo-error-color);
-    margin-top: var(--lumo-space-xs);
 }
 
 //* ========================================
@@ -794,7 +802,6 @@
 .batchupload-view vaadin-grid {
     box-shadow: var(--lumo-box-shadow-s);
     border-radius: var(--lumo-border-radius-m);
-	--lumo-font-size-s: 0.875rem;
 }
 
 .batchupload-view vaadin-grid-sorter {

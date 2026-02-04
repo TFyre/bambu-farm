@@ -87,6 +87,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 	@Inject
 	BatchPrintDelayConfig delayConfig;
 
+	private java.util.concurrent.ScheduledFuture<?> countdownFuture;
     private final ComboBox<Plate> plateLookup = new ComboBox<>("Plate Id");
     private final Grid<PrinterMapping> grid = new Grid<>();
     private final HeaderRow headerRow = grid.appendHeaderRow();
@@ -104,7 +105,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 	private final Button printButton = new Button("Print", VaadinIcon.PRINT.create(), l -> printAll());
 	private final Button refreshButton = new Button("Refresh", VaadinIcon.REFRESH.create(), l -> refresh());
 	private final Button queueMoreButton = new Button("Add to Queue", VaadinIcon.PLUS.create());
-	private final Button removeFromQueueButton = new Button("Remove from Queue", VaadinIcon.MINUS.create());
 	private final Button cancelSelectedButton = new Button("Cancel", VaadinIcon.STOP.create());
 	private final Button cancelAllButton = new Button("ABORT", VaadinIcon.BAN.create());
 	private final Button clearQueueButton = new Button("Clear Queue", VaadinIcon.TRASH.create());  // ADD THIS LINE
@@ -115,11 +115,12 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 	private final IntegerField delayHoursField = new IntegerField();
 	private final IntegerField delayMinutesField = new IntegerField();
 	private final IntegerField delaySecondsField = new IntegerField();	
-	private final Button applySimultaneousButton = new Button(VaadinIcon.CHECK.create());
-	private final Button applyDelayButton = new Button(VaadinIcon.CHECK.create());
+	private final Span selectedPrintersSpan = new Span();
 	private final Span batchInfoSpan = new Span();
 	private final Span estimatedTimeSpan = new Span();
-	private final Span activeJobsSpan = new Span();
+	private final Span queueStatusSpan = new Span();
+	private final Span remainingBatchesSpan = new Span();
+	private final Span totalDelaySpan = new Span();
 	private final Div thumbnailPlaceholder = new Div();
 
 	// Will be created in onAttach after configuring delay controls
@@ -168,21 +169,15 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		simultaneousPrintersField.setValue(delayConfig.simultaneousPrinters());
 		simultaneousPrintersField.setMin(1);
 		simultaneousPrintersField.setWidth("80px");
-		simultaneousPrintersField.setPlaceholder("Enter number");
 		simultaneousPrintersField.setHelperText("Number of printers in batch");
 		simultaneousPrintersField.addClassName("delay-field");
-		simultaneousPrintersField.addValueChangeListener(e -> updateEstimatedTime());
 		
-		// Apply button for simultaneous
-		applySimultaneousButton.addThemeVariants(
-			ButtonVariant.LUMO_PRIMARY,
-			ButtonVariant.LUMO_SMALL,
-			ButtonVariant.LUMO_SUCCESS
-		);
-		applySimultaneousButton.addClassName("delay-apply-button");
-		applySimultaneousButton.addClickListener(e -> {
-			showNotification("Simultaneous printers count updated");
-			updateEstimatedTime();
+		// Update on blur or Enter (isFromClient = true means user interaction)
+		simultaneousPrintersField.addValueChangeListener(e -> {
+			if (e.isFromClient()) {
+				showNotification("Simultaneous printers count updated");
+				updateEstimatedTime();
+			}
 		});
 		
 		// Parse initial time from config
@@ -199,7 +194,11 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		delayHoursField.setPlaceholder("HH");
 		delayHoursField.setHelperText("Hours");
 		delayHoursField.addClassName("delay-time-part");
-		delayHoursField.addValueChangeListener(e -> updateEstimatedTime());
+		delayHoursField.addValueChangeListener(e -> {
+			if (e.isFromClient()) {
+				updateEstimatedTime();
+			}
+		});
 
 		// Minutes field
 		delayMinutesField.setValue(initialMinutes);
@@ -209,7 +208,11 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		delayMinutesField.setPlaceholder("MM");
 		delayMinutesField.setHelperText("Minutes");
 		delayMinutesField.addClassName("delay-time-part");
-		delayMinutesField.addValueChangeListener(e -> updateEstimatedTime());
+		delayMinutesField.addValueChangeListener(e -> {
+			if (e.isFromClient()) {
+				updateEstimatedTime();
+			}
+		});
 
 		// Seconds field
 		delaySecondsField.setValue(initialSecs);
@@ -219,19 +222,25 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		delaySecondsField.setPlaceholder("SS");
 		delaySecondsField.setHelperText("Seconds");
 		delaySecondsField.addClassName("delay-time-part");
-		delaySecondsField.addValueChangeListener(e -> updateEstimatedTime());
+		delaySecondsField.addValueChangeListener(e -> {
+			if (e.isFromClient()) {
+				updateEstimatedTime();
+			}
+		});
 		
-		// Apply button for delay
-		applyDelayButton.addThemeVariants(
-			ButtonVariant.LUMO_PRIMARY,
-			ButtonVariant.LUMO_SMALL,
-			ButtonVariant.LUMO_SUCCESS
-		);
-		applyDelayButton.addClassName("delay-apply-button");
-		applyDelayButton.addClickListener(e -> {
+		delayHoursField.addBlurListener(e -> {
 			int totalSeconds = getTotalDelaySeconds();
 			showNotification("Delay time updated to " + formatDuration(Duration.ofSeconds(totalSeconds)));
-			updateEstimatedTime();
+		});
+
+		delayMinutesField.addBlurListener(e -> {
+			int totalSeconds = getTotalDelaySeconds();
+			showNotification("Delay time updated to " + formatDuration(Duration.ofSeconds(totalSeconds)));
+		});
+
+		delaySecondsField.addBlurListener(e -> {
+			int totalSeconds = getTotalDelaySeconds();
+			showNotification("Delay time updated to " + formatDuration(Duration.ofSeconds(totalSeconds)));
 		});
 		
 		// Enable delay checkbox
@@ -239,25 +248,19 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		enableDelay.addValueChangeListener(e -> {
 			boolean enabled = e.getValue();
 			simultaneousPrintersField.setEnabled(enabled);
-			applySimultaneousButton.setEnabled(enabled);
 			delayHoursField.setEnabled(enabled);
 			delayMinutesField.setEnabled(enabled);
 			delaySecondsField.setEnabled(enabled);
-			applyDelayButton.setEnabled(enabled);
 			updateEstimatedTime();
 		});
 		
-		// Info spans
+		// Info spans - CSS classes only
+		selectedPrintersSpan.addClassName("selected-printers");
 		batchInfoSpan.addClassName("batch-info");
 		estimatedTimeSpan.addClassName("time-estimate");
-		
-		// Active jobs span
-		activeJobsSpan.addClassName("active-jobs");
-		activeJobsSpan.getStyle()
-			.set("font-size", "var(--lumo-font-size-s)")
-			.set("color", "var(--lumo-error-text-color)")
-			.set("font-weight", "600")
-			.set("display", "none");
+		queueStatusSpan.addClassName("queue-status");
+		remainingBatchesSpan.addClassName("remaining-batches");
+		totalDelaySpan.addClassName("total-delay");
 	}
 
 	private void configureCancelButtons() {
@@ -292,16 +295,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		queueMoreButton.addClickListener(e -> queueMorePrinters());
 	}
 	
-	private void configureRemoveFromQueueButton() {
-		removeFromQueueButton.setTooltipText("Remove selected printers from batch queue");
-		removeFromQueueButton.setEnabled(false); // Disabled until batch is running
-		removeFromQueueButton.addClickListener(e -> {
-			doConfirm(() -> {
-				removeSelectedFromQueue();
-			});
-		});
-	}
-	
 	private void removeSelectedFromQueue() {
 		final Set<PrinterMapping> selected = grid.getSelectedItems();
 		if (selected.isEmpty()) {
@@ -323,7 +316,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			// If no jobs left, disable queue buttons
 		if (delayService.getQueuedJobCount() == 0 && !delayService.isBatchRunning()) {
 			queueMoreButton.setEnabled(false);
-			removeFromQueueButton.setEnabled(false);
 			clearQueueButton.setEnabled(false);
 			updatePrintButtonState();
 		}
@@ -333,21 +325,79 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 	}
 
 	private void updateActiveJobsDisplay() {
-		int activeJobs = delayService.getActiveJobCount();
-		int queuedJobs = delayService.getQueuedJobCount();
+    int queuedJobs = delayService.getQueuedJobCount();
+    int processedJobs = delayService.getProcessedJobCount();
+    int totalJobs = delayService.getTotalJobCount();
+    
+    if (delayService.isBatchRunning()) {
+        // 2. Show remaining printers in queue
+        queueStatusSpan.setText(String.format("🔄 Queue: %d / %d printers", queuedJobs, totalJobs));
+        
+        // 3. Show remaining batches
+        int simultaneousPrinters = simultaneousPrintersField.getValue() != null 
+            ? simultaneousPrintersField.getValue() 
+            : 1;
+        int remainingBatches = (int) Math.ceil((double) queuedJobs / simultaneousPrinters);
+        int totalBatches = (int) Math.ceil((double) totalJobs / simultaneousPrinters);
+        int completedBatches = totalBatches - remainingBatches;
+        
+        remainingBatchesSpan.setText(String.format("📊 Batches: %d / %d completed", 
+            completedBatches, totalBatches));
+        
+        // 4. Show remaining total delay time with live countdown
+        if (enableDelay.getValue() && remainingBatches > 1) {
+            startCountdown(remainingBatches, simultaneousPrinters);
+        } else {
+            stopCountdown();
+            totalDelaySpan.setText("");
+        }
+        
+        clearQueueButton.setEnabled(queuedJobs > 0);
+    } else {
+        stopCountdown();
+        queueStatusSpan.setText("");
+        remainingBatchesSpan.setText("");
+        totalDelaySpan.setText("");
+        clearQueueButton.setEnabled(false);
+    }
+}
+
+	private void startCountdown(int remainingBatches, int simultaneousPrinters) {
+		// Stop existing countdown if any
+		stopCountdown();
 		
-		if (activeJobs > 0 || queuedJobs > 0) {
-			if (queuedJobs > 0) {
-				activeJobsSpan.setText(String.format("🔄 %d queued", queuedJobs));
-			} else {
-				activeJobsSpan.setText(String.format("🔄 Processing..."));
-			}
-			activeJobsSpan.getStyle().set("display", "block");
-			// Enable clear queue button when there are queued jobs
-			clearQueueButton.setEnabled(queuedJobs > 0);
-		} else {
-			activeJobsSpan.getStyle().set("display", "none");
-			clearQueueButton.setEnabled(false);
+		// Start new countdown that updates every second
+		countdownFuture = ses.scheduleAtFixedRate(() -> {
+			getUI().ifPresent(ui -> ui.access(() -> {
+				int queuedJobs = delayService.getQueuedJobCount();
+				int currentRemainingBatches = (int) Math.ceil((double) queuedJobs / simultaneousPrinters);
+				
+				if (currentRemainingBatches > 1) {
+					// Calculate total remaining delay
+					int delaySeconds = getTotalDelaySeconds();
+					long remainingToNextBatch = delayService.getRemainingDelaySeconds();
+					
+					// Total = delay to next batch + delays for all future batches
+					long totalRemaining = remainingToNextBatch + (delaySeconds * (currentRemainingBatches - 2));
+					
+					if (totalRemaining > 0) {
+						String delayText = formatDuration((int) totalRemaining);
+						totalDelaySpan.setText(String.format("⏱️ Remaining delay: %s", delayText));
+					} else {
+						totalDelaySpan.setText("");
+					}
+				} else {
+					totalDelaySpan.setText("");
+					stopCountdown();
+				}
+			}));
+		}, 0, 1, java.util.concurrent.TimeUnit.SECONDS);
+	}
+
+	private void stopCountdown() {
+		if (countdownFuture != null && !countdownFuture.isDone()) {
+			countdownFuture.cancel(false);
+			countdownFuture = null;
 		}
 	}
 	
@@ -444,7 +494,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		
 		// Disable queue buttons when queue is cleared
 		queueMoreButton.setEnabled(false);
-		removeFromQueueButton.setEnabled(false);
 		clearQueueButton.setEnabled(false);
 		updatePrintButtonState();
 	}
@@ -528,7 +577,14 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 
 	private void updateEstimatedTime() {
 		Set<PrinterMapping> selected = grid.getSelectedItems();
-		int printerCount = selected.size();
+		int printerCount = (int) selected.stream().filter(PrinterMapping::canPrint).count();
+		
+		// 1. ALWAYS show selected count
+		if (printerCount > 0) {
+			selectedPrintersSpan.setText(String.format("📋 Selected: %d printers", printerCount));
+		} else {
+			selectedPrintersSpan.setText("");
+		}
 		
 		if (!enableDelay.getValue() || printerCount <= 1) {
 			batchInfoSpan.setText("");
@@ -584,6 +640,20 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			return remainingMinutes == 0 
 				? hours + "h" 
 				: String.format("%dh %dm", hours, remainingMinutes);
+		}
+	}
+
+	private String formatDuration(int totalSeconds) {
+		int hours = totalSeconds / 3600;
+		int minutes = (totalSeconds % 3600) / 60;
+		int seconds = totalSeconds % 60;
+		
+		if (hours > 0) {
+			return String.format("%dh %dm %ds", hours, minutes, seconds);
+		} else if (minutes > 0) {
+			return String.format("%dm %ds", minutes, seconds);
+		} else {
+			return String.format("%ds", seconds);
 		}
 	}
 
@@ -706,7 +776,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		printButton.setEnabled(false);
 		printButton.setText("Print (Batch in Progress...)");
 		queueMoreButton.setEnabled(true);
-		removeFromQueueButton.setEnabled(true);
 		clearQueueButton.setEnabled(true);
 
 		// Start batch with delay
@@ -715,7 +784,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			getUI().ifPresent(ui -> ui.access(() -> {
 				showNotification("All batch jobs completed!");
 				queueMoreButton.setEnabled(false);
-				removeFromQueueButton.setEnabled(false);
 				clearQueueButton.setEnabled(false);
 				updatePrintButtonState();
 			}));
@@ -729,7 +797,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 					showError("Error: " + ex.getMessage());
 				}
 				queueMoreButton.setEnabled(false);
-				removeFromQueueButton.setEnabled(false);
 				clearQueueButton.setEnabled(false);
 				updatePrintButtonState();
 			}));
@@ -823,7 +890,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		configureCancelButtons();
 		configureClearQueueButton();
 		configureQueueMoreButton();
-		configureRemoveFromQueueButton();
 		configurePlateLookup();
 		configureGrid();
 		configureUpload();
@@ -837,28 +903,27 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			printFilaments,
 			newDiv("options",                          // ← Only checkboxes now
 				skipSameSize, timelapse, bedLevelling, 
-				flowCalibration, vibrationCalibration, skipFilamentMapping
+				flowCalibration, vibrationCalibration, skipFilamentMapping, enableDelay
 			),
-			newDiv("delay-controls",                   // ← NEW separate div
-				enableDelay,
+			newDiv("delay-controls",
 				simultaneousPrintersField,
-				applySimultaneousButton,
 				delayHoursField,
 				delayMinutesField,
 				delaySecondsField,
-				applyDelayButton,
+				selectedPrintersSpan,      // NEW
 				batchInfoSpan, 
 				estimatedTimeSpan,
-				activeJobsSpan
+				queueStatusSpan,           // NEW
+				remainingBatchesSpan,      // NEW
+				totalDelaySpan             // NEW
 			),
 			newDiv("buttons",                          // ← Same buttons, new layout
 				printButton, 
 				refreshButton, 
 				cancelSelectedButton, 
 				cancelAllButton,
-				clearQueueButton,
-				queueMoreButton, 
-				removeFromQueueButton
+				queueMoreButton,
+				clearQueueButton
 			)
 		);
 		
@@ -881,6 +946,7 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
     @Override
     protected void onDetach(final DetachEvent detachEvent) {
         super.onDetach(detachEvent);
+		stopCountdown();
         closeProjectFile();
     }
 

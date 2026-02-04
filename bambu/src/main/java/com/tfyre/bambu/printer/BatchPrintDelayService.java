@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+
 /**
  * Service for managing batch print jobs with configurable delays between printer uploads
  */
@@ -29,6 +30,8 @@ public class BatchPrintDelayService {
     private final List<PrinterJobWrapper> currentBatchQueue = new CopyOnWriteArrayList<>();
     private final AtomicBoolean isBatchRunning = new AtomicBoolean(false);
     private final AtomicInteger jobIdCounter = new AtomicInteger(0);
+	private final AtomicInteger processedJobCount = new AtomicInteger(0);
+	private final AtomicInteger totalJobCount = new AtomicInteger(0);
     
     @Inject
     BatchPrintDelayConfig delayConfig;
@@ -89,6 +92,36 @@ public class BatchPrintDelayService {
         return 0;
     }
     
+	/**
+ * Get remaining delay time for entire queue (countdown)
+ */
+	public long getTotalRemainingDelaySeconds() {
+		if (!isBatchRunning.get() || currentBatchQueue.isEmpty()) {
+			return 0;
+		}
+		
+		// Get delay between batches
+		long delayBetweenBatches = configuredDelay.toSeconds();
+		if (delayBetweenBatches == 0) {
+			return 0;
+		}
+		
+		// Get number of remaining batches (need simultaneous count)
+		int remainingJobs = currentBatchQueue.size();
+		
+		// Time remaining = delay to next batch + delays for all future batches
+		long remainingToNextBatch = getRemainingDelaySeconds();
+		
+		return remainingToNextBatch;
+	}
+
+	/**
+	 * Get simultaneous printers count for calculations
+	 */
+	public int getSimultaneousPrinters() {
+		return delayConfig.simultaneousPrinters();
+	}
+	
     /**
      * Mark that a printer job was sent
      */
@@ -136,6 +169,8 @@ public class BatchPrintDelayService {
         }, 1, TimeUnit.SECONDS);
         
         Log.infof("Entire batch aborted - all queues cleared");
+		processedJobCount.set(0);
+		totalJobCount.set(0);
     }
     
     /**
@@ -209,6 +244,14 @@ public class BatchPrintDelayService {
         return currentBatchQueue.size();
     }
     
+	public int getProcessedJobCount() {
+		return processedJobCount.get();
+	}
+
+	public int getTotalJobCount() {
+		return totalJobCount.get();
+	}
+	
     /**
      * Send print jobs to multiple printers with a configurable delay between each batch
      * If a batch is already running, jobs are added to the existing queue
@@ -251,6 +294,8 @@ public class BatchPrintDelayService {
         // Initialize the batch queue
         currentBatchQueue.clear();
         currentBatchQueue.addAll(wrappedJobs);
+		totalJobCount.set(wrappedJobs.size());
+		processedJobCount.set(0);
         isBatchRunning.set(true);
         
         boolean useDelay = delayConfig.enableDelay() && currentBatchQueue.size() > batchSize;
@@ -382,6 +427,7 @@ public class BatchPrintDelayService {
                                      currentBatchIndex + 1);
                             
                             wrapper.job.execute();
+							processedJobCount.incrementAndGet();
                             
                             // Mark this printer as SENT - this starts the delay timer
                             markPrinterSent();
