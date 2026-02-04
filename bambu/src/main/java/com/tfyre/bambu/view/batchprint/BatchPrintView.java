@@ -907,15 +907,8 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 			),
 			newDiv("delay-controls",
 				simultaneousPrintersField,
-				delayHoursField,
 				delayMinutesField,
-				delaySecondsField,
-				selectedPrintersSpan,      // NEW
-				batchInfoSpan, 
-				estimatedTimeSpan,
-				queueStatusSpan,           // NEW
-				remainingBatchesSpan,      // NEW
-				totalDelaySpan             // NEW
+				delaySecondsField
 			),
 			newDiv("buttons",                          // ← Same buttons, new layout
 				printButton, 
@@ -924,6 +917,14 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 				cancelAllButton,
 				queueMoreButton,
 				clearQueueButton
+			),
+			newDiv("delay-info",
+				selectedPrintersSpan,      // NEW
+				batchInfoSpan, 
+				estimatedTimeSpan,
+				queueStatusSpan,           // NEW
+				remainingBatchesSpan,      // NEW
+				totalDelaySpan             // NEW
 			)
 		);
 		
@@ -931,9 +932,6 @@ public final class BatchPrintView extends PushDiv implements NotificationHelper,
 		thumbnail.setVisible(false);
     
 		add(newDiv("header", thumbnailPlaceholder, thumbnail, actions, upload), grid);
-		
-		//add(newDiv("header", thumbnail, actions, newDiv("upload", upload)), grid);
-		//add(newDiv("header", thumbnail, actions, upload), grid);
 		
 		final UI ui = attachEvent.getUI();
 		createFuture(() -> ui.access(() -> {

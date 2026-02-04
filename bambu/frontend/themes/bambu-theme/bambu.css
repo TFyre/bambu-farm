@@ -409,11 +409,16 @@
 
 .batchprint-view .actions .detail,
 .batchprint-view .actions .options,
-.batchprint-view .actions .delay-controls,
 .batchprint-view .actions .buttons {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    gap: var(--lumo-space-l);
+}
+
+.batchprint-view .actions .delay-controls {
+    display: flex;
+    flex-direction: row;
     gap: var(--lumo-space-l);
 }
 
@@ -671,7 +676,8 @@
    DELAY CONTROLS SECTION (between options and buttons)
    ======================================== */
 
-.batchprint-view .delay-controls {
+.batchprint-view .delay-controls,
+.batchprint-view .delay-info{
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -694,12 +700,12 @@
 }
 
 /* Info spans - full width */
-.batchprint-view .delay-controls > span.selected-printers,
-.batchprint-view .delay-controls > span.batch-info,
-.batchprint-view .delay-controls > span.time-estimate,
-.batchprint-view .delay-controls > span.queue-status,
-.batchprint-view .delay-controls > span.remaining-batches,
-.batchprint-view .delay-controls > span.total-delay {
+.batchprint-view .delay-info > span.selected-printers,
+.batchprint-view .delay-info > span.batch-info,
+.batchprint-view .delay-info > span.time-estimate,
+.batchprint-view .delay-info > span.queue-status,
+.batchprint-view .delay-info > span.remaining-batches,
+.batchprint-view .delay-info > span.total-delay {
     flex-basis: 100%;
 }
 
