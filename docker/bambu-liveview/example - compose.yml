@@ -8,7 +8,7 @@ services:
             - ./mediamtx.yml:/mediamtx.yml
         ports:
             #RTSP
-            #- '8554:8554' 
+            #- '8554:8554'
 
             #WebRTC
             - '8189:8189/tcp'
@@ -30,12 +30,38 @@ services:
         image: nginx:1.26-alpine
         restart: always
         volumes:
-            - ./reverse-proxy.conf:/etc/nginx/conf.d/default.conf
+            # mounted as a template so nginx substitutes $DOMAIN from the environment
+            - ./reverse-proxy.conf:/etc/nginx/templates/default.conf.template
+            - ./certbot/conf:/etc/letsencrypt:ro
+            - ./certbot/www:/var/www/certbot
         ports:
-            - '8080:80'
+            #HTTPS
+            - '443:443'
+            #HTTP (acme challenge + redirect to https)
+            - '80:80'
+            #Optional LAN access without TLS
+            #- '8080:80'
+        environment:
+            DOMAIN: ${DOMAIN}
+            # only substitute $DOMAIN in the template, leave other nginx vars alone
+            NGINX_ENVSUBST_FILTER: DOMAIN
+        # reload nginx periodically so renewed certificates are picked up
+        command: ['/bin/sh', '-c', 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & exec nginx -g "daemon off;"']
         depends_on:
             - mediamtx
             - bambuweb
+
+    certbot:
+        image: certbot/certbot:latest
+        restart: always
+        volumes:
+            - ./certbot/conf:/etc/letsencrypt
+            - ./certbot/www:/var/www/certbot
+        # renew once a day-ish (12h), webroot challenge served by nginx.
+        # the initial certificate must be issued manually, see README
+        entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done;'
+        depends_on:
+            - nginx
 
     printer1:
         extends:

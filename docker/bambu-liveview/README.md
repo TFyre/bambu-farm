@@ -61,6 +61,39 @@ also remember to update `reverse-proxy.conf`:
 ```
 
 
+# HTTPS with Let's Encrypt
+
+The `example - compose.yml` includes nginx with TLS and a certbot container for automatic renewal.
+
+1. Copy `example - .env` to `.env` and fix the values (docker compose reads this automatically):
+   ```properties
+   DOMAIN=your.dynamic.dns.com
+   EMAIL=you@example.com
+   ```
+
+2. The domain must resolve (DNS) to this host's public IP, and ports `80`/`443` must be reachable from the internet.
+
+3. Before the first `docker compose up`, issue the certificate (nginx can only start once the certificate exists):
+   ```bash
+   docker run --rm -p 80:80 \
+     -v "$(pwd)"/certbot/conf:/etc/letsencrypt \
+     -v "$(pwd)"/certbot/www:/var/www/certbot \
+     certbot/certbot certonly \
+     --standalone --preferred-challenges http \
+     -d "$DOMAIN" --email "$EMAIL" \
+     --agree-tos --no-eff-email
+   ```
+
+4. Start the stack with `docker compose up -d`. nginx now serves `https://$DOMAIN` and redirects HTTP to HTTPS.
+
+5. Renewal is automatic: the certbot container attempts `certbot renew` every 12h (webroot challenge, served by nginx) and nginx reloads every 6h to pick up renewed certificates.
+
+> [!NOTE]
+> WebRTC media still flows directly to mediamtx on port `8189` (TCP+UDP) — keep it open and make sure `webrtcAdditionalHosts` in `mediamtx.yml` includes your public domain/dns.
+
+> [!NOTE]
+> Without TLS you can still use the stack locally: uncomment the `8080:80` port mapping on the nginx service.
+
 # Adding your printers
 
 **Copy `example - compose.yaml` to `compose.yml`**
@@ -91,7 +124,9 @@ Edit `compose.yml` and fix the printers (lines with FIXME)
 | PORT | UDP/TCP | Purpose |
 |--|--|--|
 |8189|TCP+UDP|Streaming for WebRTC|
-|8080|TCP|HTTP for BambuWeb & WebRTC|
+|80|TCP|HTTP (ACME challenge + redirect to HTTPS)|
+|443|TCP|HTTPS for BambuWeb & WebRTC|
+|8080|TCP|Optional HTTP without TLS (LAN only)|
 
 # Starting
 
