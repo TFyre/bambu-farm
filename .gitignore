@@ -16,6 +16,8 @@ bambu/src/main/bundles/
 bambu/.flow-node-tasks.lock
 bambu/styles.css
 .env
+.mcp.json
+.vscode/
 
 /docker/bambu-local-dev/vsftpd/home/
 /docker/bambu-local-dev/*.crt
