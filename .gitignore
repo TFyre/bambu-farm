@@ -11,7 +11,8 @@ nb-configuration.xml
 
 # The following files are generated/updated by vaadin-maven-plugin
 bambu/node_modules/
-bambu/frontend/generated/
+bambu/src/main/frontend/generated/
+bambu/src/main/bundles/
 bambu/.flow-node-tasks.lock
 bambu/styles.css
 .env

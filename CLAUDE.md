@@ -11,19 +11,19 @@ Full user-facing configuration options live in [README.md](README.md) ("Full Con
 ## Modules (Maven multi-module, groupId `com.tfyre.bambu`)
 
 - `common` — shared code: `src/main/proto/bambu.proto` (generates `com.tfyre.bambu.model.*` protobuf classes for the printer's MQTT JSON payload), `mqtt/AbstractMqttController` (Camel RouteBuilder base class that builds `paho:` MQTT and `direct:` endpoints, using a no-op trust socket factory for the printers' self-signed certs), plus JAXB XJC generation from `src/main/schema/slice-info-1.0.xsd` (for parsing `.3mf` slice info, with fluent-api/default-value plugins).
-- `bambu` (artifact `bambu-web`) — the actual web application: Vaadin Flow UI, per-printer Camel MQTT routes, FTPS upload, Bambu Lab cloud support. Produces the deployable `bambu/target/bambu-web-*-runner.jar` (uber-jar under the `production` profile).
+- `bambu` (artifact `bambu-web`) — the actual web application: Vaadin Flow UI, per-printer Camel MQTT routes, FTPS upload, Bambu Lab cloud support. Produces the deployable `bambu/target/bambu-web-*-runner.jar` (uber-jar, no profile needed since Vaadin 25).
 - `server` (artifact `bambu-server`) — small headless Quarkus app that simulates printers: it subscribes to the MQTT request topic and, on a `pushall` request, publishes JSON from `server/src/main/resources/json/*.json` to the report topic. Used to test the web app without physical printers.
 
 ## Build & run
 
-- Build everything (including Vaadin production frontend build): `./mvnw clean install -Pproduction`
+- Build everything (including Vaadin production frontend build): `./mvnw clean install`
 - Run the web app in dev mode (hot reload, Vaadin dev server): `./mvnw -pl bambu quarkus:dev` (or `cd bambu && ./mvnw quarkus:dev` — the module's `defaultGoal` is `package quarkus:dev`)
 - Run the server simulator in dev mode: `./mvnw -pl server quarkus:dev`
-- Package the deployable jar: `./mvnw -pl bambu package -Pproduction`, then `java -jar bambu/target/bambu-web-*-runner.jar`
+- Package the deployable jar: `./mvnw -pl bambu package`, then `java -jar bambu/target/bambu-web-*-runner.jar`
 - Tests: `./mvnw test` (currently there are no test sources; CI still runs this)
 - No linter/formatter is configured. On Windows use `mvnw.cmd` or plain `mvn`.
 
-CI ([github-pull-reqeust.yml](.github/workflows/github-pull-reqeust.yml)) builds `-Pproduction` and runs tests on PRs/pushes to `main`; [github-release.yml](.github/workflows/github-release.yml) uploads the runner jar on release. Dependabot keeps Quarkus/Vaadin/plugin versions current — version bumps land via PRs from `TFyre/dependabot/*`.
+CI ([github-pull-reqeust.yml](.github/workflows/github-pull-reqeust.yml)) builds and runs tests on PRs/pushes to `main`; [github-release.yml](.github/workflows/github-release.yml) uploads the runner jar on release. Dependabot keeps Quarkus/Vaadin/plugin versions current — version bumps land via PRs from `TFyre/dependabot/*`.
 
 ## Git
 
@@ -55,7 +55,7 @@ Routes are created with `autoStartup(false)`; `BambuPrintersImpl.startPrinter()/
 
 ### UI (Vaadin Flow)
 
-Server-side Vaadin Flow with a custom theme in `bambu/frontend/themes/bambu-theme/` (`bambu.css`). `bambu/frontend/generated/` and `node_modules/` are build output (gitignored). Routes (layout `MainLayout`): Dashboard (`""`), `printer`, `batchprint`, `sdcard`, `filament`, `logs`, `maintenance`, plus a standalone `LoginView`. The dashboard renders each printer from `BambuPrinter` state; most views are `@Route` classes in `com.tfyre.bambu.view`. Security is Quarkus Elytron with a custom `TFyreIdentityProvider`/`TFyreIdentityManager` (users from `bambu.users.*`) and `NavigationAccessCheckerInitializer` enforcing roles.
+Server-side Vaadin Flow with a custom theme in `bambu/src/main/frontend/themes/bambu-theme/` (`bambu.css`). `bambu/src/main/frontend/generated/` and `node_modules/` are build output (gitignored). Routes (layout `MainLayout`): Dashboard (`""`), `printer`, `batchprint`, `sdcard`, `filament`, `logs`, `maintenance`, plus a standalone `LoginView`. The dashboard renders each printer from `BambuPrinter` state; most views are `@Route` classes in `com.tfyre.bambu.view`. Security is Quarkus Elytron with a custom `TFyreIdentityProvider`/`TFyreIdentityManager` (users from `bambu.users.*`) and `NavigationAccessCheckerInitializer` enforcing roles.
 
 ### FTPS and camera
 
