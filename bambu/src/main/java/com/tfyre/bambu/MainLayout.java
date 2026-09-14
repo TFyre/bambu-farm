@@ -26,6 +26,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinRequest;
 import com.vaadin.flow.theme.lumo.Lumo;
+import jakarta.annotation.security.PermitAll;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,6 +45,7 @@ import jakarta.inject.Inject;
  *
  * @author Francois Steyn - (fsteyn@tfyre.co.za)
  */
+@PermitAll
 public class MainLayout extends AppLayout {
 
     private static final Map<Class<? extends Component>, AccessRoute> MAP = makeEntries(Stream.of(
