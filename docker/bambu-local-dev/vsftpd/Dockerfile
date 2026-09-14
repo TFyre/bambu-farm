@@ -1,13 +1,13 @@
 #Copied from https://github.com/fauria/docker-vsftpd/blob/master/run-vsftpd.sh
-FROM centos:7
+FROM quay.io/centos/centos:stream9
 
 ARG USER_ID=14
 ARG GROUP_ID=50
 
-RUN yum -y update \
-  && yum clean all \
-  && yum install -y vsftpd db4-utils db4 iproute \
-  && yum clean all
+RUN dnf -y update \
+  && dnf clean all \
+  && dnf install -y vsftpd libdb-utils libdb iproute \
+  && dnf clean all
 
 RUN usermod -u ${USER_ID} ftp
 RUN groupmod -g ${GROUP_ID} ftp
