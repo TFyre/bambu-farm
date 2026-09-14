@@ -207,7 +207,7 @@ public final class PrinterMapping implements FilamentHelper, NotificationHelper 
         if (config.menuLeftClick()) {
             result.setOpenOnClick(true);
         }
-        result.setOverlayClassName("batchprint-view-menu");
+        result.setClassName("batchprint-view-menu");
         return result;
     }
 
