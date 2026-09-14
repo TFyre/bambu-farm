@@ -99,7 +99,7 @@ scheduler, security, servlet, smallrye-context-propagation, vaadin-quarkus, vert
 
 Building:
 ```bash
-mvn clean install -Pproduction
+mvn clean install
 ```
 
 Create a new directory and copy `bambu/target/bambu-web-1.0.0-runner.jar` into it, example:
@@ -406,7 +406,7 @@ If you want to modify the CSS, create a file next to the `.jar` file called `sty
 
 *Display columns is a ratio and scale based on screen width*
 
-Refer to [bambu.css](/bambu/frontend/themes/bambu-theme/bambu.css#L1-L25)
+Refer to [bambu.css](/bambu/src/main/frontend/themes/bambu-theme/bambu.css#L1-L25)
 
 | Example | value for XXX |
 | -- | -- |
