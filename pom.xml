@@ -21,7 +21,7 @@
         <vaadin.version>25.2.7</vaadin.version>
         <quarkus.version>3.39.3</quarkus.version>
         <compiler-plugin.version>3.15.0</compiler-plugin.version>
-        <jna.version>5.18.1</jna.version>
+        <jna.version>5.19.1</jna.version>
         <commons-net.version>3.12.0</commons-net.version>
         <jandex-maven-plugin.version>3.6.0</jandex-maven-plugin.version>
 
