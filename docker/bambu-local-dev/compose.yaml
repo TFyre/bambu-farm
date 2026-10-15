@@ -1,5 +1,3 @@
-version: '3'
-
 services:
     mqtt:
         image: eclipse-mosquitto

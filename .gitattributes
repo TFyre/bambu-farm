@@ -1,0 +1,5 @@
+# These run on Linux inside the containers. CRLF breaks them: a shell script
+# fails on the shebang, and an env_file value keeps its trailing \r, which for
+# SOURCEFINGERPRINT means the fingerprint never matches.
+*.sh  text eol=lf
+*.env text eol=lf
