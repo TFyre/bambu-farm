@@ -28,4 +28,7 @@ bambu/styles.css
 /docker/bambu-liveview/bambu-web-*
 /docker/bambu-liveview/compose.yml
 /docker/bambu-liveview/mediamtx.yml
+/docker/bambu-liveview/mediamtx.env
+/docker/bambu-liveview/printers.env
+/docker/bambu-liveview/printers.list
 /docker/bambu-liveview/certbot/

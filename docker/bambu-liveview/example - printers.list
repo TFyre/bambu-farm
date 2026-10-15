@@ -1,0 +1,14 @@
+# Copy to `printers.list` and list your printers, then run ./build-printers-env.sh
+# to generate printers.env from it.
+#
+# name = the key in bambu.printers.<id>. BambuPrinterImpl builds the live view
+#        url as bambu.live-view-url + id, so this is also the mediamtx path name.
+#        Lower case, one word, NO underscores - mediamtx takes only the first
+#        _-delimited segment as the map key, so a name with an underscore is
+#        silently truncated.
+# ip   = printer ip, also used to fetch its certificate
+# code = printer access code
+#
+# <name> <ip> <access-code>
+myprinter1   FIXME_this_is_my_printer_ip   FIXME_this_is_my_access_code
+#myprinter2  FIXME_this_is_my_printer_ip   FIXME_this_is_my_access_code
