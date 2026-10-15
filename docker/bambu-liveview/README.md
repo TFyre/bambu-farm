@@ -148,15 +148,29 @@ The `example - compose.yml` includes nginx with TLS and a certbot container for 
 
 2. The domain must resolve (DNS) to this host's public IP, and ports `80`/`443` must be reachable from the internet.
 
-3. Before the first `docker compose up`, issue the certificate (nginx can only start once the certificate exists):
+3. Before the first `docker compose up`, issue the certificate (nginx can only start once the certificate exists). `DOMAIN` and `EMAIL` are read from `.env` so there is one place to change them — certbot takes them as flags rather than environment variables, so the shell expands them before `docker` sees the command:
    ```bash
-   docker run --rm -p 80:80 \
+   set -a; . ./.env; set +a
+
+   docker run --rm --name bambu-certbot -p 80:80 \
      -v "$(pwd)"/certbot/conf:/etc/letsencrypt \
      -v "$(pwd)"/certbot/www:/var/www/certbot \
      certbot/certbot certonly \
      --standalone --preferred-challenges http \
      -d "$DOMAIN" --email "$EMAIL" \
-     --agree-tos --no-eff-email
+     --agree-tos --no-eff-email --non-interactive
+   ```
+
+   This has to run with the stack **down**: `--standalone` binds port 80 itself, so anything else holding that port makes it fail with `port is already allocated`.
+
+   `--non-interactive` is load-bearing. Without it, if certbot wants to prompt and has no terminal it does not fail — it blocks, holding port 80, while `docker ps` still shows a healthy container. The only clue is this, buried in the logs:
+   ```
+   Skipped user interaction because Certbot doesn't appear to be running in a terminal.
+   ```
+
+   `--name bambu-certbot` is there so a hung run can be found with `docker logs bambu-certbot`, rather than by working out which container owns port 80:
+   ```bash
+   docker stop bambu-certbot
    ```
 
 4. Start the stack with `docker compose up -d`. nginx now serves `https://$DOMAIN` and redirects HTTP to HTTPS.
