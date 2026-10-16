@@ -40,6 +40,8 @@ public interface BambuPrinter {
 
     void commandFullStatus(final boolean force);
 
+    void commandDone();
+
     void commandClearPrinterError();
 
     void commandLight(BambuConst.LightMode lightMode);
