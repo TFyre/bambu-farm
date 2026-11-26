@@ -408,6 +408,7 @@ public final class DashboardPrinter implements NotificationHelper, ViewHelper {
                     newButton("Show SD Card", VaadinIcon.ARCHIVE, l -> UI.getCurrent().navigate(SdCardView.class, printer.getName())),
                     newButton("Request full status", VaadinIcon.REFRESH, l -> printer.commandFullStatus(true)),
                     newButton("Clear Print Error", VaadinIcon.WARNING, l -> printer.commandClearPrinterError()),
+                    newButton("Send Done", VaadinIcon.ENTER, l -> printer.commandDone()),
                     newButton("Resume Print", VaadinIcon.PLAY, l -> doConfirm(BambuConst.CommandControl.RESUME)),
                     newButton("Pause Print", VaadinIcon.PAUSE, l -> doConfirm(BambuConst.CommandControl.PAUSE)),
                     newButton("Stop Print", VaadinIcon.STOP, l -> doConfirm(BambuConst.CommandControl.STOP))
